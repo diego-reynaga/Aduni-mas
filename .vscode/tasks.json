@@ -1,0 +1,90 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "mysql:start",
+      "type": "shell",
+      "command": "$ErrorActionPreference = 'Stop'; $service = Get-Service MYSQL80 -ErrorAction Stop; if ($service.Status -ne 'Running') { Start-Service MYSQL80 -ErrorAction Stop; $service.WaitForStatus('Running', '00:00:15') }; $service = Get-Service MYSQL80 -ErrorAction Stop; if ($service.Status -ne 'Running') { throw 'MYSQL80 no pudo iniciarse.' }; $service | Format-Table -AutoSize Name, Status, DisplayName",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "shell": {
+          "executable": "powershell",
+          "args": [
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command"
+          ]
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "backend:start",
+      "type": "shell",
+      "command": "mvn spring-boot:run",
+      "options": {
+        "cwd": "${workspaceFolder}/aduni-plus-backend-springboot/aduni-plus-backend"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "owner": "external",
+        "source": "spring-boot",
+        "pattern": {
+          "regexp": "^(__never_match__)$",
+          "file": 1,
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "endsPattern": ".*Started .* in .* seconds.*"
+        }
+      }
+    },
+    {
+      "label": "frontend:start",
+      "type": "shell",
+      "command": "npm start",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": {
+        "owner": "external",
+        "source": "angular",
+        "pattern": {
+          "regexp": "^(__never_match__)$",
+          "file": 1,
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "endsPattern": ".*http://localhost:4200/.*"
+        }
+      }
+    },
+    {
+      "label": "dev:start-all",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "mysql:start",
+        "backend:start",
+        "frontend:start"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

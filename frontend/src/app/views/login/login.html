@@ -1,0 +1,71 @@
+<main class="login-page">
+  <section class="login-institution">
+    <div class="institution-mark">
+      <span>AD+</span>
+    </div>
+
+    <div>
+      <p class="section-kicker">Academia Preuniversitaria</p>
+      <h1>ADUNI+</h1>
+      <p class="institution-copy">
+        Plataforma de gestion academica para registro de notas, supervision docente y consulta inmediata de rendimiento.
+      </p>
+    </div>
+
+    <div class="institution-grid" aria-label="Resumen institucional">
+      <div>
+        <span>Gestion</span>
+        <strong>2026-I</strong>
+      </div>
+      <div>
+        <span>Roles</span>
+        <strong>4 perfiles</strong>
+      </div>
+      <div>
+        <span>Modulo</span>
+        <strong>Notas</strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="login-access" aria-label="Ingreso al sistema">
+    <div class="login-card">
+      <p class="login-mobile-brand">ADUNI+</p>
+      <div class="login-heading">
+        <p class="section-kicker">Acceso institucional</p>
+        <h2>Inicio de sesion</h2>
+        <p>Ingrese con las credenciales asignadas por secretaria academica.</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+        <label>
+          <span>Usuario</span>
+          <input
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            placeholder="usuario institucional"
+          >
+        </label>
+
+        <label>
+          <span>Contrasena</span>
+          <input
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="contrasena"
+          >
+        </label>
+
+        @if (error()) {
+          <p class="login-error">{{ error() }}</p>
+        }
+
+        <button class="btn-primary login-submit" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Validando acceso...' : 'Ingresar al sistema' }}
+        </button>
+      </form>
+    </div>
+  </section>
+</main>

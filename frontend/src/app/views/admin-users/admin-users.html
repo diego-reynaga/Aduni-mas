@@ -1,0 +1,99 @@
+<section class="page-stack">
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Personas y usuarios</p>
+      <h2>Cuentas institucionales por rol</h2>
+      <p>
+        Administre usuarios vinculados a personas, docentes, estudiantes, apoderados y administrativos del modelo JPA.
+      </p>
+    </div>
+  </div>
+
+  <div class="split-grid">
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Directorio de accesos</h3>
+          <p>Credenciales asociadas a una persona y uno o mas roles.</p>
+        </div>
+      </div>
+
+      <div class="quiet-table-wrap">
+        <table class="quiet-table">
+          <thead>
+            <tr>
+              <th>Codigo</th>
+              <th>Persona</th>
+              <th>Rol</th>
+              <th>Correo</th>
+              <th>Estado</th>
+              <th>Ultimo acceso</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.codigo) {
+              <tr>
+                <td><strong>{{ user.codigo }}</strong></td>
+                <td>
+                  {{ user.persona }}<br>
+                  <span class="text-xs text-slate-500">DNI {{ user.documento }}</span>
+                </td>
+                <td>{{ roleLabels[user.rol] }}</td>
+                <td>{{ user.correo }}</td>
+                <td><span [class]="statusClass(user.estado)">{{ user.estado }}</span></td>
+                <td>{{ user.ultimoAcceso }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (error()) {
+      <p class="read-only-note">{{ error() }}</p>
+    }
+
+    <aside class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Resumen de accesos</h3>
+          <p>Distribucion actual de cuentas registradas en la base de datos.</p>
+        </div>
+      </div>
+
+      <div class="surface-body compact-list">
+        <div class="list-line">
+          <div>
+            <strong>Cuentas activas</strong>
+            <span>{{ totalActive() }} de {{ users().length }} usuarios registrados</span>
+          </div>
+          <span class="status-pill is-good">Activo</span>
+        </div>
+        <div class="list-line">
+          <div>
+            <strong>Administradores</strong>
+            <span>{{ roleTotals().ADMINISTRADOR }} cuenta(s)</span>
+          </div>
+        </div>
+        <div class="list-line">
+          <div>
+            <strong>Docentes</strong>
+            <span>{{ roleTotals().DOCENTE }} cuenta(s)</span>
+          </div>
+        </div>
+        <div class="list-line">
+          <div>
+            <strong>Estudiantes</strong>
+            <span>{{ roleTotals().ESTUDIANTE }} cuenta(s)</span>
+          </div>
+        </div>
+        <div class="list-line">
+          <div>
+            <strong>Padres de familia</strong>
+            <span>{{ roleTotals().PADRE_FAMILIA }} cuenta(s)</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>

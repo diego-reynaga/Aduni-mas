@@ -1,0 +1,70 @@
+<div class="academic-app">
+  <aside class="academic-sidebar">
+    <a class="brand-block" [routerLink]="homeRoute()" aria-label="Ir al inicio">
+      <span class="brand-seal">A+</span>
+      <span>
+        <strong>Aduni+</strong>
+        <small>Secretaria academica</small>
+      </span>
+    </a>
+
+    <nav class="role-nav" aria-label="Navegacion principal">
+      @for (item of navItems(); track item.route) {
+        <a
+          class="role-nav__item"
+          [routerLink]="item.route"
+          routerLinkActive="role-nav__item--active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <span>{{ item.eyebrow }}</span>
+          <strong>{{ item.label }}</strong>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-note">
+      <span>Gestion 2026-I</span>
+      <strong>Periodo ordinario</strong>
+    </div>
+  </aside>
+
+  <section class="academic-main">
+    <header class="topbar">
+      <div>
+        <p class="topbar__eyebrow">Sistema de gestion de estudiantes</p>
+        <h1>{{ roleTitle() }}</h1>
+      </div>
+
+      <div class="topbar__actions">
+        @if (availableRoles().length > 1) {
+          <div class="role-switcher" aria-label="Cambiar vista institucional">
+            @for (role of availableRoles(); track role) {
+              <button
+                type="button"
+                class="role-switcher__button"
+                [class.role-switcher__button--active]="activeRole() === role"
+                (click)="switchRole(role)"
+              >
+                {{ roleLabels[role] }}
+              </button>
+            }
+          </div>
+        }
+
+        <div class="account-chip">
+          <span>{{ initials() }}</span>
+          <div>
+            <strong>{{ session()?.username }}</strong>
+            <small>{{ roleTitle() }}</small>
+          </div>
+        </div>
+
+        <button class="btn-secondary btn-compact" type="button" (click)="logout()">Salir</button>
+      </div>
+    </header>
+
+    <main class="content-area">
+      <router-outlet></router-outlet>
+    </main>
+  </section>
+</div>

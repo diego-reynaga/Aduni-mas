@@ -1,0 +1,60 @@
+<section class="page-stack">
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Gestion academica</p>
+      <h2>Jerarquia curricular de Aduni+</h2>
+      <p>
+        Mantenga la relacion gestion, nivel, grado, paralelo, curso y materia que el backend registra con restricciones unicas.
+      </p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="read-only-note">{{ error() }}</p>
+  }
+
+  <div class="two-column-grid">
+    @for (level of levels(); track level.nivel + level.turno) {
+      <article class="surface">
+        <div class="surface-header">
+          <div>
+            <p class="section-kicker">{{ level.turno }}</p>
+            <h3>{{ level.nivel }}</h3>
+            <p>{{ level.descripcion }}</p>
+          </div>
+          <span class="status-pill is-good">Activo</span>
+        </div>
+
+        <div class="surface-body compact-list">
+          <div>
+            <strong>Grados y paralelos</strong>
+            <div class="data-chip-row mt-3">
+              @for (grado of level.grados; track grado) {
+                <span class="data-chip">{{ grado }}</span>
+              }
+            </div>
+          </div>
+
+          <div>
+            <strong>Materias catalogadas</strong>
+            <div class="data-chip-row mt-3">
+              @for (materia of level.materias; track materia) {
+                <span class="data-chip">{{ materia }}</span>
+              }
+            </div>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+
+  <section class="surface">
+    <div class="surface-header">
+      <div>
+        <h3>Estado de estructura</h3>
+        <p>Informacion cargada desde gestiones, niveles, grados, cursos y materias de la base de datos.</p>
+      </div>
+      <span class="status-pill is-good">{{ levels().length }} nivel(es)</span>
+    </div>
+  </section>
+</section>

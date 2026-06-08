@@ -1,0 +1,64 @@
+<section class="page-stack">
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Portal del estudiante</p>
+      <h2>Consulta de rendimiento academico</h2>
+      <p>
+        Vista de solo lectura para revisar notas publicadas, detalle de evaluaciones y promedio final por curso.
+      </p>
+    </div>
+    <span class="status-pill is-good">Solo lectura</span>
+  </div>
+
+  <div class="metric-grid">
+    @for (metric of metrics(); track metric.label) {
+      <article class="metric-card tone-{{ metric.tone }}">
+        <p class="metric-card__label">{{ metric.label }}</p>
+        <strong class="metric-card__value">{{ metric.value }}</strong>
+        <p class="metric-card__detail">{{ metric.detail }}</p>
+      </article>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="read-only-note">{{ error() }}</p>
+  }
+
+  <section class="surface">
+    <div class="surface-header">
+      <div>
+        <h3>Detalle de notas publicadas</h3>
+        <p>Las calificaciones se actualizan tras el registro docente y la publicacion administrativa.</p>
+      </div>
+    </div>
+
+    <div class="quiet-table-wrap">
+      <table class="quiet-table">
+        <thead>
+          <tr>
+            <th>Curso</th>
+            <th>Periodo</th>
+            <th>Practica</th>
+            <th>Examen</th>
+            <th>Tarea</th>
+            <th>Promedio</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (report of reports(); track report.curso + report.periodo) {
+            <tr>
+              <td><strong>{{ report.curso }}</strong></td>
+              <td>{{ report.periodo }}</td>
+              <td>{{ report.practica }}</td>
+              <td>{{ report.examen || 'Pendiente' }}</td>
+              <td>{{ report.tarea }}</td>
+              <td class="score-strong">{{ report.promedio | number: '1.2-2' }}</td>
+              <td><span [class]="statusClass(report.estado)">{{ report.estado }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

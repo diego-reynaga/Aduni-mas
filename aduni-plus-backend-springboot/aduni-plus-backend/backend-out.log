@@ -1,0 +1,3752 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------< pe.edu.aduniplus:aduni-plus-backend >-----------------
+[INFO] Building aduni-plus-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.14:run (default-cli) > test-compile @ aduni-plus-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ aduni-plus-backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ aduni-plus-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 68 source files with javac [debug parameters release 21] to target\classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] /C:/Users/Diego/Documents/SoftEscolar/aduni-plus-backend-springboot/aduni-plus-backend/src/main/java/pe/edu/aduniplus/backend/config/SecurityConfig.java: C:\Users\Diego\Documents\SoftEscolar\aduni-plus-backend-springboot\aduni-plus-backend\src\main\java\pe\edu\aduniplus\backend\config\SecurityConfig.java uses or overrides a deprecated API.
+[INFO] /C:/Users/Diego/Documents/SoftEscolar/aduni-plus-backend-springboot/aduni-plus-backend/src/main/java/pe/edu/aduniplus/backend/config/SecurityConfig.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ aduni-plus-backend ---
+[INFO] skip non existing resourceDirectory C:\Users\Diego\Documents\SoftEscolar\aduni-plus-backend-springboot\aduni-plus-backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ aduni-plus-backend ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 21] to target\test-classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] 
+[INFO] <<< spring-boot:3.5.14:run (default-cli) < test-compile @ aduni-plus-backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.14:run (default-cli) @ aduni-plus-backend ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.14)
+
+2026-06-05T11:26:37.111-05:00  INFO 16864 --- [aduni-plus-backend] [           main] p.e.a.b.AduniPlusBackendApplication      : Starting AduniPlusBackendApplication using Java 21.0.11 with PID 16864 (C:\Users\Diego\Documents\SoftEscolar\aduni-plus-backend-springboot\aduni-plus-backend\target\classes started by Diego in C:\Users\Diego\Documents\SoftEscolar\aduni-plus-backend-springboot\aduni-plus-backend)
+2026-06-05T11:26:37.114-05:00  INFO 16864 --- [aduni-plus-backend] [           main] p.e.a.b.AduniPlusBackendApplication      : No active profile set, falling back to 1 default profile: "default"
+2026-06-05T11:26:38.569-05:00  INFO 16864 --- [aduni-plus-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-06-05T11:26:38.791-05:00  INFO 16864 --- [aduni-plus-backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 207 ms. Found 22 JPA repository interfaces.
+2026-06-05T11:26:39.631-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-06-05T11:26:39.670-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-06-05T11:26:39.670-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.54]
+2026-06-05T11:26:39.830-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-06-05T11:26:39.833-05:00  INFO 16864 --- [aduni-plus-backend] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2613 ms
+2026-06-05T11:26:40.222-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-06-05T11:26:40.389-05:00  INFO 16864 --- [aduni-plus-backend] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.49.Final
+2026-06-05T11:26:40.486-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-06-05T11:26:41.423-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-06-05T11:26:41.543-05:00  INFO 16864 --- [aduni-plus-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-06-05T11:26:42.205-05:00  INFO 16864 --- [aduni-plus-backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@a047bdb
+2026-06-05T11:26:42.209-05:00  INFO 16864 --- [aduni-plus-backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-06-05T11:26:42.326-05:00  WARN 16864 --- [aduni-plus-backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-06-05T11:26:42.377-05:00  INFO 16864 --- [aduni-plus-backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.46
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-06-05T11:26:44.750-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    alter table asignaciones_docente 
+       modify column estado enum ('ACTIVA','CERRADA') not null
+Hibernate: 
+    alter table evaluaciones 
+       modify column tipo enum ('EXAMEN','OTRO','PARTICIPACION','PRACTICA','TAREA') not null
+Hibernate: 
+    alter table importaciones_notas 
+       modify column estado enum ('FALLIDA','OBSERVADA','PENDIENTE','PROCESADA') not null
+Hibernate: 
+    alter table matriculas 
+       modify column estado enum ('ACTIVA','ANULADA','FINALIZADA','RETIRADA') not null
+Hibernate: 
+    alter table niveles_educativos 
+       modify column turno enum ('MANANA','NOCHE','TARDE') not null
+Hibernate: 
+    alter table roles 
+       modify column nombre enum ('ADMINISTRADOR','DOCENTE','ESTUDIANTE','PADRE_FAMILIA') not null
+2026-06-05T11:26:45.203-05:00  INFO 16864 --- [aduni-plus-backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-06-05T11:26:45.892-05:00  INFO 16864 --- [aduni-plus-backend] [           main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-06-05T11:26:45.892-05:00  WARN 16864 --- [aduni-plus-backend] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-06-05T11:26:48.033-05:00  INFO 16864 --- [aduni-plus-backend] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-06-05T11:26:48.055-05:00  INFO 16864 --- [aduni-plus-backend] [           main] p.e.a.b.AduniPlusBackendApplication      : Started AduniPlusBackendApplication in 11.642 seconds (process running for 12.171)
+2026-06-05T11:26:49.521-05:00  INFO 16864 --- [aduni-plus-backend] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-06-05T11:26:49.521-05:00  INFO 16864 --- [aduni-plus-backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-06-05T11:26:49.526-05:00  INFO 16864 --- [aduni-plus-backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 5 ms
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=ad1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=in1_0.docente_id 
+    where
+        d1_0.persona_id=? 
+    order by
+        in1_0.creado_en desc
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=ad1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=in1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=ad1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=in1_0.docente_id 
+    where
+        d1_0.persona_id=? 
+    order by
+        in1_0.creado_en desc
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=ad1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=in1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=ad1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=in1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=ad1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=in1_0.docente_id 
+    where
+        d1_0.persona_id=? 
+    order by
+        in1_0.creado_en desc
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        d1_0.persona_id,
+        d1_1.actualizado_en,
+        d1_1.apellidos,
+        d1_1.correo,
+        d1_1.creado_en,
+        d1_1.direccion,
+        d1_1.documento_identidad,
+        d1_1.fecha_nacimiento,
+        d1_1.nombres,
+        d1_1.telefono,
+        d1_0.activo,
+        d1_0.area_academica,
+        d1_0.codigo_docente,
+        d1_0.especialidad 
+    from
+        docentes d1_0 
+    join
+        personas d1_1 
+            on d1_0.persona_id=d1_1.id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        a1_0.id,
+        a1_0.accion,
+        a1_0.actualizado_en,
+        a1_0.creado_en,
+        a1_0.detalle,
+        a1_0.entidad,
+        a1_0.entidad_id,
+        a1_0.usuario_id,
+        a1_0.usuario_responsable 
+    from
+        auditorias a1_0 
+    order by
+        a1_0.creado_en desc
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ad1_0.id,
+        ad1_0.actualizado_en,
+        ad1_0.creado_en,
+        ad1_0.curso_id,
+        ad1_0.docente_id,
+        ad1_0.estado,
+        ad1_0.fecha_asignacion,
+        ad1_0.periodo_academico_id 
+    from
+        asignaciones_docente ad1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=ad1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    join
+        cursos c1_0 
+            on c1_0.id=e1_0.curso_id 
+    join
+        periodos_academicos pa1_0 
+            on pa1_0.id=e1_0.periodo_academico_id 
+    where
+        c1_0.id=? 
+        and pa1_0.id=? 
+    order by
+        e1_0.orden
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        asignaciones_docente ad1_0 
+            on ad1_0.id=n1_0.asignacion_docente_id 
+    where
+        ad1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        grados g1_0 
+            on g1_0.id=m1_0.grado_id 
+    where
+        g1_0.id=? 
+        and m1_0.estado=?
+Hibernate: 
+    select
+        in1_0.id,
+        in1_0.actualizado_en,
+        in1_0.creado_en,
+        in1_0.curso_id,
+        in1_0.detalle,
+        in1_0.docente_id,
+        in1_0.estado,
+        in1_0.hash_archivo,
+        in1_0.nombre_archivo,
+        in1_0.periodo_academico_id,
+        in1_0.registros_observados,
+        in1_0.registros_validos,
+        in1_0.total_registros,
+        in1_0.usuario_responsable_id 
+    from
+        importaciones_notas in1_0 
+    join
+        docentes d1_0 
+            on d1_0.persona_id=in1_0.docente_id 
+    where
+        d1_0.persona_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.calculado_en,
+        pa1_0.creado_en,
+        pa1_0.curso_id,
+        pa1_0.estudiante_id,
+        pa1_0.periodo_academico_id,
+        pa1_0.promedio,
+        pa1_0.publicado 
+    from
+        promedios_academicos pa1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=pa1_0.estudiante_id 
+    where
+        e1_0.persona_id=? 
+        and pa1_0.publicado
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=n1_0.estudiante_id 
+    where
+        e1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.calculado_en,
+        pa1_0.creado_en,
+        pa1_0.curso_id,
+        pa1_0.estudiante_id,
+        pa1_0.periodo_academico_id,
+        pa1_0.promedio,
+        pa1_0.publicado 
+    from
+        promedios_academicos pa1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=pa1_0.estudiante_id 
+    where
+        e1_0.persona_id=? 
+        and pa1_0.publicado
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=n1_0.estudiante_id 
+    where
+        e1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.activo,
+        u1_0.actualizado_en,
+        u1_0.creado_en,
+        u1_0.password,
+        u1_0.persona_id,
+        u1_0.username 
+    from
+        usuarios u1_0 
+    where
+        u1_0.username=?
+Hibernate: 
+    select
+        r1_0.usuario_id,
+        r1_1.id,
+        r1_1.actualizado_en,
+        r1_1.creado_en,
+        r1_1.nombre 
+    from
+        usuario_roles r1_0 
+    join
+        roles r1_1 
+            on r1_1.id=r1_0.rol_id 
+    where
+        r1_0.usuario_id=?
+Hibernate: 
+    select
+        ea1_0.id,
+        ea1_0.actualizado_en,
+        ea1_0.creado_en,
+        ea1_0.estudiante_id,
+        ea1_0.padre_familia_id,
+        ea1_0.parentesco,
+        ea1_0.principal 
+    from
+        estudiante_apoderados ea1_0 
+    join
+        padres_familia pf1_0 
+            on pf1_0.persona_id=ea1_0.padre_familia_id 
+    where
+        pf1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.persona_id,
+        e1_1.actualizado_en,
+        e1_1.apellidos,
+        e1_1.correo,
+        e1_1.creado_en,
+        e1_1.direccion,
+        e1_1.documento_identidad,
+        e1_1.fecha_nacimiento,
+        e1_1.nombres,
+        e1_1.telefono,
+        e1_0.activo,
+        e1_0.codigo_estudiante 
+    from
+        estudiantes e1_0 
+    join
+        personas e1_1 
+            on e1_0.persona_id=e1_1.id 
+    where
+        e1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.persona_id,
+        e1_1.actualizado_en,
+        e1_1.apellidos,
+        e1_1.correo,
+        e1_1.creado_en,
+        e1_1.direccion,
+        e1_1.documento_identidad,
+        e1_1.fecha_nacimiento,
+        e1_1.nombres,
+        e1_1.telefono,
+        e1_0.activo,
+        e1_0.codigo_estudiante 
+    from
+        estudiantes e1_0 
+    join
+        personas e1_1 
+            on e1_0.persona_id=e1_1.id 
+    where
+        e1_0.persona_id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.calculado_en,
+        pa1_0.creado_en,
+        pa1_0.curso_id,
+        pa1_0.estudiante_id,
+        pa1_0.periodo_academico_id,
+        pa1_0.promedio,
+        pa1_0.publicado 
+    from
+        promedios_academicos pa1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=pa1_0.estudiante_id 
+    where
+        e1_0.persona_id=? 
+        and pa1_0.publicado
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=n1_0.estudiante_id 
+    where
+        e1_0.persona_id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        e1_0.id,
+        e1_0.actualizado_en,
+        e1_0.creado_en,
+        e1_0.curso_id,
+        e1_0.nombre,
+        e1_0.orden,
+        e1_0.periodo_academico_id,
+        e1_0.peso,
+        e1_0.publicada,
+        e1_0.tipo 
+    from
+        evaluaciones e1_0 
+    where
+        e1_0.id=?
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.cerrado,
+        pa1_0.creado_en,
+        pa1_0.fecha_fin,
+        pa1_0.fecha_inicio,
+        pa1_0.gestion_academica_id,
+        pa1_0.nombre,
+        pa1_0.orden 
+    from
+        periodos_academicos pa1_0 
+    where
+        pa1_0.id=?
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.activo,
+        c1_0.actualizado_en,
+        c1_0.creado_en,
+        c1_0.grado_id,
+        c1_0.materia_id 
+    from
+        cursos c1_0 
+    where
+        c1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.activa,
+        m1_0.actualizado_en,
+        m1_0.area,
+        m1_0.codigo,
+        m1_0.creado_en,
+        m1_0.nombre 
+    from
+        materias m1_0 
+    where
+        m1_0.id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=m1_0.estudiante_id 
+    where
+        e1_0.persona_id=?
+Hibernate: 
+    select
+        g1_0.id,
+        g1_0.activo,
+        g1_0.actualizado_en,
+        g1_0.creado_en,
+        g1_0.nivel_educativo_id,
+        g1_0.nombre,
+        g1_0.paralelo 
+    from
+        grados g1_0 
+    where
+        g1_0.id=?
+Hibernate: 
+    select
+        pa1_0.id,
+        pa1_0.actualizado_en,
+        pa1_0.calculado_en,
+        pa1_0.creado_en,
+        pa1_0.curso_id,
+        pa1_0.estudiante_id,
+        pa1_0.periodo_academico_id,
+        pa1_0.promedio,
+        pa1_0.publicado 
+    from
+        promedios_academicos pa1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=pa1_0.estudiante_id 
+    where
+        e1_0.persona_id=? 
+        and pa1_0.publicado
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.actualizado_en,
+        n1_0.asignacion_docente_id,
+        n1_0.creado_en,
+        n1_0.estudiante_id,
+        n1_0.evaluacion_id,
+        n1_0.importacion_notas_id,
+        n1_0.observacion,
+        n1_0.registrado_por_id,
+        n1_0.valor 
+    from
+        notas n1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=n1_0.estudiante_id 
+    where
+        e1_0.persona_id=?
+Hibernate: 
+    select
+        m1_0.id,
+        m1_0.actualizado_en,
+        m1_0.codigo_matricula,
+        m1_0.creado_en,
+        m1_0.estado,
+        m1_0.estudiante_id,
+        m1_0.fecha_matricula,
+        m1_0.grado_id 
+    from
+        matriculas m1_0 
+    join
+        estudiantes e1_0 
+            on e1_0.persona_id=m1_0.estudiante_id 
+    where
+        e1_0.persona_id=?

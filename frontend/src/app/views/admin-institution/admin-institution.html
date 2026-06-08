@@ -1,0 +1,79 @@
+<section class="page-stack">
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Configuracion institucional</p>
+      <h2>Datos oficiales de la academia</h2>
+      <p>
+        Administre la informacion centralizada en configuraciones_institucionales para reportes, cabeceras y constancias.
+      </p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="read-only-note">{{ error() }}</p>
+  }
+
+  <div class="split-grid">
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Ficha institucional</h3>
+          <p>Registro principal utilizado por el sistema Aduni+.</p>
+        </div>
+        <span class="status-pill is-good">PRINCIPAL</span>
+      </div>
+
+      <form class="surface-body form-grid">
+        <label class="field col-span-full">
+          <span>Nombre de la academia</span>
+          <input [value]="config().nombre" readonly>
+        </label>
+        <label class="field">
+          <span>RUC</span>
+          <input [value]="config().ruc" readonly>
+        </label>
+        <label class="field">
+          <span>Telefono</span>
+          <input [value]="config().telefono" readonly>
+        </label>
+        <label class="field col-span-full">
+          <span>Direccion</span>
+          <input [value]="config().direccion" readonly>
+        </label>
+        <label class="field">
+          <span>Correo institucional</span>
+          <input [value]="config().correoInstitucional" readonly>
+        </label>
+        <label class="field">
+          <span>Sitio web</span>
+          <input [value]="config().sitioWeb" readonly>
+        </label>
+        <label class="field col-span-full">
+          <span>Logo URL</span>
+          <input [value]="config().logoUrl" placeholder="https://.../logo.png" readonly>
+        </label>
+      </form>
+    </section>
+
+    <aside class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Trazabilidad</h3>
+          <p>Ultimas operaciones registradas.</p>
+        </div>
+      </div>
+
+      <div class="surface-body compact-list">
+        @for (entry of audits(); track entry.fecha + entry.detalle) {
+          <div class="list-line">
+            <div>
+              <strong>{{ entry.accion }}</strong>
+              <span>{{ entry.fecha }}</span>
+              <span>{{ entry.detalle }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </aside>
+  </div>
+</section>
