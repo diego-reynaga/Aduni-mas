@@ -68,6 +68,16 @@ record AdminInstitutionDto(
     List<AuditEntryDto> audits
 ) {}
 
+record SaveInstitutionRequest(
+    String nombre,
+    String ruc,
+    String telefono,
+    String direccion,
+    String correoInstitucional,
+    String sitioWeb,
+    String logoUrl
+) {}
+
 record CourseAssignmentDto(
     Long assignmentId,
     String codigo,

@@ -15,6 +15,7 @@ import {
   TeacherProgress,
   UserRow,
   GradeEntryInput,
+  InstitutionConfig,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -39,6 +40,10 @@ export class PortalService {
 
   adminInstitution(): Observable<AdminInstitutionPayload> {
     return this.http.get<AdminInstitutionPayload>(`${API_URL}/portal/admin/institution`);
+  }
+
+  saveAdminInstitution(config: InstitutionConfig): Observable<AdminInstitutionPayload> {
+    return this.http.put<AdminInstitutionPayload>(`${API_URL}/portal/admin/institution`, config);
   }
 
   teacherDashboard(): Observable<TeacherDashboardPayload> {

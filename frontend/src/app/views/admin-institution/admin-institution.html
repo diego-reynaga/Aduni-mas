@@ -10,48 +10,89 @@
   </div>
 
   @if (error()) {
-    <p class="read-only-note">{{ error() }}</p>
+    <p class="form-error-note">{{ error() }}</p>
+  }
+
+  @if (message()) {
+    <p class="read-only-note">{{ message() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="read-only-note">Cargando configuracion institucional...</p>
   }
 
   <div class="split-grid">
     <section class="surface">
-      <div class="surface-header">
-        <div>
-          <h3>Ficha institucional</h3>
-          <p>Registro principal utilizado por el sistema Aduni+.</p>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="surface-header">
+          <div>
+            <h3>Ficha institucional</h3>
+            <p>Registro principal utilizado por el sistema Aduni+.</p>
+          </div>
+          <div class="data-chip-row">
+            <button
+              class="btn-secondary btn-compact"
+              type="button"
+              [disabled]="loading() || saving() || !form.dirty"
+              (click)="reset()"
+            >
+              Descartar cambios
+            </button>
+            <button
+              class="btn-primary btn-compact"
+              type="submit"
+              [disabled]="loading() || saving() || !form.dirty"
+            >
+              {{ saving() ? 'Guardando...' : 'Guardar configuracion' }}
+            </button>
+          </div>
         </div>
-        <span class="status-pill is-good">PRINCIPAL</span>
-      </div>
 
-      <form class="surface-body form-grid">
-        <label class="field col-span-full">
-          <span>Nombre de la academia</span>
-          <input [value]="config().nombre" readonly>
-        </label>
-        <label class="field">
-          <span>RUC</span>
-          <input [value]="config().ruc" readonly>
-        </label>
-        <label class="field">
-          <span>Telefono</span>
-          <input [value]="config().telefono" readonly>
-        </label>
-        <label class="field col-span-full">
-          <span>Direccion</span>
-          <input [value]="config().direccion" readonly>
-        </label>
-        <label class="field">
-          <span>Correo institucional</span>
-          <input [value]="config().correoInstitucional" readonly>
-        </label>
-        <label class="field">
-          <span>Sitio web</span>
-          <input [value]="config().sitioWeb" readonly>
-        </label>
-        <label class="field col-span-full">
-          <span>Logo URL</span>
-          <input [value]="config().logoUrl" placeholder="https://.../logo.png" readonly>
-        </label>
+        <div class="surface-body form-grid">
+          <label class="field col-span-full">
+            <span>Nombre de la academia *</span>
+            <input formControlName="nombre" maxlength="150" placeholder="Nombre oficial">
+            @if (form.controls.nombre.touched && form.controls.nombre.invalid) {
+              <small class="field-error">El nombre institucional es obligatorio.</small>
+            }
+          </label>
+          <label class="field">
+            <span>RUC</span>
+            <input formControlName="ruc" maxlength="20" placeholder="Identificador fiscal">
+          </label>
+          <label class="field">
+            <span>Telefono</span>
+            <input formControlName="telefono" maxlength="30" placeholder="+51 999 999 999">
+            @if (form.controls.telefono.touched && form.controls.telefono.invalid) {
+              <small class="field-error">Use numeros y los simbolos + ( ) -.</small>
+            }
+          </label>
+          <label class="field col-span-full">
+            <span>Direccion</span>
+            <input formControlName="direccion" maxlength="200" placeholder="Direccion institucional">
+          </label>
+          <label class="field">
+            <span>Correo institucional</span>
+            <input type="email" formControlName="correoInstitucional" maxlength="150" placeholder="contacto@academia.edu.pe">
+            @if (form.controls.correoInstitucional.touched && form.controls.correoInstitucional.invalid) {
+              <small class="field-error">Ingrese un correo valido.</small>
+            }
+          </label>
+          <label class="field">
+            <span>Sitio web</span>
+            <input type="url" formControlName="sitioWeb" maxlength="150" placeholder="https://academia.edu.pe">
+            @if (form.controls.sitioWeb.touched && form.controls.sitioWeb.invalid) {
+              <small class="field-error">La direccion debe comenzar con http:// o https://.</small>
+            }
+          </label>
+          <label class="field col-span-full">
+            <span>Logo URL</span>
+            <input type="url" formControlName="logoUrl" maxlength="250" placeholder="https://.../logo.png">
+            @if (form.controls.logoUrl.touched && form.controls.logoUrl.invalid) {
+              <small class="field-error">La direccion debe comenzar con http:// o https://.</small>
+            }
+          </label>
+        </div>
       </form>
     </section>
 
@@ -64,14 +105,18 @@
       </div>
 
       <div class="surface-body compact-list">
-        @for (entry of audits(); track entry.fecha + entry.detalle) {
-          <div class="list-line">
-            <div>
-              <strong>{{ entry.accion }}</strong>
-              <span>{{ entry.fecha }}</span>
-              <span>{{ entry.detalle }}</span>
+        @if (audits().length === 0) {
+          <p class="empty-state">Aun no hay operaciones registradas.</p>
+        } @else {
+          @for (entry of audits(); track entry.fecha + entry.detalle) {
+            <div class="list-line">
+              <div>
+                <strong>{{ entry.accion }}</strong>
+                <span>{{ entry.fecha }} · {{ entry.responsable }}</span>
+                <span>{{ entry.detalle }}</span>
+              </div>
             </div>
-          </div>
+          }
         }
       </div>
     </aside>

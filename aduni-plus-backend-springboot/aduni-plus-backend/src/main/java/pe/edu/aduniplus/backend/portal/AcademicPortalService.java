@@ -48,6 +48,7 @@ import pe.edu.aduniplus.backend.usuario.UsuarioRepository;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.text.Normalizer;
@@ -189,22 +190,41 @@ public class AcademicPortalService {
         ConfiguracionInstitucional config = configuracionInstitucionalRepository.findByCodigo("PRINCIPAL")
             .orElseGet(() -> configuracionInstitucionalRepository.findAll().stream().findFirst().orElse(null));
 
-        InstitutionConfigDto configDto;
-        if (config == null) {
-            configDto = new InstitutionConfigDto("", "", "", "", "", "", "");
-        } else {
-            configDto = new InstitutionConfigDto(
-                safe(config.getNombre(), ""),
-                safe(config.getRuc(), ""),
-                safe(config.getTelefono(), ""),
-                safe(config.getDireccion(), ""),
-                safe(config.getCorreoInstitucional(), ""),
-                safe(config.getSitioWeb(), ""),
-                safe(config.getLogoUrl(), "")
-            );
+        return new AdminInstitutionDto(toInstitutionConfig(config), latestAudits(10));
+    }
+
+    @Transactional
+    public AdminInstitutionDto saveAdminInstitution(Long userId, SaveInstitutionRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("La configuracion institucional es obligatoria.");
         }
 
-        return new AdminInstitutionDto(configDto, latestAudits(10));
+        Usuario user = usuarioRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        Optional<ConfiguracionInstitucional> existing = configuracionInstitucionalRepository.findByCodigo("PRINCIPAL");
+        boolean created = existing.isEmpty();
+        ConfiguracionInstitucional config = existing.orElseGet(() -> ConfiguracionInstitucional.builder()
+            .codigo("PRINCIPAL")
+            .build());
+
+        config.setNombre(requiredText(request.nombre(), "El nombre institucional", 150));
+        config.setRuc(optionalText(request.ruc(), "El RUC", 20));
+        config.setTelefono(optionalText(request.telefono(), "El telefono", 30));
+        config.setDireccion(optionalText(request.direccion(), "La direccion", 200));
+        config.setCorreoInstitucional(validatedEmail(request.correoInstitucional()));
+        config.setSitioWeb(validatedWebUrl(request.sitioWeb(), "El sitio web", 150));
+        config.setLogoUrl(validatedWebUrl(request.logoUrl(), "La URL del logo", 250));
+        config = configuracionInstitucionalRepository.save(config);
+
+        audit(
+            created ? "CREAR_CONFIGURACION" : "ACTUALIZAR_CONFIGURACION",
+            "configuraciones_institucionales",
+            config.getId(),
+            user,
+            (created ? "Se creo" : "Se actualizo") + " la ficha institucional principal."
+        );
+
+        return new AdminInstitutionDto(toInstitutionConfig(config), latestAudits(10));
     }
 
     @Transactional(readOnly = true)
@@ -1085,6 +1105,66 @@ public class AcademicPortalService {
                 safe(entry.getDetalle(), "")
             ))
             .toList();
+    }
+
+    private InstitutionConfigDto toInstitutionConfig(ConfiguracionInstitucional config) {
+        if (config == null) {
+            return new InstitutionConfigDto("", "", "", "", "", "", "");
+        }
+
+        return new InstitutionConfigDto(
+            safe(config.getNombre(), ""),
+            safe(config.getRuc(), ""),
+            safe(config.getTelefono(), ""),
+            safe(config.getDireccion(), ""),
+            safe(config.getCorreoInstitucional(), ""),
+            safe(config.getSitioWeb(), ""),
+            safe(config.getLogoUrl(), "")
+        );
+    }
+
+    private String requiredText(String value, String label, int maxLength) {
+        String normalized = optionalText(value, label, maxLength);
+        if (normalized == null) {
+            throw new IllegalArgumentException(label + " es obligatorio.");
+        }
+        return normalized;
+    }
+
+    private String optionalText(String value, String label, int maxLength) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim();
+        if (normalized.length() > maxLength) {
+            throw new IllegalArgumentException(label + " no puede superar " + maxLength + " caracteres.");
+        }
+        return normalized;
+    }
+
+    private String validatedEmail(String value) {
+        String email = optionalText(value, "El correo institucional", 150);
+        if (email != null && !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            throw new IllegalArgumentException("El correo institucional no es valido.");
+        }
+        return email;
+    }
+
+    private String validatedWebUrl(String value, String label, int maxLength) {
+        String url = optionalText(value, label, maxLength);
+        if (url == null) {
+            return null;
+        }
+
+        try {
+            URI parsed = URI.create(url);
+            if (parsed.getHost() == null || (!"http".equalsIgnoreCase(parsed.getScheme()) && !"https".equalsIgnoreCase(parsed.getScheme()))) {
+                throw new IllegalArgumentException(label + " debe comenzar con http:// o https://.");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(label + " no es valida.");
+        }
+        return url;
     }
 
     private void audit(String action, String entity, Long entityId, Usuario user, String detail) {

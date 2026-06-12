@@ -51,6 +51,15 @@ public class PortalController {
         return portalService.getAdminInstitution();
     }
 
+    @PutMapping("/admin/institution")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public AdminInstitutionDto saveAdminInstitution(
+        @AuthenticationPrincipal AuthenticatedUser user,
+        @RequestBody SaveInstitutionRequest request
+    ) {
+        return portalService.saveAdminInstitution(user.userId(), request);
+    }
+
     @GetMapping("/teacher/dashboard")
     @PreAuthorize("hasRole('DOCENTE')")
     public TeacherDashboardDto teacherDashboard(@AuthenticationPrincipal AuthenticatedUser user) {
