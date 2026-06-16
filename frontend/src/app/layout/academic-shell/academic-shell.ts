@@ -15,12 +15,13 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Personas y usuarios', route: '/admin/usuarios', eyebrow: 'Accesos' },
     { label: 'Gestion academica', route: '/admin/academico', eyebrow: 'Estructura' },
     { label: 'Supervision docente', route: '/admin/supervision', eyebrow: 'Notas' },
+    { label: 'Importaciones notas', route: '/admin/importaciones-notas', eyebrow: 'Excel' },
     { label: 'Configuracion', route: '/admin/configuracion', eyebrow: 'Institucion' },
   ],
   DOCENTE: [
     { label: 'Carga docente', route: '/docente', eyebrow: 'Cursos' },
     { label: 'Acta de notas', route: '/docente/notas', eyebrow: 'Registro' },
-    { label: 'Importacion Excel', route: '/docente/importar', eyebrow: 'Carga' },
+    { label: 'Importacion Excel', route: '/docente/importar-notas', eyebrow: 'Carga' },
   ],
   ESTUDIANTE: [
     { label: 'Consulta academica', route: '/estudiante', eyebrow: 'Lectura' },

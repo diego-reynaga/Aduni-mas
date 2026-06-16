@@ -72,3 +72,21 @@ http://localhost:4200
 - `GET /api/health`
 - `GET /api/notas`
 - `POST /api/notas/importar-excel`
+
+## Módulo de importación de notas Excel
+
+Flujo trimestral:
+
+- `POST /api/notas/importar-trimestre/preview`: recibe `multipart/form-data` con `file`, `trimestre` y `assignmentId` o `cursoId`; valida estructura y devuelve metadata, estudiantes, notas individuales, promedios de competencia, resumen estadístico y errores.
+- `POST /api/notas/importar-trimestre/confirmar`: recibe nuevamente `file`, `trimestre` y `assignmentId` o `cursoId`; recalcula la previsualización y guarda solo el trimestre seleccionado.
+- `GET /api/notas/importaciones`: historial de importaciones para administrador o docente autenticado.
+- `GET /api/notas/importaciones/{id}`: detalle del lote.
+- `GET /api/notas/importaciones/{id}/errores`: errores registrados del lote.
+
+La importación usa Apache POI, no depende de rangos nombrados ni de fórmulas internas del Excel, y calcula los promedios desde los bloques de competencias de la hoja seleccionada. Las notas individuales se guardan en `calificacion_detalle_trimestre`, los promedios por competencia en `calificacion_competencia_trimestre`, los errores por fila en `error_importacion_excel`, y el lote con sus metadatos en `importaciones_notas`.
+
+Prueba unitaria del parser:
+
+```bash
+mvn "-Dtest=RegistroNotasExcelParserTest,RegistroNotasTrimestreParserTest" test
+```

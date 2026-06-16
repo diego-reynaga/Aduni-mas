@@ -2,140 +2,303 @@
   <div class="page-heading import-heading">
     <div>
       <p class="section-kicker">Importacion de notas</p>
-      <h2>Convierte la plantilla en registros reales</h2>
-      <p>
-        El sistema valida cada fila, encuentra o crea al estudiante, lo matricula en el grado seleccionado y guarda sus
-        notas directamente en la base de datos.
-      </p>
+      <h2>Notas individuales por trimestre</h2>
+      <p>Seleccione un trimestre y un curso. El sistema leerá solo esa hoja y guardará cada nota individual.</p>
     </div>
-    <button class="btn-primary import-action" type="button" (click)="importarExcel()" [disabled]="!canImport() || loading()">
-      {{ loading() ? 'Procesando archivo...' : 'Importar y guardar notas' }}
-    </button>
+    <div class="action-row">
+      <button class="btn-secondary import-action" type="button" (click)="previewExcel()" [disabled]="!canPreview()">
+        {{ loadingPreview() ? 'Previsualizando...' : 'Previsualizar' }}
+      </button>
+      <button class="btn-primary import-action" type="button" (click)="confirmarImportacion()" [disabled]="!canConfirm()">
+        {{ confirming() ? 'Guardando...' : 'Confirmar importacion' }}
+      </button>
+    </div>
   </div>
 
   @if (error()) {
     <p class="import-alert is-error">{{ error() }}</p>
   }
 
-  <div class="import-workflow">
-    <section class="workflow-step">
-      <span class="workflow-number">1</span>
-      <div class="workflow-copy">
-        <p class="workflow-label">Elige el destino</p>
-        <h3>Asignacion docente</h3>
-        <p>Las notas y nuevas matriculas se registraran en este curso, grado y periodo.</p>
+  <section class="surface">
+    <div class="surface-header">
+      <div>
+        <p class="section-kicker">Configuracion</p>
+        <h3>Archivo, trimestre y curso</h3>
+        <p>No se usa resumen anual ni se importan otros trimestres.</p>
+      </div>
+    </div>
+    <div class="surface-body import-file-panel" [formGroup]="form">
+      <div class="selector-grid">
         <label class="field">
-          <span>Curso y periodo</span>
-          <select #assignmentSelect [value]="selectedAssignmentId() ?? ''" (change)="setAssignment(assignmentSelect.value)">
+          <span>Trimestre</span>
+          <select formControlName="trimestre" (change)="onTrimestreChanged()">
+            @for (item of trimestres; track item.value) {
+              <option [value]="item.value">{{ item.label }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Curso asignado</span>
+          <select formControlName="assignmentId" (change)="onAssignmentChanged()">
             @for (course of courses(); track course.assignmentId) {
-              <option [value]="course.assignmentId">
+              <option [ngValue]="course.assignmentId">
                 {{ course.curso }} · {{ course.grado }} {{ course.seccion }} · {{ course.periodo }}
               </option>
             }
           </select>
         </label>
       </div>
-    </section>
 
-    <section class="workflow-step">
-      <span class="workflow-number">2</span>
-      <div class="workflow-copy">
-        <p class="workflow-label">Selecciona la plantilla</p>
-        <h3>Archivo Excel institucional</h3>
-        <p>Se admite la plantilla universal en formato `.xlsx` o `.xls`.</p>
-        <label class="file-picker">
-          <input type="file" accept=".xlsx,.xls" (change)="onFileSelected($event)">
-          <span class="file-picker__title">{{ selectedFileName() || 'Seleccionar archivo Excel' }}</span>
-          <span class="file-picker__detail">
-            {{ selectedFileName() ? 'Archivo listo para validar e importar' : 'Haz clic para buscar la plantilla en tu equipo' }}
-          </span>
-        </label>
-      </div>
-    </section>
+      <label class="file-picker file-picker--wide">
+        <input type="file" accept=".xlsx" (change)="onFileSelected($event)">
+        <span class="file-picker__title">{{ form.value.fileName || 'Seleccionar REGISTRO DE NOTAS_1RO-ALFA.xlsx' }}</span>
+        <span class="file-picker__detail">
+          {{ form.value.fileName ? 'Listo para previsualizar el trimestre' : 'Haz clic para elegir el archivo Excel' }}
+        </span>
+      </label>
 
-    <section class="workflow-step is-summary">
-      <span class="workflow-number">3</span>
-      <div class="workflow-copy">
-        <p class="workflow-label">Confirma la importacion</p>
-        <h3>Resumen de destino</h3>
-        @if (selectedCourse(); as course) {
-          <dl class="destination-summary">
-            <div>
-              <dt>Curso</dt>
-              <dd>{{ course.curso }}</dd>
-            </div>
-            <div>
-              <dt>Grado</dt>
-              <dd>{{ course.grado }} {{ course.seccion }}</dd>
-            </div>
-            <div>
-              <dt>Periodo</dt>
-              <dd>{{ course.periodo }}</dd>
-            </div>
-            <div>
-              <dt>Estudiantes actuales</dt>
-              <dd>{{ course.estudiantes }}</dd>
-            </div>
-          </dl>
-        } @else {
-          <p class="empty-state">No hay asignaciones disponibles para importar.</p>
-        }
-        <button class="btn-primary workflow-button" type="button" (click)="importarExcel()" [disabled]="!canImport() || loading()">
-          {{ loading() ? 'Validando y guardando...' : 'Validar e importar ahora' }}
-        </button>
-      </div>
-    </section>
-  </div>
+      @if (selectedCourse(); as course) {
+        <dl class="destination-summary destination-summary--wide">
+          <div>
+            <dt>Curso</dt>
+            <dd>{{ course.curso }}</dd>
+          </div>
+          <div>
+            <dt>Grado</dt>
+            <dd>{{ course.grado }} {{ course.seccion }}</dd>
+          </div>
+          <div>
+            <dt>Periodo asignado</dt>
+            <dd>{{ course.periodo }}</dd>
+          </div>
+          <div>
+            <dt>Estudiantes</dt>
+            <dd>{{ course.estudiantes }}</dd>
+          </div>
+        </dl>
+      } @else {
+        <p class="empty-state">{{ loadingContext() ? 'Cargando asignaciones...' : 'No hay asignaciones disponibles.' }}</p>
+      }
+    </div>
+  </section>
 
-  @if (result(); as importResult) {
-    <section class="import-result">
-      <div class="import-result__heading">
+  @if (preview(); as data) {
+    <section class="surface">
+      <div class="surface-header">
         <div>
-          <p class="section-kicker">Resultado guardado en base de datos</p>
-          <h3>{{ importResult.message }}</h3>
+          <p class="section-kicker">Datos detectados</p>
+          <h3>{{ data.metadata.areaCurricular }} · {{ data.metadata.grado }} {{ data.metadata.seccion }}</h3>
+          <p>{{ data.metadata.trimestre }} · {{ data.metadata.institucion }} · {{ data.metadata.docente }}</p>
         </div>
-        <span class="status-pill" [class.is-good]="importResult.registrosObservados === 0" [class.is-warning]="importResult.registrosObservados > 0">
-          {{ importResult.registrosObservados === 0 ? 'Completada' : 'Revisar observaciones' }}
+        <span class="status-pill" [class.is-good]="!data.bloqueante" [class.is-danger]="data.bloqueante">
+          {{ data.bloqueante ? 'Bloqueada' : 'Lista para confirmar' }}
         </span>
       </div>
 
-      <div class="result-grid">
+      <div class="surface-body">
+        <dl class="metadata-grid">
+          <div>
+            <dt>Año</dt>
+            <dd>{{ data.metadata.anio || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Nivel</dt>
+            <dd>{{ data.metadata.nivel || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Área</dt>
+            <dd>{{ data.metadata.areaCurricular || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Docente</dt>
+            <dd>{{ data.metadata.docente || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Grado</dt>
+            <dd>{{ data.metadata.grado || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Sección</dt>
+            <dd>{{ data.metadata.seccion || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Institución</dt>
+            <dd>{{ data.metadata.institucion || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Lugar</dt>
+            <dd>{{ data.metadata.lugar || '-' }}</dd>
+          </div>
+        </dl>
+
+        <div class="result-grid result-grid--compact">
+          <article>
+            <span>Matriculados</span>
+            <strong>{{ data.resumen.matriculados }}</strong>
+          </article>
+          <article class="is-highlight">
+            <span>Evaluados</span>
+            <strong>{{ data.resumen.evaluados }}</strong>
+          </article>
+          <article>
+            <span>Aprobados</span>
+            <strong>{{ data.resumen.aprobados }}</strong>
+          </article>
+          <article [class.has-warning]="data.resumen.desaprobados > 0">
+            <span>Desaprobados</span>
+            <strong>{{ data.resumen.desaprobados }}</strong>
+          </article>
+          <article>
+            <span>AD / A / B / C</span>
+            <strong>{{ data.resumen.nivelAD }}/{{ data.resumen.nivelA }}/{{ data.resumen.nivelB }}/{{ data.resumen.nivelC }}</strong>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    @if (previewErrors().length > 0) {
+      <section class="surface">
+        <div class="surface-header">
+          <div>
+            <p class="section-kicker">Observaciones</p>
+            <h3>Errores detectados</h3>
+            <p>Los errores críticos bloquean la confirmación. Las notas inválidas no se guardan.</p>
+          </div>
+          <button class="btn-secondary" type="button" (click)="downloadErrors()">Descargar CSV</button>
+        </div>
+        <div class="error-list">
+          @for (item of previewErrors(); track $index) {
+            <div class="error-line" [class.error-line--critical]="item.critico">
+              <strong>{{ item.critico ? 'Crítico' : 'Fila ' + (item.filaExcel || '-') }}</strong>
+              <span>{{ item.campo }} · {{ item.descripcionError }}</span>
+              @if (item.estudianteTexto) {
+                <small>{{ item.estudianteTexto }}</small>
+              }
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <p class="section-kicker">Previsualización</p>
+          <h3>Notas individuales del trimestre</h3>
+          <p>Expanda un estudiante para revisar columnas, capacidades y valores importables.</p>
+        </div>
+      </div>
+      <div class="quiet-table-wrap">
+        <table class="quiet-table import-preview-table import-preview-table--wide">
+          <thead>
+            <tr>
+              <th>N°</th>
+              <th>Estudiante</th>
+              <th>Mapeo</th>
+              <th>Competencia 1</th>
+              <th>Competencia 2</th>
+              <th>Competencia 3</th>
+              <th>Competencia 4</th>
+              <th>Promedio final</th>
+              <th>Logro final</th>
+              <th>Observaciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (student of data.estudiantes; track student.filaExcel) {
+              <tr [class]="rowClass(student.errores)">
+                <td>{{ student.numeroOrden || '-' }}</td>
+                <td>
+                  <button class="btn-subtle btn-compact" type="button" (click)="toggleExpanded(student)">
+                    {{ isExpanded(student) ? 'Ocultar' : 'Ver notas' }}
+                  </button>
+                  <strong>{{ student.nombreExcel }}</strong><br>
+                  <span class="text-xs text-slate-500">Fila {{ student.filaExcel }}</span>
+                </td>
+                <td>
+                  <span class="status-pill" [class.is-good]="student.estadoMapeo === 'ENCONTRADO'" [class.is-warning]="student.estadoMapeo !== 'ENCONTRADO'">
+                    {{ student.estadoMapeo === 'ENCONTRADO' ? 'Encontrado' : 'No encontrado' }}
+                  </span>
+                </td>
+                @for (competence of student.competencias; track competence.numero) {
+                  <td>
+                    <strong>{{ competence.promedioCompetencia ?? '-' }}</strong>
+                    <span class="text-xs text-slate-500"> {{ competence.logroLiteral || '-' }}</span>
+                  </td>
+                }
+                <td><strong>{{ student.promedioFinalTrimestre ?? '-' }}</strong></td>
+                <td>{{ student.logroFinalTrimestre || '-' }}</td>
+                <td>
+                  @if (student.errores.length > 0) {
+                    {{ student.errores[0].descripcionError }}
+                  } @else {
+                    Sin observaciones
+                  }
+                </td>
+              </tr>
+              @if (isExpanded(student)) {
+                <tr class="expanded-row">
+                  <td colspan="10">
+                    <div class="competency-mini-grid">
+                      @for (competence of student.competencias; track competence.numero) {
+                        <article>
+                          <h4>{{ competence.numero }}. {{ competence.nombre }}</h4>
+                          <div class="mini-note-list">
+                            @for (note of competence.notas; track note.columnaExcel) {
+                              <span>
+                                <strong>{{ note.columnaExcel }}</strong>
+                                {{ note.nombreNota }}:
+                                <b>{{ note.valor ?? '-' }}</b>
+                              </span>
+                            }
+                          </div>
+                        </article>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (result(); as saved) {
+    <section class="import-result">
+      <div class="import-result__heading">
+        <div>
+          <p class="section-kicker">Resultado guardado</p>
+          <h3>{{ saved.message }}</h3>
+        </div>
+        <span class="status-pill" [class.is-good]="saved.totalConError === 0" [class.is-warning]="saved.totalConError > 0">
+          Importación #{{ saved.idImportacion }}
+        </span>
+      </div>
+      <div class="result-grid result-grid--compact">
         <article>
-          <span>Filas leidas</span>
-          <strong>{{ importResult.totalRegistros }}</strong>
-        </article>
-        <article>
-          <span>Filas con notas</span>
-          <strong>{{ importResult.registrosValidos }}</strong>
-        </article>
-        <article>
-          <span>Estudiantes encontrados</span>
-          <strong>{{ importResult.estudiantesEncontrados }}</strong>
+          <span>Filas leídas</span>
+          <strong>{{ saved.totalFilas }}</strong>
         </article>
         <article class="is-highlight">
-          <span>Estudiantes creados</span>
-          <strong>{{ importResult.estudiantesCreados }}</strong>
+          <span>Estudiantes guardados</span>
+          <strong>{{ saved.totalCorrectas }}</strong>
         </article>
         <article>
-          <span>Nuevas matriculas</span>
-          <strong>{{ importResult.nuevasMatriculas }}</strong>
+          <span>Notas individuales</span>
+          <strong>{{ saved.notasIndividualesGuardadas }}</strong>
         </article>
-        <article [class.has-warning]="importResult.registrosObservados > 0">
+        <article>
+          <span>Competencias</span>
+          <strong>{{ saved.competenciasGuardadas }}</strong>
+        </article>
+        <article [class.has-warning]="saved.totalConError > 0">
           <span>Filas observadas</span>
-          <strong>{{ importResult.registrosObservados }}</strong>
+          <strong>{{ saved.totalConError }}</strong>
         </article>
       </div>
-
-      @if (importResult.observaciones.length > 0) {
-        <div class="observation-panel">
-          <h4>Detalle de acciones y observaciones</h4>
-          <ul>
-            @for (observation of importResult.observaciones; track observation) {
-              <li>{{ observation }}</li>
-            }
-          </ul>
-        </div>
-      }
     </section>
   }
 
@@ -144,28 +307,21 @@
       <div>
         <p class="section-kicker">Trazabilidad</p>
         <h3>Importaciones recientes</h3>
-        <p>Cada lote mostrado proviene de la tabla de importaciones de la base de datos.</p>
+        <p>Historial registrado en backend para este usuario.</p>
       </div>
     </div>
     <div class="history-list">
-      @for (item of history(); track item.archivo + item.fecha) {
+      @for (item of history(); track item.idImportacion) {
         <article class="history-row">
           <div>
-            <strong>{{ item.archivo }}</strong>
-            <span>{{ item.periodo }} · {{ item.fecha }}</span>
-            <p>{{ item.detalle }}</p>
+            <strong>{{ item.nombreArchivo }}</strong>
+            <span>{{ item.trimestre || 'Sin trimestre' }} · {{ item.areaCurricular }} · {{ item.grado }} {{ item.seccion }} · {{ item.fechaImportacion }}</span>
+            <p>{{ item.observacion }}</p>
           </div>
-          <span
-            class="status-pill"
-            [class.is-good]="item.estado === 'PROCESADA'"
-            [class.is-danger]="item.estado === 'FALLIDA'"
-            [class.is-warning]="item.estado !== 'PROCESADA' && item.estado !== 'FALLIDA'"
-          >
-            {{ item.estado }}
-          </span>
+          <span [class]="statusClass(item.estado)">{{ item.estado }}</span>
         </article>
       } @empty {
-        <p class="empty-state">Todavia no existen importaciones registradas para este docente.</p>
+        <p class="empty-state">{{ loadingHistory() ? 'Cargando historial...' : 'Todavía no existen importaciones registradas.' }}</p>
       }
     </div>
   </section>

@@ -41,6 +41,35 @@ public class ImportacionNotas extends BaseEntity {
     @Column(length = 128)
     private String hashArchivo;
 
+    private Integer anio;
+
+    @Column(length = 80)
+    private String nivel;
+
+    @Column(length = 150)
+    private String institucion;
+
+    @Column(length = 150)
+    private String lugar;
+
+    @Column(length = 120)
+    private String areaCurricular;
+
+    @Column(length = 150)
+    private String docenteExcel;
+
+    @Column(length = 80)
+    private String grado;
+
+    @Column(length = 20)
+    private String seccion;
+
+    @Column(length = 120)
+    private String periodosImportados;
+
+    @Column(length = 20)
+    private String trimestre;
+
     @Builder.Default
     @Column(nullable = false)
     private Integer totalRegistros = 0;

@@ -3,6 +3,7 @@ import { authGuard, roleGuard } from './core/auth.guard';
 import { AcademicShell } from './layout/academic-shell/academic-shell';
 import { AdminAcademic } from './views/admin-academic/admin-academic';
 import { AdminDashboard } from './views/admin-dashboard/admin-dashboard';
+import { AdminImportacionesNotas } from './views/admin-importaciones-notas/admin-importaciones-notas';
 import { AdminInstitution } from './views/admin-institution/admin-institution';
 import { AdminSupervision } from './views/admin-supervision/admin-supervision';
 import { AdminUsers } from './views/admin-users/admin-users';
@@ -50,6 +51,11 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
+        path: 'admin/importaciones-notas',
+        component: AdminImportacionesNotas,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
         path: 'admin/configuracion',
         component: AdminInstitution,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
@@ -65,9 +71,13 @@ export const routes: Routes = [
         canActivate: [roleGuard(['DOCENTE'])],
       },
       {
-        path: 'docente/importar',
+        path: 'docente/importar-notas',
         component: TeacherImport,
         canActivate: [roleGuard(['DOCENTE'])],
+      },
+      {
+        path: 'docente/importar',
+        redirectTo: 'docente/importar-notas',
       },
       {
         path: 'estudiante',

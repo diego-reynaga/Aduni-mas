@@ -174,6 +174,169 @@ export interface ExcelImportResult {
   observaciones: string[];
 }
 
+export interface RegistroNotasMetadata {
+  anio: number | null;
+  nivel: string;
+  institucion: string;
+  lugar: string;
+  areaCurricular: string;
+  docente: string;
+  grado: string;
+  seccion: string;
+}
+
+export type TrimestreImportacion = 'I_TRIMESTRE' | 'II_TRIMESTRE' | 'III_TRIMESTRE';
+
+export interface RegistroNotasTrimestreMetadata extends RegistroNotasMetadata {
+  trimestre: TrimestreImportacion;
+}
+
+export interface RegistroNotasResumen {
+  totalFilas: number;
+  estudiantesEncontrados: number;
+  estudiantesNoEncontrados: number;
+  filasConError: number;
+  filasImportables: number;
+}
+
+export interface ErrorImportacionNotas {
+  filaExcel: number | null;
+  estudianteTexto: string | null;
+  campo: string;
+  descripcionError: string;
+  critico: boolean;
+}
+
+export interface NotaIndividualTrimestre {
+  columnaExcel: string;
+  nombreNota: string;
+  valor: number | null;
+}
+
+export interface CompetenciaTrimestre {
+  numero: number;
+  nombre: string;
+  notas: NotaIndividualTrimestre[];
+  promedioCompetencia: number | null;
+  logroLiteral: string | null;
+}
+
+export interface ResumenEstadisticoTrimestre {
+  matriculados: number;
+  evaluados: number;
+  noEvaluados: number;
+  aprobados: number;
+  desaprobados: number;
+  nivelAD: number;
+  nivelA: number;
+  nivelB: number;
+  nivelC: number;
+  porcentajeAD: number;
+  porcentajeA: number;
+  porcentajeB: number;
+  porcentajeC: number;
+}
+
+export interface EstudianteTrimestrePreview {
+  filaExcel: number;
+  numeroOrden: number | null;
+  nombreExcel: string;
+  idEstudiante: number | null;
+  codigoEstudiante: string | null;
+  estadoMapeo: 'ENCONTRADO' | 'NO_ENCONTRADO';
+  competencias: CompetenciaTrimestre[];
+  promedioFinalTrimestre: number | null;
+  logroFinalTrimestre: string | null;
+  errores: ErrorImportacionNotas[];
+}
+
+export interface RegistroNotasTrimestrePreviewResponse {
+  metadata: RegistroNotasTrimestreMetadata;
+  resumen: ResumenEstadisticoTrimestre;
+  estudiantes: EstudianteTrimestrePreview[];
+  errores: ErrorImportacionNotas[];
+  bloqueante: boolean;
+}
+
+export interface EstudianteNotaPreview {
+  filaExcel: number;
+  numeroOrden: number | null;
+  nombreExcel: string;
+  idEstudiante: number | null;
+  codigoEstudiante: string | null;
+  estadoMapeo: 'ENCONTRADO' | 'NO_ENCONTRADO';
+  iTrimestre: number | null;
+  iiTrimestre: number | null;
+  iiiTrimestre: number | null;
+  promedioAnual: number | null;
+  logroLiteral: string;
+  situacionFinal: string;
+  errores: ErrorImportacionNotas[];
+}
+
+export interface RegistroNotasPreviewResponse {
+  metadata: RegistroNotasMetadata;
+  resumen: RegistroNotasResumen;
+  estudiantes: EstudianteNotaPreview[];
+  errores: ErrorImportacionNotas[];
+  bloqueante: boolean;
+}
+
+export interface ResultadoImportacionNotas {
+  message: string;
+  idImportacion: number;
+  totalFilas: number;
+  totalCorrectas: number;
+  totalConError: number;
+  calificacionesGuardadas: number;
+  errores: ErrorImportacionNotas[];
+}
+
+export interface ResultadoImportacionTrimestre {
+  message: string;
+  idImportacion: number;
+  trimestre: TrimestreImportacion;
+  totalFilas: number;
+  totalCorrectas: number;
+  totalConError: number;
+  notasIndividualesGuardadas: number;
+  competenciasGuardadas: number;
+  promediosFinalesGuardados: number;
+  errores: ErrorImportacionNotas[];
+}
+
+export interface ImportacionNotasHistorial {
+  idImportacion: number;
+  nombreArchivo: string;
+  trimestre: string;
+  anio: number | null;
+  areaCurricular: string;
+  grado: string;
+  seccion: string;
+  docente: string;
+  usuarioResponsable: string;
+  fechaImportacion: string;
+  estado: string;
+  totalFilas: number;
+  totalCorrectas: number;
+  totalConError: number;
+  observacion: string;
+}
+
+export interface ImportacionNotasDetalle {
+  idImportacion: number;
+  nombreArchivo: string;
+  trimestre: string;
+  metadata: RegistroNotasMetadata;
+  usuarioResponsable: string;
+  fechaImportacion: string;
+  estado: string;
+  totalFilas: number;
+  totalCorrectas: number;
+  totalConError: number;
+  observacion: string;
+}
+
 export interface StudentPortalPayload {
   metrics: Metric[];
   reports: StudentCourseReport[];

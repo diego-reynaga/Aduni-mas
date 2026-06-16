@@ -198,6 +198,38 @@ Ejecutar la compilación SSR generada, disponible en `http://localhost:4000`:
 npm run serve:ssr:frontend
 ```
 
+## Importación trimestral de registro auxiliar de notas
+
+El módulo permite importar el Excel institucional `REGISTRO DE NOTAS_1RO-ALFA.xlsx` un trimestre a la vez. No importa automáticamente otros trimestres ni usa `RESUMEN ANUAL` o `NOTA ANUAL` en este flujo:
+
+1. Inicia MySQL, backend y frontend.
+2. Ingresa como docente o administrador.
+3. Docente: abre `http://localhost:4200/docente/importar-notas`.
+4. Selecciona el archivo `.xlsx`, el trimestre (`I_TRIMESTRE`, `II_TRIMESTRE` o `III_TRIMESTRE`) y el curso/asignación.
+5. Pulsa **Previsualizar**.
+6. Revisa metadata, estudiantes encontrados, notas individuales, promedios por competencia, promedio final del trimestre y observaciones.
+7. Pulsa **Confirmar importación** si no hay errores críticos.
+8. Administrador: revisa el historial en `http://localhost:4200/admin/importaciones-notas`.
+
+Endpoints principales:
+
+```text
+POST http://localhost:8080/api/notas/importar-trimestre/preview
+POST http://localhost:8080/api/notas/importar-trimestre/confirmar
+GET  http://localhost:8080/api/notas/importaciones
+GET  http://localhost:8080/api/notas/importaciones/{id}
+GET  http://localhost:8080/api/notas/importaciones/{id}/errores
+```
+
+Los `POST` reciben `multipart/form-data` con `file`, `trimestre` y `assignmentId` o `cursoId`. El backend valida `.xlsx`, tamaño máximo de 10MB, hoja seleccionada, permisos por rol, asignación docente, matrícula activa y notas en rango 0 a 20. La confirmación guarda notas individuales en `calificacion_detalle_trimestre`, promedios de competencia en `calificacion_competencia_trimestre`, promedio final en `notas` y `promedios_academicos`, además de la trazabilidad en `importaciones_notas` y `error_importacion_excel`.
+
+Prueba rápida del parser sin depender de MySQL:
+
+```powershell
+cd aduni-plus-backend-springboot\aduni-plus-backend
+mvn "-Dtest=RegistroNotasExcelParserTest,RegistroNotasTrimestreParserTest" test
+```
+
 ## Configuración y puertos
 
 | Servicio | Dirección | Configuración |
