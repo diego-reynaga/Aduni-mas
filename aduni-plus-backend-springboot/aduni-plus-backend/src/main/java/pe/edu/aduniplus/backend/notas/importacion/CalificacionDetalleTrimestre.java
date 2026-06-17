@@ -18,9 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import pe.edu.aduniplus.backend.academico.Curso;
-import pe.edu.aduniplus.backend.academico.Matricula;
-import pe.edu.aduniplus.backend.academico.PeriodoAcademico;
+import pe.edu.aduniplus.backend.academico.DetalleMatricula;
 import pe.edu.aduniplus.backend.common.BaseEntity;
 import pe.edu.aduniplus.backend.notas.ImportacionNotas;
 import java.math.BigDecimal;
@@ -35,26 +33,22 @@ import java.time.LocalDateTime;
 @Table(
     name = "calificacion_detalle_trimestre",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_calif_detalle_tri_matricula_curso_tri_comp_col",
-        columnNames = {"matricula_id", "curso_id", "trimestre", "numero_competencia", "columna_excel"}
+        name = "uk_calif_det_tri_detalle_tri_comp_col",
+        columnNames = {"detalle_matricula_id", "trimestre", "numero_competencia", "columna_excel"}
     ),
     indexes = {
-        @Index(name = "idx_calif_detalle_tri_matricula", columnList = "matricula_id"),
-        @Index(name = "idx_calif_detalle_tri_curso_periodo", columnList = "curso_id, periodo_academico_id")
+        @Index(name = "idx_calif_det_tri_detalle", columnList = "detalle_matricula_id"),
+        @Index(name = "idx_calif_det_tri_importacion", columnList = "importacion_id")
     }
 )
 public class CalificacionDetalleTrimestre extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "matricula_id", nullable = false, foreignKey = @ForeignKey(name = "fk_calif_detalle_tri_matricula"))
-    private Matricula matricula;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "curso_id", nullable = false, foreignKey = @ForeignKey(name = "fk_calif_detalle_tri_curso"))
-    private Curso curso;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "periodo_academico_id", nullable = false, foreignKey = @ForeignKey(name = "fk_calif_detalle_tri_periodo"))
-    private PeriodoAcademico periodoAcademico;
+    @JoinColumn(
+        name = "detalle_matricula_id",
+        nullable = false,
+        foreignKey = @ForeignKey(name = "fk_calif_det_tri_detallematricula")
+    )
+    private DetalleMatricula detalleMatricula;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -82,7 +76,7 @@ public class CalificacionDetalleTrimestre extends BaseEntity {
     private LocalDateTime fechaRegistro;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "importacion_notas_id", foreignKey = @ForeignKey(name = "fk_calif_detalle_tri_importacion"))
+    @JoinColumn(name = "importacion_id", foreignKey = @ForeignKey(name = "fk_calif_detalle_tri_importacion"))
     private ImportacionNotas importacionNotas;
 
     @PrePersist

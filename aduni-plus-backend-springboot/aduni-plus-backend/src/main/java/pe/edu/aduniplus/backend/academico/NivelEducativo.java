@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import pe.edu.aduniplus.backend.common.BaseEntity;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -14,9 +12,9 @@ import java.util.Set;
 @SuperBuilder
 @Entity
 @Table(
-    name = "niveles_educativos",
+    name = "nivel_educativo",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_niveles_gestion_nombre_turno",
+        name = "uk_nivel_gestion_nombre_turno",
         columnNames = {"gestion_academica_id", "nombre", "turno"}
     )
 )
@@ -38,8 +36,4 @@ public class NivelEducativo extends BaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean activo = true;
-
-    @OneToMany(mappedBy = "nivelEducativo")
-    @Builder.Default
-    private Set<Grado> grados = new HashSet<>();
 }

@@ -137,7 +137,7 @@ public class CalificacionImportacionService {
 
         audit(
             "CONFIRMAR_IMPORTACION_NOTAS",
-            "importaciones_notas",
+            "importacion_excel",
             batch.getId(),
             user,
             "Archivo " + originalFilename + ". Filas: " + totalRows + ", importadas: " + importedRows

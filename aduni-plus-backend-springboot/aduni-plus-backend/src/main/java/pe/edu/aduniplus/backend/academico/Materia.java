@@ -12,10 +12,10 @@ import pe.edu.aduniplus.backend.common.BaseEntity;
 @SuperBuilder
 @Entity
 @Table(
-    name = "materias",
+    name = "asignatura",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_materias_nombre", columnNames = "nombre"),
-        @UniqueConstraint(name = "uk_materias_codigo", columnNames = "codigo")
+        @UniqueConstraint(name = "uk_asignatura_nombre", columnNames = "nombre"),
+        @UniqueConstraint(name = "uk_asignatura_codigo", columnNames = "codigo")
     }
 )
 public class Materia extends BaseEntity {

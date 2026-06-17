@@ -24,12 +24,12 @@ import pe.edu.aduniplus.backend.notas.ImportacionNotas;
 @Entity
 @Table(
     name = "error_importacion_excel",
-    indexes = @Index(name = "idx_error_importacion_excel_importacion", columnList = "importacion_notas_id")
+    indexes = @Index(name = "idx_error_importacion_excel_importacion", columnList = "importacion_id")
 )
 public class ErrorImportacionExcel extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(
-        name = "importacion_notas_id",
+        name = "importacion_id",
         nullable = false,
         foreignKey = @ForeignKey(name = "fk_error_importacion_excel_importacion")
     )

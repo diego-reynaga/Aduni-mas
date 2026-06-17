@@ -8,8 +8,6 @@ import pe.edu.aduniplus.backend.academico.PeriodoAcademico;
 import pe.edu.aduniplus.backend.common.BaseEntity;
 import pe.edu.aduniplus.backend.persona.Docente;
 import pe.edu.aduniplus.backend.usuario.Usuario;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -17,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "importaciones_notas")
+@Table(name = "importacion_excel")
 public class ImportacionNotas extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "docente_id", nullable = false, foreignKey = @ForeignKey(name = "fk_importaciones_docente"))
@@ -89,8 +87,4 @@ public class ImportacionNotas extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String detalle;
-
-    @OneToMany(mappedBy = "importacionNotas")
-    @Builder.Default
-    private Set<Nota> notas = new HashSet<>();
 }

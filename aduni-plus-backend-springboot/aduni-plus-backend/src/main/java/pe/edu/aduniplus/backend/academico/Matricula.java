@@ -14,12 +14,12 @@ import java.time.LocalDate;
 @SuperBuilder
 @Entity
 @Table(
-    name = "matriculas",
+    name = "matricula",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_matriculas_codigo", columnNames = "codigo_matricula"),
-        @UniqueConstraint(name = "uk_matriculas_estudiante_grado", columnNames = {"estudiante_id", "grado_id"})
+        @UniqueConstraint(name = "uk_matricula_codigo", columnNames = "codigo_matricula"),
+        @UniqueConstraint(name = "uk_matricula_estudiante_aula", columnNames = {"estudiante_id", "aula_id"})
     },
-    indexes = @Index(name = "idx_matriculas_estudiante", columnList = "estudiante_id")
+    indexes = @Index(name = "idx_matricula_estudiante", columnList = "estudiante_id")
 )
 public class Matricula extends BaseEntity {
     @Column(name = "codigo_matricula", nullable = false, length = 30)
@@ -30,7 +30,7 @@ public class Matricula extends BaseEntity {
     private Estudiante estudiante;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "grado_id", nullable = false, foreignKey = @ForeignKey(name = "fk_matriculas_grado"))
+    @JoinColumn(name = "aula_id", nullable = false, foreignKey = @ForeignKey(name = "fk_matricula_aula"))
     private Grado grado;
 
     @Column(nullable = false)

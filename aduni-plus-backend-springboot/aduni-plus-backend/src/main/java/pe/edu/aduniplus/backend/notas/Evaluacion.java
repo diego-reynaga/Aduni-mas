@@ -8,8 +8,6 @@ import pe.edu.aduniplus.backend.academico.Curso;
 import pe.edu.aduniplus.backend.academico.PeriodoAcademico;
 import pe.edu.aduniplus.backend.common.BaseEntity;
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -18,9 +16,9 @@ import java.util.Set;
 @SuperBuilder
 @Entity
 @Table(
-    name = "evaluaciones",
+    name = "evaluacion",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_evaluaciones_curso_periodo_nombre",
+        name = "uk_evaluacion_curso_periodo_nombre",
         columnNames = {"curso_id", "periodo_academico_id", "nombre"}
     )
 )
@@ -51,8 +49,4 @@ public class Evaluacion extends BaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean publicada = false;
-
-    @OneToMany(mappedBy = "evaluacion")
-    @Builder.Default
-    private Set<Nota> notas = new HashSet<>();
 }

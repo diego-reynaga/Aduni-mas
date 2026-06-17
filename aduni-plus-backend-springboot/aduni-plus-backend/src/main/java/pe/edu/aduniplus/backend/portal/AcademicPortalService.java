@@ -15,6 +15,8 @@ import pe.edu.aduniplus.backend.academico.AsignacionDocente;
 import pe.edu.aduniplus.backend.academico.AsignacionDocenteRepository;
 import pe.edu.aduniplus.backend.academico.Curso;
 import pe.edu.aduniplus.backend.academico.CursoRepository;
+import pe.edu.aduniplus.backend.academico.DetalleMatricula;
+import pe.edu.aduniplus.backend.academico.DetalleMatriculaRepository;
 import pe.edu.aduniplus.backend.academico.EstadoAsignacionDocente;
 import pe.edu.aduniplus.backend.academico.EstadoMatricula;
 import pe.edu.aduniplus.backend.academico.Grado;
@@ -28,6 +30,8 @@ import pe.edu.aduniplus.backend.auditoria.Auditoria;
 import pe.edu.aduniplus.backend.auditoria.AuditoriaRepository;
 import pe.edu.aduniplus.backend.institucion.ConfiguracionInstitucional;
 import pe.edu.aduniplus.backend.institucion.ConfiguracionInstitucionalRepository;
+import pe.edu.aduniplus.backend.notas.Calificacion;
+import pe.edu.aduniplus.backend.notas.CalificacionRepository;
 import pe.edu.aduniplus.backend.notas.EstadoImportacionNotas;
 import pe.edu.aduniplus.backend.notas.Evaluacion;
 import pe.edu.aduniplus.backend.notas.EvaluacionRepository;
@@ -88,6 +92,8 @@ public class AcademicPortalService {
     private final EvaluacionRepository evaluacionRepository;
     private final NotaRepository notaRepository;
     private final PromedioAcademicoRepository promedioAcademicoRepository;
+    private final DetalleMatriculaRepository detalleMatriculaRepository;
+    private final CalificacionRepository calificacionRepository;
     private final ConfiguracionInstitucionalRepository configuracionInstitucionalRepository;
     private final NivelEducativoRepository nivelEducativoRepository;
     private final GradoRepository gradoRepository;
@@ -218,7 +224,7 @@ public class AcademicPortalService {
 
         audit(
             created ? "CREAR_CONFIGURACION" : "ACTUALIZAR_CONFIGURACION",
-            "configuraciones_institucionales",
+            "configuracion_institucional",
             config.getId(),
             user,
             (created ? "Se creo" : "Se actualizo") + " la ficha institucional principal."
@@ -354,7 +360,7 @@ public class AcademicPortalService {
 
         audit(
             "ACTUALIZAR_NOTAS",
-            "notas",
+            "calificacion",
             assignment.getId(),
             user,
             "Se registraron " + processed + " filas de notas para la asignacion " + assignment.getId()
@@ -550,7 +556,7 @@ public class AcademicPortalService {
 
             audit(
                 "IMPORTAR_EXCEL",
-                "importaciones_notas",
+                "importacion_excel",
                 batch.getId(),
                 user,
                 "Archivo " + originalName + " procesado. Validos: " + validRows
@@ -852,6 +858,71 @@ public class AcademicPortalService {
         promedio.setPromedio(BigDecimal.valueOf(round2(average)).setScale(2, RoundingMode.HALF_UP));
         promedio.setPublicado(true);
         promedioAcademicoRepository.save(promedio);
+        refreshCalificacion(student, course, assignment, promedio.getPromedio());
+    }
+
+    private void refreshCalificacion(
+        Estudiante student,
+        Curso course,
+        AsignacionDocente assignment,
+        BigDecimal average
+    ) {
+        Matricula matricula = matriculaRepository.findByEstudianteIdAndGradoId(student.getId(), course.getGrado().getId())
+            .orElse(null);
+        if (matricula == null) {
+            return;
+        }
+
+        DetalleMatricula detalleMatricula = detalleMatriculaRepository.findByMatriculaIdAndCursoId(matricula.getId(), course.getId())
+            .orElseGet(() -> detalleMatriculaRepository.save(DetalleMatricula.builder()
+                .matricula(matricula)
+                .curso(course)
+                .fechaRegistro(LocalDate.now())
+                .estado(true)
+                .build()));
+        String trimestre = trimestreCode(assignment.getPeriodoAcademico().getNombre(), assignment.getPeriodoAcademico().getOrden());
+        Calificacion calificacion = calificacionRepository.findByDetalleMatriculaIdAndPeriodoAcademicoIdAndTrimestre(
+            detalleMatricula.getId(),
+            assignment.getPeriodoAcademico().getId(),
+            trimestre
+        ).orElseGet(() -> Calificacion.builder()
+            .detalleMatricula(detalleMatricula)
+            .periodoAcademico(assignment.getPeriodoAcademico())
+            .trimestre(trimestre)
+            .build());
+
+        calificacion.setValorFinal(average.setScale(2, RoundingMode.HALF_UP));
+        calificacion.setLogroLiteral(logroLiteral(average));
+        calificacion.setObservacion("Promedio actualizado desde registro manual de notas");
+        calificacionRepository.save(calificacion);
+    }
+
+    private String trimestreCode(String nombrePeriodo, Integer orden) {
+        String normalized = normalizeName(nombrePeriodo);
+        if ((orden != null && orden == 3) || normalized.contains("III") || normalized.contains("TERCER") || normalized.contains("3")) {
+            return "III_TRIMESTRE";
+        }
+        if ((orden != null && orden == 2) || normalized.contains("II") || normalized.contains("SEGUNDO") || normalized.contains("2")) {
+            return "II_TRIMESTRE";
+        }
+        return "I_TRIMESTRE";
+    }
+
+    private String logroLiteral(BigDecimal score) {
+        if (score == null) {
+            return null;
+        }
+        double value = score.doubleValue();
+        if (value <= 10) {
+            return "C";
+        }
+        if (value <= 14) {
+            return "B";
+        }
+        if (value <= 19) {
+            return "A";
+        }
+        return "AD";
     }
 
     private List<StudentCourseReportDto> buildReportsForStudent(Long studentId, List<PromedioAcademico> averages) {

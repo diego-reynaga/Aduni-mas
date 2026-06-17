@@ -12,8 +12,8 @@ import pe.edu.aduniplus.backend.common.BaseEntity;
 @SuperBuilder
 @Entity
 @Table(
-    name = "roles",
-    uniqueConstraints = @UniqueConstraint(name = "uk_roles_nombre", columnNames = "nombre")
+    name = "rol",
+    uniqueConstraints = @UniqueConstraint(name = "uk_rol_nombre", columnNames = "nombre")
 )
 public class Rol extends BaseEntity {
     @Enumerated(EnumType.STRING)

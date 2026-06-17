@@ -24,7 +24,7 @@ mvn -version
 Crear la base de datos:
 
 ```sql
-CREATE DATABASE aduni_plus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE aduniplus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 Editar credenciales en:
@@ -33,17 +33,20 @@ Editar credenciales en:
 src/main/resources/application.yml
 ```
 
-El esquema relacional se genera desde las entidades JPA con `spring.jpa.hibernate.ddl-auto=update`.
-Modelo principal:
+El esquema limpio auditable esta en `../../database/schema_aduniplus_limpio.sql`. Para desarrollo puede reiniciarse con `../../database/reset_database.sql`, siempre despues de ejecutar `../../database/backup_aduniplus.ps1`.
 
-- `personas` usa herencia JOINED hacia `docentes`, `estudiantes`, `padres_familia` y `administrativos`.
-- `usuarios`, `roles` y `usuario_roles` controlan el acceso por perfil para Angular 21.
-- `gestiones_academicas -> niveles_educativos -> grados -> cursos` organiza la estructura academica.
-- `materias` funciona como catalogo reutilizable para los cursos.
-- `periodos_academicos`, `asignaciones_docente`, `matriculas` y `estudiante_apoderados` controlan permisos academicos, secciones y acceso familiar.
-- `evaluaciones`, `notas`, `promedios_academicos` e `importaciones_notas` soportan registro manual, importacion Excel, consulta y trazabilidad.
-- `configuraciones_institucionales` centraliza datos de la academia.
-- `auditorias` registra acciones criticas con usuario responsable.
+El esquema relacional tambien se mantiene alineado con las entidades JPA. Modelo principal:
+
+- `persona` usa herencia JOINED hacia `docente`, `estudiante` y `apoderado`.
+- `usuario`, `rol` y `usuario_rol` controlan el acceso por perfil para Angular.
+- `gestion_academica -> nivel_educativo -> aula -> curso` organiza la estructura academica.
+- `asignatura` funciona como catalogo reutilizable para los cursos.
+- `matricula` y `detallematricula` separan la matricula del estudiante del detalle por curso.
+- `asignaciondocente` controla que un docente solo registre notas de cursos asignados.
+- `calificacion`, `evaluacion`, `nota` y `promedio_academico` soportan registro manual, consulta y compatibilidad con pantallas actuales.
+- `importacion_excel`, `error_importacion_excel`, `calificacion_detalle_trimestre` y `calificacion_competencia_trimestre` soportan importacion Excel trimestral y trazabilidad.
+- `apoderadoestudiante` conserva el vinculo padre/apoderado-estudiante.
+- `auditoria` registra acciones criticas con usuario responsable.
 
 Diccionario de datos:
 
@@ -83,7 +86,7 @@ Flujo trimestral:
 - `GET /api/notas/importaciones/{id}`: detalle del lote.
 - `GET /api/notas/importaciones/{id}/errores`: errores registrados del lote.
 
-La importación usa Apache POI, no depende de rangos nombrados ni de fórmulas internas del Excel, y calcula los promedios desde los bloques de competencias de la hoja seleccionada. Las notas individuales se guardan en `calificacion_detalle_trimestre`, los promedios por competencia en `calificacion_competencia_trimestre`, los errores por fila en `error_importacion_excel`, y el lote con sus metadatos en `importaciones_notas`.
+La importación usa Apache POI, no depende de rangos nombrados ni de fórmulas internas del Excel, y calcula los promedios desde los bloques de competencias de la hoja seleccionada. Las notas individuales se guardan en `calificacion_detalle_trimestre`, los promedios por competencia en `calificacion_competencia_trimestre`, el promedio final en `calificacion`, `nota` y `promedio_academico`, los errores por fila en `error_importacion_excel`, y el lote con sus metadatos en `importacion_excel`.
 
 Prueba unitaria del parser:
 

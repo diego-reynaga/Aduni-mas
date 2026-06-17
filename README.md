@@ -221,7 +221,18 @@ GET  http://localhost:8080/api/notas/importaciones/{id}
 GET  http://localhost:8080/api/notas/importaciones/{id}/errores
 ```
 
-Los `POST` reciben `multipart/form-data` con `file`, `trimestre` y `assignmentId` o `cursoId`. El backend valida `.xlsx`, tamaño máximo de 10MB, hoja seleccionada, permisos por rol, asignación docente, matrícula activa y notas en rango 0 a 20. La confirmación guarda notas individuales en `calificacion_detalle_trimestre`, promedios de competencia en `calificacion_competencia_trimestre`, promedio final en `notas` y `promedios_academicos`, además de la trazabilidad en `importaciones_notas` y `error_importacion_excel`.
+Los `POST` reciben `multipart/form-data` con `file`, `trimestre` y `assignmentId` o `cursoId`. El backend valida `.xlsx`, tamaño máximo de 10MB, hoja seleccionada, permisos por rol, asignación docente, matrícula activa y notas en rango 0 a 20. La confirmación guarda notas individuales en `calificacion_detalle_trimestre`, promedios de competencia en `calificacion_competencia_trimestre`, promedio final en `calificacion`, `nota` y `promedio_academico`, además de la trazabilidad en `importacion_excel` y `error_importacion_excel`.
+
+## Modelo relacional limpio
+
+El backend apunta por defecto a la base MySQL `aduniplus`. Los scripts de respaldo, reinicio y esquema limpio están en `database/`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File database\backup_aduniplus.ps1
+mysql -u root -p < database\reset_database.sql
+```
+
+El esquema final está en `database/schema_aduniplus_limpio.sql` y la explicación de tablas conservadas, eliminadas y relaciones modificadas está en `database/modelo_relacional_limpio.md`.
 
 Prueba rápida del parser sin depender de MySQL:
 

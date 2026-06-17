@@ -5,8 +5,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import pe.edu.aduniplus.backend.common.BaseEntity;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -15,8 +13,8 @@ import java.util.Set;
 @SuperBuilder
 @Entity
 @Table(
-    name = "gestiones_academicas",
-    uniqueConstraints = @UniqueConstraint(name = "uk_gestiones_anio", columnNames = "anio")
+    name = "gestion_academica",
+    uniqueConstraints = @UniqueConstraint(name = "uk_gestion_academica_anio", columnNames = "anio")
 )
 public class GestionAcademica extends BaseEntity {
     @Column(nullable = false)
@@ -32,12 +30,4 @@ public class GestionAcademica extends BaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean activa = true;
-
-    @OneToMany(mappedBy = "gestionAcademica")
-    @Builder.Default
-    private Set<NivelEducativo> niveles = new HashSet<>();
-
-    @OneToMany(mappedBy = "gestionAcademica")
-    @Builder.Default
-    private Set<PeriodoAcademico> periodos = new HashSet<>();
 }

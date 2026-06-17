@@ -15,10 +15,10 @@ import java.util.Set;
 @SuperBuilder
 @Entity
 @Table(
-    name = "usuarios",
+    name = "usuario",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_usuarios_username", columnNames = "username"),
-        @UniqueConstraint(name = "uk_usuarios_persona", columnNames = "persona_id")
+        @UniqueConstraint(name = "uk_usuario_username", columnNames = "username"),
+        @UniqueConstraint(name = "uk_usuario_persona", columnNames = "persona_id")
     }
 )
 public class Usuario extends BaseEntity {
@@ -40,9 +40,9 @@ public class Usuario extends BaseEntity {
     )
     private Persona persona;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "usuario_roles",
+        name = "usuario_rol",
         joinColumns = @JoinColumn(name = "usuario_id", foreignKey = @ForeignKey(name = "fk_usuario_roles_usuario")),
         inverseJoinColumns = @JoinColumn(name = "rol_id", foreignKey = @ForeignKey(name = "fk_usuario_roles_rol")),
         uniqueConstraints = @UniqueConstraint(name = "uk_usuario_roles_usuario_rol", columnNames = {"usuario_id", "rol_id"})

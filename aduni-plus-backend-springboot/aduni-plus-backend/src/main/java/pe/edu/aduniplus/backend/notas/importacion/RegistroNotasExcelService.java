@@ -49,7 +49,7 @@ public class RegistroNotasExcelService {
         RegistroNotasValidationResult validation = validacionService.validar(parser.parse(content), user);
         audit(
             "PREVISUALIZAR_IMPORTACION_NOTAS",
-            "importaciones_notas",
+            "importacion_excel",
             null,
             user.userId(),
             "Archivo " + originalFilename(file) + ". Filas detectadas: " + validation.preview().resumen().totalFilas()
@@ -82,7 +82,7 @@ public class RegistroNotasExcelService {
         );
         audit(
             "PREVISUALIZAR_IMPORTACION_NOTAS_TRIMESTRE",
-            "importaciones_notas",
+            "importacion_excel",
             null,
             user.userId(),
             "Archivo " + originalFilename(file) + ". Trimestre: " + trimestre.name()

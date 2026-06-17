@@ -17,11 +17,11 @@ import java.math.BigDecimal;
 @SuperBuilder
 @Entity
 @Table(
-    name = "notas",
-    uniqueConstraints = @UniqueConstraint(name = "uk_notas_estudiante_evaluacion", columnNames = {"estudiante_id", "evaluacion_id"}),
+    name = "nota",
+    uniqueConstraints = @UniqueConstraint(name = "uk_nota_estudiante_evaluacion", columnNames = {"estudiante_id", "evaluacion_id"}),
     indexes = {
-        @Index(name = "idx_notas_estudiante", columnList = "estudiante_id"),
-        @Index(name = "idx_notas_evaluacion", columnList = "evaluacion_id")
+        @Index(name = "idx_nota_estudiante", columnList = "estudiante_id"),
+        @Index(name = "idx_nota_evaluacion", columnList = "evaluacion_id")
     }
 )
 @Check(constraints = "valor >= 0 and valor <= 20")
@@ -43,7 +43,7 @@ public class Nota extends BaseEntity {
     private Usuario registradoPor;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "importacion_notas_id", foreignKey = @ForeignKey(name = "fk_notas_importacion"))
+    @JoinColumn(name = "importacion_id", foreignKey = @ForeignKey(name = "fk_nota_importacion"))
     private ImportacionNotas importacionNotas;
 
     @Column(nullable = false, precision = 5, scale = 2)
