@@ -41,10 +41,11 @@ El esquema relacional tambien se mantiene alineado con las entidades JPA. Modelo
 - `usuario`, `rol` y `usuario_rol` controlan el acceso por perfil para Angular.
 - `gestion_academica -> nivel_educativo -> aula -> curso` organiza la estructura academica.
 - `asignatura` funciona como catalogo reutilizable para los cursos.
-- `matricula` y `detallematricula` separan la matricula del estudiante del detalle por curso.
+- `matricula` y `detallematricula` separan la matricula del estudiante del detalle por asignatura.
 - `asignaciondocente` controla que un docente solo registre notas de cursos asignados.
 - `calificacion`, `evaluacion`, `nota` y `promedio_academico` soportan registro manual, consulta y compatibilidad con pantallas actuales.
-- `importacion_excel`, `error_importacion_excel`, `calificacion_detalle_trimestre` y `calificacion_competencia_trimestre` soportan importacion Excel trimestral y trazabilidad.
+- `importacion_excel` depende de `asignaciondocente`; `nota` depende de `evaluacion`; `detallematricula` depende de `asignatura`. Asi no hay dos rutas de negocio hacia curso/docente/periodo.
+- `error_importacion_excel`, `calificacion_detalle_trimestre` y `calificacion_competencia_trimestre` guardan `importacion_id` como trazabilidad simple, sin FK navegable hacia el lote.
 - `apoderadoestudiante` conserva el vinculo padre/apoderado-estudiante.
 - `auditoria` registra acciones criticas con usuario responsable.
 

@@ -254,7 +254,7 @@ public class AcademicPortalService {
             .filter((course) -> "CERRADA".equals(course.estado()) || course.avance() >= 100)
             .count();
 
-        long observedImports = importacionNotasRepository.findByDocenteId(docenteId).stream()
+        long observedImports = importacionNotasRepository.findByAsignacionDocenteDocenteId(docenteId).stream()
             .filter((item) -> item.getEstado() != EstadoImportacionNotas.PROCESADA)
             .count();
 
@@ -279,7 +279,10 @@ public class AcademicPortalService {
 
         AsignacionDocente selected = resolveAssignment(assignments, assignmentId);
         Map<TipoEvaluacion, Evaluacion> evaluations = loadEvaluationsByType(selected);
-        List<Nota> notes = notaRepository.findByAsignacionDocenteId(selected.getId());
+        List<Nota> notes = notaRepository.findByEvaluacionCursoIdAndEvaluacionPeriodoAcademicoId(
+            selected.getCurso().getId(),
+            selected.getPeriodoAcademico().getId()
+        );
         Map<String, Nota> noteByStudentEval = notes.stream().collect(Collectors.toMap(
             (note) -> note.getEstudiante().getId() + "|" + note.getEvaluacion().getId(),
             (note) -> note,
@@ -376,7 +379,7 @@ public class AcademicPortalService {
             .map(this::toCourseAssignment)
             .toList();
 
-        List<ImportBatchDto> history = importacionNotasRepository.findByDocenteIdOrderByCreadoEnDesc(docenteId).stream()
+        List<ImportBatchDto> history = importacionNotasRepository.findByAsignacionDocenteDocenteIdOrderByCreadoEnDesc(docenteId).stream()
             .limit(8)
             .map((item) -> new ImportBatchDto(
                 item.getNombreArchivo(),
@@ -409,9 +412,7 @@ public class AcademicPortalService {
 
         String originalName = safe(file.getOriginalFilename(), "registro_notas.xlsx");
         ImportacionNotas batch = ImportacionNotas.builder()
-            .docente(assignment.getDocente())
-            .curso(assignment.getCurso())
-            .periodoAcademico(assignment.getPeriodoAcademico())
+            .asignacionDocente(assignment)
             .usuarioResponsable(user)
             .nombreArchivo(originalName)
             .hashArchivo(hashSha256(content))
@@ -732,7 +733,10 @@ public class AcademicPortalService {
             assignment.getCurso().getGrado().getId(),
             EstadoMatricula.ACTIVA
         );
-        List<Nota> notes = notaRepository.findByAsignacionDocenteId(assignment.getId());
+        List<Nota> notes = notaRepository.findByEvaluacionCursoIdAndEvaluacionPeriodoAcademicoId(
+            assignment.getCurso().getId(),
+            assignment.getPeriodoAcademico().getId()
+        );
 
         int totalExpected = students.size() * evaluations.size();
         int registered = notes.size();
@@ -813,14 +817,12 @@ public class AcademicPortalService {
             .orElseGet(() -> Nota.builder()
                 .estudiante(student)
                 .evaluacion(evaluation)
-                .asignacionDocente(assignment)
                 .registradoPor(user)
                 .build());
 
         note.setValor(BigDecimal.valueOf(bounded).setScale(2, RoundingMode.HALF_UP));
         note.setObservacion(safe(observation, ""));
-        note.setImportacionNotas(batch);
-        note.setAsignacionDocente(assignment);
+        note.setImportacionId(batch == null ? null : batch.getId());
         note.setRegistradoPor(user);
         notaRepository.save(note);
     }
@@ -873,10 +875,13 @@ public class AcademicPortalService {
             return;
         }
 
-        DetalleMatricula detalleMatricula = detalleMatriculaRepository.findByMatriculaIdAndCursoId(matricula.getId(), course.getId())
+        DetalleMatricula detalleMatricula = detalleMatriculaRepository.findByMatriculaIdAndMateriaId(
+            matricula.getId(),
+            course.getMateria().getId()
+        )
             .orElseGet(() -> detalleMatriculaRepository.save(DetalleMatricula.builder()
                 .matricula(matricula)
-                .curso(course)
+                .materia(course.getMateria())
                 .fechaRegistro(LocalDate.now())
                 .estado(true)
                 .build()));

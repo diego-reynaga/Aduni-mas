@@ -3,6 +3,7 @@ package pe.edu.aduniplus.backend.notas;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import pe.edu.aduniplus.backend.academico.AsignacionDocente;
 import pe.edu.aduniplus.backend.academico.Curso;
 import pe.edu.aduniplus.backend.academico.PeriodoAcademico;
 import pe.edu.aduniplus.backend.common.BaseEntity;
@@ -18,16 +19,8 @@ import pe.edu.aduniplus.backend.usuario.Usuario;
 @Table(name = "importacion_excel")
 public class ImportacionNotas extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "docente_id", nullable = false, foreignKey = @ForeignKey(name = "fk_importaciones_docente"))
-    private Docente docente;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "curso_id", nullable = false, foreignKey = @ForeignKey(name = "fk_importaciones_curso"))
-    private Curso curso;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "periodo_academico_id", nullable = false, foreignKey = @ForeignKey(name = "fk_importaciones_periodo"))
-    private PeriodoAcademico periodoAcademico;
+    @JoinColumn(name = "asignacion_docente_id", nullable = false, foreignKey = @ForeignKey(name = "fk_importaciones_asignaciondocente"))
+    private AsignacionDocente asignacionDocente;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_responsable_id", nullable = false, foreignKey = @ForeignKey(name = "fk_importaciones_usuario"))
@@ -87,4 +80,19 @@ public class ImportacionNotas extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String detalle;
+
+    @Transient
+    public Docente getDocente() {
+        return asignacionDocente == null ? null : asignacionDocente.getDocente();
+    }
+
+    @Transient
+    public Curso getCurso() {
+        return asignacionDocente == null ? null : asignacionDocente.getCurso();
+    }
+
+    @Transient
+    public PeriodoAcademico getPeriodoAcademico() {
+        return asignacionDocente == null ? null : asignacionDocente.getPeriodoAcademico();
+    }
 }

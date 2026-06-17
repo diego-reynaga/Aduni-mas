@@ -64,9 +64,8 @@ public class Calificacion extends BaseEntity {
     @JoinColumn(name = "registrado_por_id", foreignKey = @ForeignKey(name = "fk_calificacion_usuario"))
     private Usuario registradoPor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "importacion_id", foreignKey = @ForeignKey(name = "fk_calificacion_importacion"))
-    private ImportacionNotas importacionNotas;
+    @Column(name = "importacion_id")
+    private Long importacionId;
 
     @Column(nullable = false)
     private LocalDateTime fechaRegistro;

@@ -70,9 +70,7 @@ public class CalificacionTrimestreImportacionService {
         AsignacionDocente assignment = validation.asignacionDocente();
 
         ImportacionNotas batch = importacionNotasRepository.save(ImportacionNotas.builder()
-            .docente(assignment.getDocente())
-            .curso(validation.curso())
-            .periodoAcademico(validation.periodoAcademico())
+            .asignacionDocente(assignment)
             .usuarioResponsable(user)
             .nombreArchivo(originalFilename)
             .hashArchivo(fileHash)
@@ -171,10 +169,10 @@ public class CalificacionTrimestreImportacionService {
     }
 
     private DetalleMatricula ensureDetalleMatricula(Matricula matricula, Curso curso) {
-        return detalleMatriculaRepository.findByMatriculaIdAndCursoId(matricula.getId(), curso.getId())
+        return detalleMatriculaRepository.findByMatriculaIdAndMateriaId(matricula.getId(), curso.getMateria().getId())
             .orElseGet(() -> detalleMatriculaRepository.save(DetalleMatricula.builder()
                 .matricula(matricula)
-                .curso(curso)
+                .materia(curso.getMateria())
                 .fechaRegistro(LocalDate.now())
                 .estado(true)
                 .build()));
@@ -205,7 +203,7 @@ public class CalificacionTrimestreImportacionService {
         detail.setNombreNota(trim(note.nombreNota(), 100));
         detail.setValorNota(note.valor() == null ? null : note.valor().setScale(2, RoundingMode.HALF_UP));
         detail.setFilaExcel(filaExcel);
-        detail.setImportacionNotas(batch);
+        detail.setImportacionId(batch.getId());
         detalleRepository.save(detail);
     }
 
@@ -229,7 +227,7 @@ public class CalificacionTrimestreImportacionService {
         summary.setNombreCompetencia(trim(competence.nombre(), 255));
         summary.setPromedioCompetencia(competence.promedioCompetencia() == null ? null : competence.promedioCompetencia().setScale(2, RoundingMode.HALF_UP));
         summary.setLogroLiteral(competence.logroLiteral());
-        summary.setImportacionNotas(batch);
+        summary.setImportacionId(batch.getId());
         competenciaRepository.save(summary);
     }
 
@@ -255,7 +253,7 @@ public class CalificacionTrimestreImportacionService {
         calificacion.setValorFinal(row.parsed().promedioFinalTrimestre().setScale(2, RoundingMode.HALF_UP));
         calificacion.setLogroLiteral(row.parsed().logroFinalTrimestre());
         calificacion.setRegistradoPor(user);
-        calificacion.setImportacionNotas(batch);
+        calificacion.setImportacionId(batch.getId());
         calificacion.setObservacion("Promedio final importado desde " + validation.parseResult().trimestre().nombre());
         calificacionRepository.save(calificacion);
     }
@@ -271,14 +269,12 @@ public class CalificacionTrimestreImportacionService {
             .orElseGet(() -> Nota.builder()
                 .estudiante(row.estudiante())
                 .evaluacion(evaluation)
-                .asignacionDocente(validation.asignacionDocente())
                 .registradoPor(user)
                 .build());
 
         note.setValor(row.parsed().promedioFinalTrimestre().setScale(2, RoundingMode.HALF_UP));
         note.setObservacion("Promedio final importado desde " + validation.parseResult().trimestre().nombre());
-        note.setImportacionNotas(batch);
-        note.setAsignacionDocente(validation.asignacionDocente());
+        note.setImportacionId(batch.getId());
         note.setRegistradoPor(user);
         notaRepository.save(note);
     }
@@ -330,7 +326,7 @@ public class CalificacionTrimestreImportacionService {
     private void saveErrors(ImportacionNotas batch, List<ErrorImportacionDTO> errors) {
         for (ErrorImportacionDTO error : errors) {
             errorImportacionExcelRepository.save(ErrorImportacionExcel.builder()
-                .importacionNotas(batch)
+                .importacionId(batch.getId())
                 .filaExcel(error.filaExcel())
                 .estudianteTexto(trim(error.estudianteTexto(), 180))
                 .campo(trim(error.campo(), 80))

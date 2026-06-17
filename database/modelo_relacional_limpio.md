@@ -22,7 +22,7 @@ Hallazgos principales:
 - `aula`: reemplaza el nombre fisico anterior de grado/seccion.
 - `asignatura`: reemplaza el nombre fisico anterior de materia.
 - `curso`: se conserva como tabla tecnica necesaria para resolver aula + asignatura en el backend actual.
-- `matricula` y `detallematricula`: matricula del estudiante y detalle por curso.
+- `matricula` y `detallematricula`: matricula del estudiante y detalle por asignatura.
 - `asignaciondocente`: docente asignado a curso y periodo.
 - `evaluacion`, `nota`, `promedio_academico`: se conservan por compatibilidad con pantallas existentes.
 - `calificacion`: promedio final por detalle de matricula, periodo y trimestre.
@@ -42,8 +42,22 @@ Estas tablas antiguas se eliminan al ejecutar `schema_aduniplus_limpio.sql` o `r
 - Se eliminaron relaciones inversas `@OneToMany` no necesarias para evitar ciclos JSON.
 - Las relaciones persistentes quedan unidireccionales desde la entidad hija o transaccional hacia su padre.
 - `Usuario.roles` queda `LAZY`; los servicios lo leen dentro de transacciones.
+- `DetalleMatricula` depende de `Matricula` + `Asignatura`, no de `Curso`, para evitar la doble ruta `detallematricula -> curso -> aula` y `detallematricula -> matricula -> aula`.
+- `Nota` depende de `Evaluacion`, no de `AsignacionDocente`; para llegar al curso de una nota solo existe la ruta `nota -> evaluacion -> curso`.
+- `ImportacionExcel` depende de `AsignacionDocente`, no de docente + curso + periodo por separado; para llegar a docente, curso o periodo desde un lote solo existe la ruta `importacion_excel -> asignaciondocente`.
 - `CalificacionDetalleTrimestre` y `CalificacionCompetenciaTrimestre` dependen ahora de `DetalleMatricula`, no de la combinacion redundante matricula + curso + periodo.
 - `Calificacion` evita duplicados con `detalle_matricula_id + periodo_academico_id + trimestre`.
+
+## Verificacion de rutas sin bucles
+
+El esquema limpio evita rutas alternativas hacia las mismas tablas de negocio:
+
+- Desde `nota` hacia `curso`: `nota -> evaluacion -> curso`.
+- Desde `detallematricula` hacia `asignatura`: `detallematricula -> asignatura`.
+- Desde `detallematricula` hacia `aula`: `detallematricula -> matricula -> aula`.
+- Desde `importacion_excel` hacia docente/curso/periodo: `importacion_excel -> asignaciondocente -> docente/curso/periodo`.
+
+Las columnas `importacion_id` en notas, calificaciones y errores se mantienen solo como dato de trazabilidad. No tienen FK navegable hacia `importacion_excel`, por lo que no crean una segunda ruta relacional hacia curso, docente o periodo.
 
 ## Respaldo
 

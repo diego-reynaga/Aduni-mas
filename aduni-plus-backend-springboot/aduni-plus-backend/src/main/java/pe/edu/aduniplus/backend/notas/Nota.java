@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.Check;
-import pe.edu.aduniplus.backend.academico.AsignacionDocente;
 import pe.edu.aduniplus.backend.common.BaseEntity;
 import pe.edu.aduniplus.backend.persona.Estudiante;
 import pe.edu.aduniplus.backend.usuario.Usuario;
@@ -35,16 +34,11 @@ public class Nota extends BaseEntity {
     private Evaluacion evaluacion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "asignacion_docente_id", nullable = false, foreignKey = @ForeignKey(name = "fk_notas_asignacion_docente"))
-    private AsignacionDocente asignacionDocente;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "registrado_por_id", nullable = false, foreignKey = @ForeignKey(name = "fk_notas_usuario_registro"))
     private Usuario registradoPor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "importacion_id", foreignKey = @ForeignKey(name = "fk_nota_importacion"))
-    private ImportacionNotas importacionNotas;
+    @Column(name = "importacion_id")
+    private Long importacionId;
 
     @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal valor;

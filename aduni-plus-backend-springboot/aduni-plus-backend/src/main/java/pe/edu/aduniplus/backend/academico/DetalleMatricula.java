@@ -28,12 +28,12 @@ import java.time.LocalDate;
 @Table(
     name = "detallematricula",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_detallematricula_matricula_curso",
-        columnNames = {"matricula_id", "curso_id"}
+        name = "uk_detallematricula_matricula_asignatura",
+        columnNames = {"matricula_id", "asignatura_id"}
     ),
     indexes = {
         @Index(name = "idx_detallematricula_matricula", columnList = "matricula_id"),
-        @Index(name = "idx_detallematricula_curso", columnList = "curso_id")
+        @Index(name = "idx_detallematricula_asignatura", columnList = "asignatura_id")
     }
 )
 public class DetalleMatricula extends BaseEntity {
@@ -42,8 +42,8 @@ public class DetalleMatricula extends BaseEntity {
     private Matricula matricula;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "curso_id", nullable = false, foreignKey = @ForeignKey(name = "fk_detallematricula_curso"))
-    private Curso curso;
+    @JoinColumn(name = "asignatura_id", nullable = false, foreignKey = @ForeignKey(name = "fk_detallematricula_asignatura"))
+    private Materia materia;
 
     @Column(nullable = false)
     private LocalDate fechaRegistro;

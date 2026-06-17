@@ -113,7 +113,7 @@ public class RegistroNotasExcelService {
     public List<ImportacionNotasHistorialDTO> listarImportaciones(AuthenticatedUser user) {
         List<ImportacionNotas> rows = hasRole(user, "ADMINISTRADOR")
             ? importacionNotasRepository.findAllByOrderByCreadoEnDesc()
-            : importacionNotasRepository.findByDocenteIdOrderByCreadoEnDesc(user.personaId());
+            : importacionNotasRepository.findByAsignacionDocenteDocenteIdOrderByCreadoEnDesc(user.personaId());
 
         return rows.stream()
             .map(this::toHistory)
@@ -141,7 +141,7 @@ public class RegistroNotasExcelService {
     @Transactional(readOnly = true)
     public List<ErrorImportacionDTO> listarErrores(Long id, AuthenticatedUser user) {
         loadAuthorizedImport(id, user);
-        return errorImportacionExcelRepository.findByImportacionNotasIdOrderByFilaExcelAscIdAsc(id).stream()
+        return errorImportacionExcelRepository.findByImportacionIdOrderByFilaExcelAscIdAsc(id).stream()
             .map((error) -> new ErrorImportacionDTO(
                 error.getFilaExcel(),
                 error.getEstudianteTexto(),

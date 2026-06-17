@@ -218,17 +218,17 @@ CREATE TABLE matricula (
 CREATE TABLE detallematricula (
   id BIGINT NOT NULL AUTO_INCREMENT,
   matricula_id BIGINT NOT NULL,
-  curso_id BIGINT NOT NULL,
+  asignatura_id BIGINT NOT NULL,
   fecha_registro DATE NOT NULL,
   estado BOOLEAN NOT NULL DEFAULT TRUE,
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uk_detallematricula_matricula_curso (matricula_id, curso_id),
+  UNIQUE KEY uk_detallematricula_matricula_asignatura (matricula_id, asignatura_id),
   KEY idx_detallematricula_matricula (matricula_id),
-  KEY idx_detallematricula_curso (curso_id),
+  KEY idx_detallematricula_asignatura (asignatura_id),
   CONSTRAINT fk_detallematricula_matricula FOREIGN KEY (matricula_id) REFERENCES matricula(id),
-  CONSTRAINT fk_detallematricula_curso FOREIGN KEY (curso_id) REFERENCES curso(id)
+  CONSTRAINT fk_detallematricula_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE asignaciondocente (
@@ -252,9 +252,7 @@ CREATE TABLE asignaciondocente (
 
 CREATE TABLE importacion_excel (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  docente_id BIGINT NOT NULL,
-  curso_id BIGINT NOT NULL,
-  periodo_academico_id BIGINT NOT NULL,
+  asignacion_docente_id BIGINT NOT NULL,
   usuario_responsable_id BIGINT NOT NULL,
   nombre_archivo VARCHAR(180) NOT NULL,
   hash_archivo VARCHAR(128) NULL,
@@ -276,11 +274,8 @@ CREATE TABLE importacion_excel (
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  KEY idx_importacion_docente (docente_id),
-  KEY idx_importacion_curso_periodo (curso_id, periodo_academico_id),
-  CONSTRAINT fk_importacion_docente FOREIGN KEY (docente_id) REFERENCES docente(persona_id),
-  CONSTRAINT fk_importacion_curso FOREIGN KEY (curso_id) REFERENCES curso(id),
-  CONSTRAINT fk_importacion_periodo FOREIGN KEY (periodo_academico_id) REFERENCES periodo_academico(id),
+  KEY idx_importacion_asignaciondocente (asignacion_docente_id),
+  CONSTRAINT fk_importacion_asignaciondocente FOREIGN KEY (asignacion_docente_id) REFERENCES asignaciondocente(id),
   CONSTRAINT fk_importacion_usuario FOREIGN KEY (usuario_responsable_id) REFERENCES usuario(id),
   CONSTRAINT chk_importacion_estado CHECK (estado IN ('PENDIENTE','PROCESADA','OBSERVADA','FALLIDA')),
   CONSTRAINT chk_importacion_trimestre CHECK (trimestre IS NULL OR trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE','ANUAL'))
@@ -322,10 +317,10 @@ CREATE TABLE calificacion (
   UNIQUE KEY uk_calificacion_detalle_periodo_trimestre (detalle_matricula_id, periodo_academico_id, trimestre),
   KEY idx_calificacion_detalle (detalle_matricula_id),
   KEY idx_calificacion_periodo (periodo_academico_id),
+  KEY idx_calificacion_importacion (importacion_id),
   CONSTRAINT fk_calificacion_detallematricula FOREIGN KEY (detalle_matricula_id) REFERENCES detallematricula(id),
   CONSTRAINT fk_calificacion_periodo FOREIGN KEY (periodo_academico_id) REFERENCES periodo_academico(id),
   CONSTRAINT fk_calificacion_usuario FOREIGN KEY (registrado_por_id) REFERENCES usuario(id),
-  CONSTRAINT fk_calificacion_importacion FOREIGN KEY (importacion_id) REFERENCES importacion_excel(id),
   CONSTRAINT chk_calificacion_valor CHECK (valor_final >= 0 AND valor_final <= 20),
   CONSTRAINT chk_calificacion_trimestre CHECK (trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE','ANUAL'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -353,7 +348,6 @@ CREATE TABLE nota (
   id BIGINT NOT NULL AUTO_INCREMENT,
   estudiante_id BIGINT NOT NULL,
   evaluacion_id BIGINT NOT NULL,
-  asignacion_docente_id BIGINT NOT NULL,
   registrado_por_id BIGINT NOT NULL,
   importacion_id BIGINT NULL,
   valor DECIMAL(5,2) NOT NULL,
@@ -364,11 +358,10 @@ CREATE TABLE nota (
   UNIQUE KEY uk_nota_estudiante_evaluacion (estudiante_id, evaluacion_id),
   KEY idx_nota_estudiante (estudiante_id),
   KEY idx_nota_evaluacion (evaluacion_id),
+  KEY idx_nota_importacion (importacion_id),
   CONSTRAINT fk_nota_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiante(persona_id),
   CONSTRAINT fk_nota_evaluacion FOREIGN KEY (evaluacion_id) REFERENCES evaluacion(id),
-  CONSTRAINT fk_nota_asignacion_docente FOREIGN KEY (asignacion_docente_id) REFERENCES asignaciondocente(id),
   CONSTRAINT fk_nota_usuario_registro FOREIGN KEY (registrado_por_id) REFERENCES usuario(id),
-  CONSTRAINT fk_nota_importacion FOREIGN KEY (importacion_id) REFERENCES importacion_excel(id),
   CONSTRAINT chk_nota_valor CHECK (valor >= 0 AND valor <= 20)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -399,8 +392,7 @@ CREATE TABLE error_importacion_excel (
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  KEY idx_error_importacion_excel_importacion (importacion_id),
-  CONSTRAINT fk_error_importacion_excel_importacion FOREIGN KEY (importacion_id) REFERENCES importacion_excel(id)
+  KEY idx_error_importacion_excel_importacion (importacion_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE auditoria (
@@ -438,7 +430,6 @@ CREATE TABLE calificacion_detalle_trimestre (
   KEY idx_calif_det_tri_detalle (detalle_matricula_id),
   KEY idx_calif_det_tri_importacion (importacion_id),
   CONSTRAINT fk_calif_det_tri_detallematricula FOREIGN KEY (detalle_matricula_id) REFERENCES detallematricula(id),
-  CONSTRAINT fk_calif_det_tri_importacion FOREIGN KEY (importacion_id) REFERENCES importacion_excel(id),
   CONSTRAINT chk_calif_det_tri_trimestre CHECK (trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE')),
   CONSTRAINT chk_calif_det_tri_valor CHECK (valor_nota IS NULL OR (valor_nota >= 0 AND valor_nota <= 20))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -460,7 +451,6 @@ CREATE TABLE calificacion_competencia_trimestre (
   KEY idx_calif_comp_tri_detalle (detalle_matricula_id),
   KEY idx_calif_comp_tri_importacion (importacion_id),
   CONSTRAINT fk_calif_comp_tri_detallematricula FOREIGN KEY (detalle_matricula_id) REFERENCES detallematricula(id),
-  CONSTRAINT fk_calif_comp_tri_importacion FOREIGN KEY (importacion_id) REFERENCES importacion_excel(id),
   CONSTRAINT chk_calif_comp_tri_trimestre CHECK (trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE')),
   CONSTRAINT chk_calif_comp_tri_promedio CHECK (promedio_competencia IS NULL OR (promedio_competencia >= 0 AND promedio_competencia <= 20))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

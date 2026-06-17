@@ -20,7 +20,6 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import pe.edu.aduniplus.backend.academico.DetalleMatricula;
 import pe.edu.aduniplus.backend.common.BaseEntity;
-import pe.edu.aduniplus.backend.notas.ImportacionNotas;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -75,9 +74,8 @@ public class CalificacionDetalleTrimestre extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime fechaRegistro;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "importacion_id", foreignKey = @ForeignKey(name = "fk_calif_detalle_tri_importacion"))
-    private ImportacionNotas importacionNotas;
+    @Column(name = "importacion_id")
+    private Long importacionId;
 
     @PrePersist
     @PreUpdate

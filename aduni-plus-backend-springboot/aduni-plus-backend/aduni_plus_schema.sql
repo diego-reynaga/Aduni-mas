@@ -1,366 +1,472 @@
-CREATE DATABASE IF NOT EXISTS aduni_plus;
-USE aduni_plus;
+CREATE DATABASE IF NOT EXISTS aduniplus
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 
-CREATE TABLE configuraciones_institucionales (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  codigo VARCHAR(30) NOT NULL,
-  nombre VARCHAR(150) NOT NULL,
-  logo_url VARCHAR(250),
-  direccion VARCHAR(200),
-  telefono VARCHAR(30),
-  correo_institucional VARCHAR(150),
-  ruc VARCHAR(20),
-  sitio_web VARCHAR(150),
-  PRIMARY KEY (id),
-  CONSTRAINT uk_configuraciones_codigo UNIQUE (codigo)
-) ENGINE=InnoDB;
+USE aduniplus;
 
-CREATE TABLE gestiones_academicas (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  anio INT NOT NULL,
-  nombre VARCHAR(80) NOT NULL,
-  fecha_inicio DATE,
-  fecha_fin DATE,
-  activa BIT(1) NOT NULL,
-  PRIMARY KEY (id),
-  CONSTRAINT uk_gestiones_anio UNIQUE (anio)
-) ENGINE=InnoDB;
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS calificacion_competencia_trimestre;
+DROP TABLE IF EXISTS calificacion_detalle_trimestre;
+DROP TABLE IF EXISTS auditoria;
+DROP TABLE IF EXISTS error_importacion_excel;
+DROP TABLE IF EXISTS nota;
+DROP TABLE IF EXISTS promedio_academico;
+DROP TABLE IF EXISTS calificacion;
+DROP TABLE IF EXISTS importacion_excel;
+DROP TABLE IF EXISTS evaluacion;
+DROP TABLE IF EXISTS asignaciondocente;
+DROP TABLE IF EXISTS detallematricula;
+DROP TABLE IF EXISTS apoderadoestudiante;
+DROP TABLE IF EXISTS matricula;
+DROP TABLE IF EXISTS curso;
+DROP TABLE IF EXISTS asignatura;
+DROP TABLE IF EXISTS aula;
+DROP TABLE IF EXISTS periodo_academico;
+DROP TABLE IF EXISTS nivel_educativo;
+DROP TABLE IF EXISTS gestion_academica;
+DROP TABLE IF EXISTS configuracion_institucional;
+DROP TABLE IF EXISTS usuario_rol;
+DROP TABLE IF EXISTS usuario;
+DROP TABLE IF EXISTS rol;
+DROP TABLE IF EXISTS apoderado;
+DROP TABLE IF EXISTS estudiante;
+DROP TABLE IF EXISTS docente;
+DROP TABLE IF EXISTS persona;
+SET FOREIGN_KEY_CHECKS = 1;
 
-CREATE TABLE materias (
+CREATE TABLE persona (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  codigo VARCHAR(20),
-  nombre VARCHAR(100) NOT NULL,
-  area VARCHAR(20),
-  activa BIT(1) NOT NULL,
-  PRIMARY KEY (id),
-  CONSTRAINT uk_materias_nombre UNIQUE (nombre),
-  CONSTRAINT uk_materias_codigo UNIQUE (codigo)
-) ENGINE=InnoDB;
-
-CREATE TABLE personas (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  nombres VARCHAR(100) NOT NULL,
-  apellidos VARCHAR(120) NOT NULL,
-  documento_identidad VARCHAR(20) NOT NULL,
-  fecha_nacimiento DATE,
-  direccion VARCHAR(150),
-  telefono VARCHAR(20),
-  correo VARCHAR(150),
   tipo_persona VARCHAR(30) NOT NULL,
+  tipo_documento VARCHAR(20) NOT NULL DEFAULT 'DNI',
+  numero_documento VARCHAR(20) NOT NULL,
+  nombre_persona VARCHAR(100) NOT NULL,
+  apellido_persona VARCHAR(120) NOT NULL,
+  fech_naci_persona DATE NULL,
+  estado_persona BOOLEAN NOT NULL DEFAULT TRUE,
+  correo_persona VARCHAR(150) NULL,
+  genero_persona VARCHAR(20) NULL,
+  direccion VARCHAR(150) NULL,
+  telefono VARCHAR(20) NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_personas_documento UNIQUE (documento_identidad),
-  CONSTRAINT uk_personas_correo UNIQUE (correo)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_persona_documento (numero_documento),
+  UNIQUE KEY uk_persona_correo (correo_persona)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE roles (
+CREATE TABLE rol (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
   nombre VARCHAR(30) NOT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_roles_nombre UNIQUE (nombre)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_rol_nombre (nombre),
+  CONSTRAINT chk_rol_nombre CHECK (nombre IN ('ADMINISTRADOR','DOCENTE','ESTUDIANTE','PADRE_FAMILIA'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE estudiantes (
-  persona_id BIGINT NOT NULL,
-  codigo_estudiante VARCHAR(30) NOT NULL,
-  activo BIT(1) NOT NULL,
-  PRIMARY KEY (persona_id),
-  CONSTRAINT uk_estudiantes_codigo UNIQUE (codigo_estudiante),
-  CONSTRAINT fk_estudiantes_persona FOREIGN KEY (persona_id)
-    REFERENCES personas (id)
-) ENGINE=InnoDB;
-
-CREATE TABLE docentes (
-  persona_id BIGINT NOT NULL,
-  codigo_docente VARCHAR(30) NOT NULL,
-  especialidad VARCHAR(100),
-  area_academica VARCHAR(100),
-  activo BIT(1) NOT NULL,
-  PRIMARY KEY (persona_id),
-  CONSTRAINT uk_docentes_codigo UNIQUE (codigo_docente),
-  CONSTRAINT fk_docentes_persona FOREIGN KEY (persona_id)
-    REFERENCES personas (id)
-) ENGINE=InnoDB;
-
-CREATE TABLE administrativos (
-  persona_id BIGINT NOT NULL,
-  codigo_administrativo VARCHAR(30) NOT NULL,
-  cargo VARCHAR(80) NOT NULL,
-  activo BIT(1) NOT NULL,
-  PRIMARY KEY (persona_id),
-  CONSTRAINT uk_administrativos_codigo UNIQUE (codigo_administrativo),
-  CONSTRAINT fk_administrativos_persona FOREIGN KEY (persona_id)
-    REFERENCES personas (id)
-) ENGINE=InnoDB;
-
-CREATE TABLE padres_familia (
-  persona_id BIGINT NOT NULL,
-  ocupacion VARCHAR(100),
-  activo BIT(1) NOT NULL,
-  PRIMARY KEY (persona_id),
-  CONSTRAINT fk_padres_familia_persona FOREIGN KEY (persona_id)
-    REFERENCES personas (id)
-) ENGINE=InnoDB;
-
-CREATE TABLE usuarios (
+CREATE TABLE usuario (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
   username VARCHAR(80) NOT NULL,
   password VARCHAR(255) NOT NULL,
-  activo BIT(1) NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
   persona_id BIGINT NOT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_usuarios_username UNIQUE (username),
-  CONSTRAINT uk_usuarios_persona UNIQUE (persona_id),
-  CONSTRAINT fk_usuarios_persona FOREIGN KEY (persona_id)
-    REFERENCES personas (id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_usuario_username (username),
+  UNIQUE KEY uk_usuario_persona (persona_id),
+  CONSTRAINT fk_usuario_persona FOREIGN KEY (persona_id) REFERENCES persona(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE usuario_roles (
+CREATE TABLE usuario_rol (
   usuario_id BIGINT NOT NULL,
   rol_id BIGINT NOT NULL,
   PRIMARY KEY (usuario_id, rol_id),
-  CONSTRAINT uk_usuario_roles_usuario_rol UNIQUE (usuario_id, rol_id),
-  CONSTRAINT fk_usuario_roles_usuario FOREIGN KEY (usuario_id)
-    REFERENCES usuarios (id),
-  CONSTRAINT fk_usuario_roles_rol FOREIGN KEY (rol_id)
-    REFERENCES roles (id)
-) ENGINE=InnoDB;
+  CONSTRAINT fk_usuario_rol_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+  CONSTRAINT fk_usuario_rol_rol FOREIGN KEY (rol_id) REFERENCES rol(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE niveles_educativos (
+CREATE TABLE docente (
+  persona_id BIGINT NOT NULL,
+  codigo_docente VARCHAR(30) NOT NULL,
+  especialidad VARCHAR(100) NULL,
+  area_academica VARCHAR(100) NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (persona_id),
+  UNIQUE KEY uk_docente_codigo (codigo_docente),
+  CONSTRAINT fk_docente_persona FOREIGN KEY (persona_id) REFERENCES persona(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE estudiante (
+  persona_id BIGINT NOT NULL,
+  codigo_estudiante VARCHAR(30) NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (persona_id),
+  UNIQUE KEY uk_estudiante_codigo (codigo_estudiante),
+  CONSTRAINT fk_estudiante_persona FOREIGN KEY (persona_id) REFERENCES persona(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE apoderado (
+  persona_id BIGINT NOT NULL,
+  ocupacion VARCHAR(100) NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (persona_id),
+  CONSTRAINT fk_apoderado_persona FOREIGN KEY (persona_id) REFERENCES persona(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE gestion_academica (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
+  anio INT NOT NULL,
+  nombre VARCHAR(80) NOT NULL,
+  fecha_inicio DATE NULL,
+  fecha_fin DATE NULL,
+  activa BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_gestion_academica_anio (anio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE nivel_educativo (
+  id BIGINT NOT NULL AUTO_INCREMENT,
   gestion_academica_id BIGINT NOT NULL,
   nombre VARCHAR(80) NOT NULL,
   turno VARCHAR(20) NOT NULL,
-  descripcion VARCHAR(250),
-  activo BIT(1) NOT NULL,
+  descripcion VARCHAR(250) NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_niveles_gestion_nombre_turno UNIQUE (gestion_academica_id, nombre, turno),
-  CONSTRAINT fk_niveles_gestion FOREIGN KEY (gestion_academica_id)
-    REFERENCES gestiones_academicas (id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_nivel_gestion_nombre_turno (gestion_academica_id, nombre, turno),
+  CONSTRAINT fk_nivel_gestion FOREIGN KEY (gestion_academica_id) REFERENCES gestion_academica(id),
+  CONSTRAINT chk_nivel_turno CHECK (turno IN ('MANANA','TARDE','NOCHE'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE grados (
+CREATE TABLE periodo_academico (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  nivel_educativo_id BIGINT NOT NULL,
-  nombre VARCHAR(80) NOT NULL,
-  paralelo VARCHAR(20) NOT NULL,
-  activo BIT(1) NOT NULL,
-  PRIMARY KEY (id),
-  CONSTRAINT uk_grados_nivel_nombre_paralelo UNIQUE (nivel_educativo_id, nombre, paralelo),
-  CONSTRAINT fk_grados_nivel FOREIGN KEY (nivel_educativo_id)
-    REFERENCES niveles_educativos (id)
-) ENGINE=InnoDB;
-
-CREATE TABLE periodos_academicos (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
   gestion_academica_id BIGINT NOT NULL,
   nombre VARCHAR(80) NOT NULL,
   orden INT NOT NULL,
-  fecha_inicio DATE,
-  fecha_fin DATE,
-  cerrado BIT(1) NOT NULL,
+  fecha_inicio DATE NULL,
+  fecha_fin DATE NULL,
+  cerrado BOOLEAN NOT NULL DEFAULT FALSE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_periodos_gestion_nombre UNIQUE (gestion_academica_id, nombre),
-  CONSTRAINT uk_periodos_gestion_orden UNIQUE (gestion_academica_id, orden),
-  CONSTRAINT fk_periodos_gestion FOREIGN KEY (gestion_academica_id)
-    REFERENCES gestiones_academicas (id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_periodo_gestion_nombre (gestion_academica_id, nombre),
+  UNIQUE KEY uk_periodo_gestion_orden (gestion_academica_id, orden),
+  CONSTRAINT fk_periodo_gestion FOREIGN KEY (gestion_academica_id) REFERENCES gestion_academica(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE cursos (
+CREATE TABLE aula (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  grado_id BIGINT NOT NULL,
-  materia_id BIGINT NOT NULL,
-  activo BIT(1) NOT NULL,
+  nivel_educativo_id BIGINT NOT NULL,
+  nombre VARCHAR(80) NOT NULL,
+  paralelo VARCHAR(20) NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_cursos_grado_materia UNIQUE (grado_id, materia_id),
-  CONSTRAINT fk_cursos_grado FOREIGN KEY (grado_id)
-    REFERENCES grados (id),
-  CONSTRAINT fk_cursos_materia FOREIGN KEY (materia_id)
-    REFERENCES materias (id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_aula_nivel_nombre_paralelo (nivel_educativo_id, nombre, paralelo),
+  CONSTRAINT fk_aula_nivel FOREIGN KEY (nivel_educativo_id) REFERENCES nivel_educativo(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE asignaciones_docente (
+CREATE TABLE asignatura (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
+  codigo VARCHAR(20) NULL,
+  nombre VARCHAR(100) NOT NULL,
+  area VARCHAR(20) NULL,
+  activa BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_asignatura_codigo (codigo),
+  UNIQUE KEY uk_asignatura_nombre (nombre)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE curso (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  aula_id BIGINT NOT NULL,
+  asignatura_id BIGINT NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_curso_aula_asignatura (aula_id, asignatura_id),
+  CONSTRAINT fk_curso_aula FOREIGN KEY (aula_id) REFERENCES aula(id),
+  CONSTRAINT fk_curso_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE matricula (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  codigo_matricula VARCHAR(30) NOT NULL,
+  estudiante_id BIGINT NOT NULL,
+  aula_id BIGINT NOT NULL,
+  fecha_matricula DATE NOT NULL,
+  estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVA',
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_matricula_codigo (codigo_matricula),
+  UNIQUE KEY uk_matricula_estudiante_aula (estudiante_id, aula_id),
+  KEY idx_matricula_estudiante (estudiante_id),
+  CONSTRAINT fk_matricula_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiante(persona_id),
+  CONSTRAINT fk_matricula_aula FOREIGN KEY (aula_id) REFERENCES aula(id),
+  CONSTRAINT chk_matricula_estado CHECK (estado IN ('ACTIVA','RETIRADA','FINALIZADA','ANULADA'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE detallematricula (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  matricula_id BIGINT NOT NULL,
+  asignatura_id BIGINT NOT NULL,
+  fecha_registro DATE NOT NULL,
+  estado BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_detallematricula_matricula_asignatura (matricula_id, asignatura_id),
+  KEY idx_detallematricula_matricula (matricula_id),
+  KEY idx_detallematricula_asignatura (asignatura_id),
+  CONSTRAINT fk_detallematricula_matricula FOREIGN KEY (matricula_id) REFERENCES matricula(id),
+  CONSTRAINT fk_detallematricula_asignatura FOREIGN KEY (asignatura_id) REFERENCES asignatura(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE asignaciondocente (
+  id BIGINT NOT NULL AUTO_INCREMENT,
   docente_id BIGINT NOT NULL,
   curso_id BIGINT NOT NULL,
   periodo_academico_id BIGINT NOT NULL,
-  fecha_asignacion DATE,
-  estado VARCHAR(20) NOT NULL,
+  fecha_asignacion DATE NULL,
+  estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVA',
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_asignaciones_docente_curso_periodo UNIQUE (docente_id, curso_id, periodo_academico_id),
-  CONSTRAINT fk_asignaciones_docente FOREIGN KEY (docente_id)
-    REFERENCES docentes (persona_id),
-  CONSTRAINT fk_asignaciones_curso FOREIGN KEY (curso_id)
-    REFERENCES cursos (id),
-  CONSTRAINT fk_asignaciones_periodo FOREIGN KEY (periodo_academico_id)
-    REFERENCES periodos_academicos (id),
-  INDEX idx_asignaciones_docente (docente_id),
-  INDEX idx_asignaciones_curso (curso_id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_asignaciondocente_curso_periodo (docente_id, curso_id, periodo_academico_id),
+  KEY idx_asignaciondocente_docente (docente_id),
+  KEY idx_asignaciondocente_curso (curso_id),
+  CONSTRAINT fk_asignaciondocente_docente FOREIGN KEY (docente_id) REFERENCES docente(persona_id),
+  CONSTRAINT fk_asignaciondocente_curso FOREIGN KEY (curso_id) REFERENCES curso(id),
+  CONSTRAINT fk_asignaciondocente_periodo FOREIGN KEY (periodo_academico_id) REFERENCES periodo_academico(id),
+  CONSTRAINT chk_asignaciondocente_estado CHECK (estado IN ('ACTIVA','CERRADA'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE matriculas (
+CREATE TABLE importacion_excel (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  codigo_matricula VARCHAR(30) NOT NULL,
-  estudiante_id BIGINT NOT NULL,
-  grado_id BIGINT NOT NULL,
-  fecha_matricula DATE NOT NULL,
-  estado VARCHAR(20) NOT NULL,
+  asignacion_docente_id BIGINT NOT NULL,
+  usuario_responsable_id BIGINT NOT NULL,
+  nombre_archivo VARCHAR(180) NOT NULL,
+  hash_archivo VARCHAR(128) NULL,
+  trimestre VARCHAR(20) NULL,
+  anio INT NULL,
+  nivel VARCHAR(80) NULL,
+  institucion VARCHAR(150) NULL,
+  lugar VARCHAR(150) NULL,
+  area_curricular VARCHAR(120) NULL,
+  docente_excel VARCHAR(150) NULL,
+  grado VARCHAR(80) NULL,
+  seccion VARCHAR(20) NULL,
+  periodos_importados VARCHAR(120) NULL,
+  total_registros INT NOT NULL DEFAULT 0,
+  registros_validos INT NOT NULL DEFAULT 0,
+  registros_observados INT NOT NULL DEFAULT 0,
+  estado VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE',
+  detalle TEXT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_matriculas_codigo UNIQUE (codigo_matricula),
-  CONSTRAINT uk_matriculas_estudiante_grado UNIQUE (estudiante_id, grado_id),
-  CONSTRAINT fk_matriculas_estudiante FOREIGN KEY (estudiante_id)
-    REFERENCES estudiantes (persona_id),
-  CONSTRAINT fk_matriculas_grado FOREIGN KEY (grado_id)
-    REFERENCES grados (id),
-  INDEX idx_matriculas_estudiante (estudiante_id)
-) ENGINE=InnoDB;
+  KEY idx_importacion_asignaciondocente (asignacion_docente_id),
+  CONSTRAINT fk_importacion_asignaciondocente FOREIGN KEY (asignacion_docente_id) REFERENCES asignaciondocente(id),
+  CONSTRAINT fk_importacion_usuario FOREIGN KEY (usuario_responsable_id) REFERENCES usuario(id),
+  CONSTRAINT chk_importacion_estado CHECK (estado IN ('PENDIENTE','PROCESADA','OBSERVADA','FALLIDA')),
+  CONSTRAINT chk_importacion_trimestre CHECK (trimestre IS NULL OR trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE','ANUAL'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE evaluaciones (
+CREATE TABLE evaluacion (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
   curso_id BIGINT NOT NULL,
   periodo_academico_id BIGINT NOT NULL,
   nombre VARCHAR(100) NOT NULL,
-  tipo VARCHAR(30) NOT NULL,
+  tipo VARCHAR(30) NOT NULL DEFAULT 'OTRO',
   peso DECIMAL(5,2) NOT NULL,
   orden INT NOT NULL,
-  publicada BIT(1) NOT NULL,
+  publicada BOOLEAN NOT NULL DEFAULT FALSE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_evaluaciones_curso_periodo_nombre UNIQUE (curso_id, periodo_academico_id, nombre),
-  CONSTRAINT fk_evaluaciones_curso FOREIGN KEY (curso_id)
-    REFERENCES cursos (id),
-  CONSTRAINT fk_evaluaciones_periodo FOREIGN KEY (periodo_academico_id)
-    REFERENCES periodos_academicos (id),
-  CONSTRAINT chk_evaluaciones_peso CHECK (peso >= 0 and peso <= 100)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_evaluacion_curso_periodo_nombre (curso_id, periodo_academico_id, nombre),
+  CONSTRAINT fk_evaluacion_curso FOREIGN KEY (curso_id) REFERENCES curso(id),
+  CONSTRAINT fk_evaluacion_periodo FOREIGN KEY (periodo_academico_id) REFERENCES periodo_academico(id),
+  CONSTRAINT chk_evaluacion_peso CHECK (peso >= 0 AND peso <= 100),
+  CONSTRAINT chk_evaluacion_tipo CHECK (tipo IN ('PRACTICA','EXAMEN','TAREA','PARTICIPACION','OTRO'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE importaciones_notas (
+CREATE TABLE calificacion (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  docente_id BIGINT NOT NULL,
-  curso_id BIGINT NOT NULL,
+  detalle_matricula_id BIGINT NOT NULL,
   periodo_academico_id BIGINT NOT NULL,
-  usuario_responsable_id BIGINT NOT NULL,
-  nombre_archivo VARCHAR(180) NOT NULL,
-  hash_archivo VARCHAR(128),
-  total_registros INT NOT NULL,
-  registros_validos INT NOT NULL,
-  registros_observados INT NOT NULL,
-  estado VARCHAR(30) NOT NULL,
-  detalle TEXT,
+  trimestre VARCHAR(20) NOT NULL,
+  valor_final DECIMAL(5,2) NOT NULL,
+  logro_literal VARCHAR(2) NULL,
+  registrado_por_id BIGINT NULL,
+  importacion_id BIGINT NULL,
+  fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  observacion VARCHAR(250) NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT fk_importaciones_docente FOREIGN KEY (docente_id)
-    REFERENCES docentes (persona_id),
-  CONSTRAINT fk_importaciones_curso FOREIGN KEY (curso_id)
-    REFERENCES cursos (id),
-  CONSTRAINT fk_importaciones_periodo FOREIGN KEY (periodo_academico_id)
-    REFERENCES periodos_academicos (id),
-  CONSTRAINT fk_importaciones_usuario FOREIGN KEY (usuario_responsable_id)
-    REFERENCES usuarios (id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_calificacion_detalle_periodo_trimestre (detalle_matricula_id, periodo_academico_id, trimestre),
+  KEY idx_calificacion_detalle (detalle_matricula_id),
+  KEY idx_calificacion_periodo (periodo_academico_id),
+  KEY idx_calificacion_importacion (importacion_id),
+  CONSTRAINT fk_calificacion_detallematricula FOREIGN KEY (detalle_matricula_id) REFERENCES detallematricula(id),
+  CONSTRAINT fk_calificacion_periodo FOREIGN KEY (periodo_academico_id) REFERENCES periodo_academico(id),
+  CONSTRAINT fk_calificacion_usuario FOREIGN KEY (registrado_por_id) REFERENCES usuario(id),
+  CONSTRAINT chk_calificacion_valor CHECK (valor_final >= 0 AND valor_final <= 20),
+  CONSTRAINT chk_calificacion_trimestre CHECK (trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE','ANUAL'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE notas (
+CREATE TABLE promedio_academico (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
-  estudiante_id BIGINT NOT NULL,
-  evaluacion_id BIGINT NOT NULL,
-  asignacion_docente_id BIGINT NOT NULL,
-  registrado_por_id BIGINT NOT NULL,
-  importacion_notas_id BIGINT,
-  valor DECIMAL(5,2) NOT NULL,
-  observacion VARCHAR(250),
-  PRIMARY KEY (id),
-  CONSTRAINT uk_notas_estudiante_evaluacion UNIQUE (estudiante_id, evaluacion_id),
-  CONSTRAINT fk_notas_estudiante FOREIGN KEY (estudiante_id)
-    REFERENCES estudiantes (persona_id),
-  CONSTRAINT fk_notas_evaluacion FOREIGN KEY (evaluacion_id)
-    REFERENCES evaluaciones (id),
-  CONSTRAINT fk_notas_asignacion_docente FOREIGN KEY (asignacion_docente_id)
-    REFERENCES asignaciones_docente (id),
-  CONSTRAINT fk_notas_usuario_registro FOREIGN KEY (registrado_por_id)
-    REFERENCES usuarios (id),
-  CONSTRAINT fk_notas_importacion FOREIGN KEY (importacion_notas_id)
-    REFERENCES importaciones_notas (id),
-  CONSTRAINT chk_notas_valor CHECK (valor >= 0 and valor <= 20),
-  INDEX idx_notas_estudiante (estudiante_id),
-  INDEX idx_notas_evaluacion (evaluacion_id)
-) ENGINE=InnoDB;
-
-CREATE TABLE promedios_academicos (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
   estudiante_id BIGINT NOT NULL,
   curso_id BIGINT NOT NULL,
   periodo_academico_id BIGINT NOT NULL,
   promedio DECIMAL(5,2) NOT NULL,
-  publicado BIT(1) NOT NULL,
-  calculado_en DATETIME(6) NOT NULL,
+  publicado BOOLEAN NOT NULL DEFAULT FALSE,
+  calculado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_promedios_estudiante_curso_periodo UNIQUE (estudiante_id, curso_id, periodo_academico_id),
-  CONSTRAINT fk_promedios_estudiante FOREIGN KEY (estudiante_id)
-    REFERENCES estudiantes (persona_id),
-  CONSTRAINT fk_promedios_curso FOREIGN KEY (curso_id)
-    REFERENCES cursos (id),
-  CONSTRAINT fk_promedios_periodo FOREIGN KEY (periodo_academico_id)
-    REFERENCES periodos_academicos (id),
-  CONSTRAINT chk_promedios_promedio CHECK (promedio >= 0 and promedio <= 20),
-  INDEX idx_promedios_estudiante (estudiante_id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_promedio_estudiante_curso_periodo (estudiante_id, curso_id, periodo_academico_id),
+  KEY idx_promedio_estudiante (estudiante_id),
+  CONSTRAINT fk_promedio_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiante(persona_id),
+  CONSTRAINT fk_promedio_curso FOREIGN KEY (curso_id) REFERENCES curso(id),
+  CONSTRAINT fk_promedio_periodo FOREIGN KEY (periodo_academico_id) REFERENCES periodo_academico(id),
+  CONSTRAINT chk_promedio_valor CHECK (promedio >= 0 AND promedio <= 20)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE estudiante_apoderados (
+CREATE TABLE nota (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
   estudiante_id BIGINT NOT NULL,
-  padre_familia_id BIGINT NOT NULL,
-  parentesco VARCHAR(40) NOT NULL,
-  principal BIT(1) NOT NULL,
+  evaluacion_id BIGINT NOT NULL,
+  registrado_por_id BIGINT NOT NULL,
+  importacion_id BIGINT NULL,
+  valor DECIMAL(5,2) NOT NULL,
+  observacion VARCHAR(250) NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT uk_estudiante_apoderado UNIQUE (estudiante_id, padre_familia_id),
-  CONSTRAINT fk_estudiante_apoderados_estudiante FOREIGN KEY (estudiante_id)
-    REFERENCES estudiantes (persona_id),
-  CONSTRAINT fk_estudiante_apoderados_padre FOREIGN KEY (padre_familia_id)
-    REFERENCES padres_familia (persona_id)
-) ENGINE=InnoDB;
+  UNIQUE KEY uk_nota_estudiante_evaluacion (estudiante_id, evaluacion_id),
+  KEY idx_nota_estudiante (estudiante_id),
+  KEY idx_nota_evaluacion (evaluacion_id),
+  KEY idx_nota_importacion (importacion_id),
+  CONSTRAINT fk_nota_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiante(persona_id),
+  CONSTRAINT fk_nota_evaluacion FOREIGN KEY (evaluacion_id) REFERENCES evaluacion(id),
+  CONSTRAINT fk_nota_usuario_registro FOREIGN KEY (registrado_por_id) REFERENCES usuario(id),
+  CONSTRAINT chk_nota_valor CHECK (valor >= 0 AND valor <= 20)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE auditorias (
+CREATE TABLE apoderadoestudiante (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  creado_en DATETIME(6) NOT NULL,
-  actualizado_en DATETIME(6),
+  apoderado_id BIGINT NOT NULL,
+  estudiante_id BIGINT NOT NULL,
+  parentesco VARCHAR(40) NOT NULL,
+  es_principal BOOLEAN NOT NULL DEFAULT FALSE,
+  estado BOOLEAN NOT NULL DEFAULT TRUE,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_apoderadoestudiante (estudiante_id, apoderado_id),
+  KEY idx_apoderadoestudiante_apoderado (apoderado_id),
+  KEY idx_apoderadoestudiante_estudiante (estudiante_id),
+  CONSTRAINT fk_apoderadoestudiante_apoderado FOREIGN KEY (apoderado_id) REFERENCES apoderado(persona_id),
+  CONSTRAINT fk_apoderadoestudiante_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiante(persona_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE error_importacion_excel (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  importacion_id BIGINT NOT NULL,
+  fila_excel INT NULL,
+  estudiante_texto VARCHAR(180) NULL,
+  campo VARCHAR(80) NULL,
+  descripcion_error VARCHAR(500) NOT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_error_importacion_excel_importacion (importacion_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE auditoria (
+  id BIGINT NOT NULL AUTO_INCREMENT,
   accion VARCHAR(80) NOT NULL,
   entidad VARCHAR(80) NOT NULL,
-  entidad_id BIGINT,
-  usuario_id BIGINT,
+  entidad_id BIGINT NULL,
+  usuario_id BIGINT NULL,
   usuario_responsable VARCHAR(80) NOT NULL,
-  detalle TEXT,
+  detalle TEXT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT fk_auditorias_usuario FOREIGN KEY (usuario_id)
-    REFERENCES usuarios (id)
-) ENGINE=InnoDB;
+  KEY idx_auditoria_usuario (usuario_id),
+  KEY idx_auditoria_entidad (entidad, entidad_id),
+  CONSTRAINT fk_auditoria_usuario FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE calificacion_detalle_trimestre (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  detalle_matricula_id BIGINT NOT NULL,
+  trimestre VARCHAR(20) NOT NULL,
+  numero_competencia INT NOT NULL,
+  nombre_competencia VARCHAR(255) NOT NULL,
+  columna_excel VARCHAR(5) NOT NULL,
+  nombre_nota VARCHAR(100) NOT NULL,
+  valor_nota DECIMAL(5,2) NULL,
+  fila_excel INT NOT NULL,
+  fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  importacion_id BIGINT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_calif_det_tri_detalle_tri_comp_col (detalle_matricula_id, trimestre, numero_competencia, columna_excel),
+  KEY idx_calif_det_tri_detalle (detalle_matricula_id),
+  KEY idx_calif_det_tri_importacion (importacion_id),
+  CONSTRAINT fk_calif_det_tri_detallematricula FOREIGN KEY (detalle_matricula_id) REFERENCES detallematricula(id),
+  CONSTRAINT chk_calif_det_tri_trimestre CHECK (trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE')),
+  CONSTRAINT chk_calif_det_tri_valor CHECK (valor_nota IS NULL OR (valor_nota >= 0 AND valor_nota <= 20))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE calificacion_competencia_trimestre (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  detalle_matricula_id BIGINT NOT NULL,
+  trimestre VARCHAR(20) NOT NULL,
+  numero_competencia INT NOT NULL,
+  nombre_competencia VARCHAR(255) NOT NULL,
+  promedio_competencia DECIMAL(5,2) NULL,
+  logro_literal VARCHAR(2) NULL,
+  fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  importacion_id BIGINT NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_calif_comp_tri_detalle_tri_comp (detalle_matricula_id, trimestre, numero_competencia),
+  KEY idx_calif_comp_tri_detalle (detalle_matricula_id),
+  KEY idx_calif_comp_tri_importacion (importacion_id),
+  CONSTRAINT fk_calif_comp_tri_detallematricula FOREIGN KEY (detalle_matricula_id) REFERENCES detallematricula(id),
+  CONSTRAINT chk_calif_comp_tri_trimestre CHECK (trimestre IN ('I_TRIMESTRE','II_TRIMESTRE','III_TRIMESTRE')),
+  CONSTRAINT chk_calif_comp_tri_promedio CHECK (promedio_competencia IS NULL OR (promedio_competencia >= 0 AND promedio_competencia <= 20))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE configuracion_institucional (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  codigo VARCHAR(30) NOT NULL DEFAULT 'PRINCIPAL',
+  nombre VARCHAR(150) NOT NULL,
+  logo_url VARCHAR(250) NULL,
+  direccion VARCHAR(200) NULL,
+  telefono VARCHAR(30) NULL,
+  correo_institucional VARCHAR(150) NULL,
+  ruc VARCHAR(20) NULL,
+  sitio_web VARCHAR(150) NULL,
+  creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_configuracion_codigo (codigo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
