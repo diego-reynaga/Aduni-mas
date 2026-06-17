@@ -20,6 +20,7 @@ import java.util.Map;
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final pe.edu.aduniplus.backend.security.TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -33,6 +34,15 @@ public class AuthController {
             user.getUsername(),
             user.roles()
         ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7).trim();
+            tokenBlacklistService.invalidarToken(token);
+        }
+        return ResponseEntity.ok(Map.of("message", "Sesion cerrada exitosamente"));
     }
 
     @ExceptionHandler({BadCredentialsException.class, DisabledException.class})

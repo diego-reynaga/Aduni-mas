@@ -64,6 +64,10 @@ public class JwtService {
         return List.of();
     }
 
+    public Date extractExpiration(String token) {
+        return extractAllClaims(token).getExpiration();
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
             .verifyWith(resolveKey())
