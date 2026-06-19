@@ -13,6 +13,7 @@ import { StudentPortal } from './views/student-portal/student-portal';
 import { TeacherDashboard } from './views/teacher-dashboard/teacher-dashboard';
 import { TeacherGrades } from './views/teacher-grades/teacher-grades';
 import { TeacherImport } from './views/teacher-import/teacher-import';
+import { AdminStudents } from './views/admin-students/admin-students';
 
 
 export const routes: Routes = [
@@ -58,6 +59,11 @@ export const routes: Routes = [
       {
         path: 'admin/configuracion',
         component: AdminInstitution,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/alumnos',
+        component: AdminStudents,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {

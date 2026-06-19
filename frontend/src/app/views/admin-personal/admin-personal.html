@@ -5,10 +5,9 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn" [class.active]="activeTab() === 'personas'" (click)="setTab('personas')">General (Todas las Personas)</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'general'" (click)="setTab('general')">General (Todas las Personas)</button>
     <button class="tab-btn" [class.active]="activeTab() === 'docentes'" (click)="setTab('docentes')">Cuerpo Docente</button>
     <button class="tab-btn" [class.active]="activeTab() === 'administrativos'" (click)="setTab('administrativos')">Personal Administrativo</button>
-    <button class="tab-btn" [class.active]="activeTab() === 'estudiantes'" (click)="setTab('estudiantes')">Estudiantes / Familia</button>
   </div>
 
   @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
@@ -26,8 +25,8 @@
           <div style="flex-grow: 1; max-width: 400px;">
             <input type="text" class="search-input" placeholder="Buscar por DNI, Nombres o Apellidos..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
           </div>
-          <button class="btn-primary" (click)="openAdd(activeTab() === 'personas' ? 'PERSONA' : activeTab() === 'docentes' ? 'DOCENTE' : 'ADMINISTRATIVO')">
-            + Añadir {{ activeTab() | titlecase }}
+          <button class="btn-primary" (click)="openAdd(activeTab() === 'general' ? 'PERSONA' : activeTab() === 'docentes' ? 'DOCENTE' : 'ADMINISTRATIVO')">
+            + Añadir {{ activeTab() === 'general' ? 'Persona' : activeTab() === 'docentes' ? 'Docente' : 'Administrativo' }}
           </button>
         </div>
 
@@ -87,9 +86,6 @@
                     </td>
                     <td>
                       <button class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;" (click)="openEdit(p)">Editar</button>
-                      @if (p.tipoPersona === 'ESTUDIANTE' && activeTab() === 'estudiantes') {
-                        <button class="btn-primary" style="padding: 0.2rem 0.5rem; font-size: 0.8rem; margin-left: 0.5rem;" (click)="selectEstudiante(p.id)">Apoderados</button>
-                      }
                     </td>
                   </tr>
                 } @empty {
@@ -100,80 +96,6 @@
           </div>
         }
       </div>
-
-      <!-- MATRIZ DE ASIGNACIÓN FAMILIAR -->
-      @if (activeTab() === 'estudiantes' && selectedEstudianteId()) {
-        <div class="card fade-in" style="margin-top: 2rem;">
-          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h2 class="card-title">Entorno Familiar del Estudiante</h2>
-            <button class="btn-primary" (click)="openAddApoderado()">Vincular Familiar</button>
-          </div>
-
-          @if (isAddingApoderado()) {
-            <form [formGroup]="formApoderado" (ngSubmit)="saveApoderado()" class="grid-form" style="margin-bottom: 2rem; background: var(--background-color); padding: 1.5rem; border-radius: 8px;">
-              <h3 class="col-span-full section-subtitle">Vincular Nuevo Apoderado</h3>
-              
-              <label class="field">
-                <span>Padre de Familia (ID o DNI registrado) <span style="color:var(--danger-color)">*</span></span>
-                <input type="number" formControlName="padreFamiliaId" placeholder="ID del Padre en sistema">
-              </label>
-
-              <label class="field">
-                <span>Parentesco <span style="color:var(--danger-color)">*</span></span>
-                <select formControlName="parentesco">
-                  <option value="Padre">Padre</option>
-                  <option value="Madre">Madre</option>
-                  <option value="Tio(a)">Tío(a)</option>
-                  <option value="Abuelo(a)">Abuelo(a)</option>
-                  <option value="Hermano(a) Mayor">Hermano(a) Mayor</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </label>
-
-              <label class="field checkbox-field col-span-full">
-                <input type="checkbox" formControlName="principal">
-                <span style="font-weight: 500; color: var(--primary-color)">¿Establecer como Apoderado Principal?</span>
-              </label>
-
-              <div class="col-span-full flex gap-2">
-                <button type="submit" class="btn-primary">Guardar Vinculación</button>
-                <button type="button" class="btn-secondary" (click)="cancelAddApoderado()">Cancelar</button>
-              </div>
-            </form>
-          }
-
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Familiar</th>
-                  <th>Contacto</th>
-                  <th>Parentesco</th>
-                  <th>Rol</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (apo of apoderados(); track apo.id) {
-                  <tr>
-                    <td>{{ apo.padreNombreCompleto }} <br><small>DNI: {{ apo.padreDocumento }}</small></td>
-                    <td>{{ apo.padreTelefono }} <br><small>{{ apo.padreCorreo }}</small></td>
-                    <td>{{ apo.parentesco }}</td>
-                    <td>
-                      @if (apo.principal) {
-                        <span class="badge" style="background: var(--success-color)">PRINCIPAL</span>
-                      } @else {
-                        <span class="badge" style="background: var(--text-secondary)">SECUNDARIO</span>
-                      }
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">El estudiante no tiene apoderados registrados.</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      }
     } @else {
       <!-- FORMULARIO DE ALTA Y EDICIÓN -->
       <div class="card fade-in form-card">

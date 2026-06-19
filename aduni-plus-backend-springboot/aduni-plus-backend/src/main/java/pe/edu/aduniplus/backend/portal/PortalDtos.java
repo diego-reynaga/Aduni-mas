@@ -30,6 +30,7 @@ record TeacherProgressDto(
 ) {}
 
 record UserRowDto(
+    Long id,
     String codigo,
     String persona,
     String documento,

@@ -35,6 +35,10 @@ public class Grado extends BaseEntity {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer capacidad = 30;
+
     @OneToMany(mappedBy = "grado")
     @Builder.Default
     private Set<Curso> cursos = new HashSet<>();

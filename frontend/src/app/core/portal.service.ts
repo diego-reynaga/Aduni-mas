@@ -262,6 +262,30 @@ export class PortalService {
     return this.http.put<Academico.GradoResponse>(`${API_URL}/academico/grados/${id}`, req);
   }
 
+  // --- CRUD Estudiantes ---
+  buscarEstudiantes(search: string = ''): Observable<any[]> {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    return this.http.get<any[]>(`${API_URL}/estudiantes/search`, { params });
+  }
+
+  crearEstudiante(req: any): Observable<any> {
+    return this.http.post<any>(`${API_URL}/estudiantes`, req);
+  }
+
+  // --- CRUD Matriculas ---
+  listarMatriculas(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/matriculas`);
+  }
+
+  matricularEstudiante(req: any): Observable<any> {
+    return this.http.post<any>(`${API_URL}/matriculas`, req);
+  }
+
+  cambiarEstadoMatricula(id: number, estado: string): Observable<void> {
+    return this.http.patch<void>(`${API_URL}/matriculas/${id}/estado`, { estado });
+  }
+
   deleteGrado(id: number): Observable<void> {
     return this.http.delete<void>(`${API_URL}/academico/grados/${id}`);
   }

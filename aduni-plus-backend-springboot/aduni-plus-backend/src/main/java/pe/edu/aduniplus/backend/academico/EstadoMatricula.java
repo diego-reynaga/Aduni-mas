@@ -1,8 +1,8 @@
 package pe.edu.aduniplus.backend.academico;
 
 public enum EstadoMatricula {
-    ACTIVA,
-    RETIRADA,
-    FINALIZADA,
-    ANULADA
+    PRE_MATRICULADO,
+    ACTIVO,
+    RETIRADO,
+    SUSPENDIDO
 }

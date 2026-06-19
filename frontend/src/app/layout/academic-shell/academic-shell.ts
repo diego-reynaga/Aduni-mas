@@ -15,6 +15,7 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Personas y usuarios', route: '/admin/usuarios', eyebrow: 'Accesos' },
     { label: 'Personal y Familia', route: '/admin/personal', eyebrow: 'Recursos Humanos' },
     { label: 'Gestion academica', route: '/admin/academico', eyebrow: 'Estructura' },
+    { label: 'Matriculas y Alumnos', route: '/admin/alumnos', eyebrow: 'Gestion' },
     { label: 'Supervision docente', route: '/admin/supervision', eyebrow: 'Notas' },
     { label: 'Configuracion', route: '/admin/configuracion', eyebrow: 'Institucion' },
   ],

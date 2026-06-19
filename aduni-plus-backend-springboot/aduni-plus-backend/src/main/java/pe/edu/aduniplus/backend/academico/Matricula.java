@@ -39,5 +39,5 @@ public class Matricula extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     @Column(nullable = false, length = 20)
-    private EstadoMatricula estado = EstadoMatricula.ACTIVA;
+    private EstadoMatricula estado = EstadoMatricula.ACTIVO;
 }

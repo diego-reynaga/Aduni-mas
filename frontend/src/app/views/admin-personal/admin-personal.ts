@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@a
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
-import { PersonaResponse, PersonaRequest, EstudianteApoderadoResponse, EstudianteApoderadoRequest } from '../../core/models';
+import { PersonaResponse, PersonaRequest } from '../../core/models';
 
-type Tab = 'personas' | 'docentes' | 'administrativos' | 'estudiantes';
+type Tab = 'general' | 'docentes' | 'administrativos';
 
 @Component({
   selector: 'app-admin-personal',
@@ -17,31 +17,29 @@ type Tab = 'personas' | 'docentes' | 'administrativos' | 'estudiantes';
 export class AdminPersonal {
   private readonly portal = inject(PortalService);
 
-  readonly activeTab = signal<Tab>('personas');
+  readonly activeTab = signal<Tab>('general');
   readonly personas = signal<PersonaResponse[]>([]);
-  readonly apoderados = signal<EstudianteApoderadoResponse[]>([]);
-  readonly selectedEstudianteId = signal<number | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
   readonly successMsg = signal('');
-
-  // --- FILTROS DE BÚSQUEDA ---
   readonly searchQuery = signal('');
+  readonly isAdding = signal(false);
+  readonly editingPersona = signal<PersonaResponse | null>(null);
 
   readonly filteredPersonas = computed(() => {
     const q = this.searchQuery().toLowerCase();
     const tab = this.activeTab();
     return this.personas().filter(p => {
-      const matchTab = tab === 'personas' ||
+      const matchTab = tab === 'general' ||
                        (tab === 'docentes' && p.tipoPersona === 'DOCENTE') ||
-                       (tab === 'administrativos' && p.tipoPersona === 'ADMINISTRATIVO') ||
-                       (tab === 'estudiantes' && p.tipoPersona === 'ESTUDIANTE');
+                       (tab === 'administrativos' && p.tipoPersona === 'ADMINISTRATIVO');
       if (!matchTab) return false;
 
       if (!q) return true;
-      return p.nombres.toLowerCase().includes(q) ||
+      const matchSearch = p.nombres.toLowerCase().includes(q) ||
              p.apellidos.toLowerCase().includes(q) ||
              p.documentoIdentidad.toLowerCase().includes(q);
+      return matchSearch;
     });
   });
 
@@ -57,11 +55,6 @@ export class AdminPersonal {
     return map;
   });
 
-  // Estados de formularios compartidos
-  readonly isAdding = signal(false);
-  readonly editingPersona = signal<PersonaResponse | null>(null);
-
-  // Formulario Base de Persona (Manejando campos requeridos y tipos)
   readonly formPersona = new FormGroup({
     tipoPersona: new FormControl('PERSONA', { nonNullable: true, validators: [Validators.required] }),
     nombres: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -71,20 +64,11 @@ export class AdminPersonal {
     direccion: new FormControl(''),
     telefono: new FormControl(''),
     correo: new FormControl('', [Validators.email]),
-    // Campos Específicos
     codigo: new FormControl(''),
     cargo: new FormControl(''),
     especialidad: new FormControl(''),
     areaAcademica: new FormControl(''),
     ocupacion: new FormControl(''),
-  });
-
-  // Formulario Vinculación Familiar
-  readonly isAddingApoderado = signal(false);
-  readonly formApoderado = new FormGroup({
-    padreFamiliaId: new FormControl<number | null>(null, [Validators.required]),
-    parentesco: new FormControl('', [Validators.required]),
-    principal: new FormControl(false),
   });
 
   constructor() {
@@ -95,9 +79,6 @@ export class AdminPersonal {
     this.activeTab.set(tab);
     this.searchQuery.set('');
     this.cancelAdd();
-    this.isAddingApoderado.set(false);
-    this.selectedEstudianteId.set(null);
-    this.apoderados.set([]);
     this.error.set('');
     this.successMsg.set('');
   }
@@ -184,61 +165,6 @@ export class AdminPersonal {
       },
       error: (err) => {
         this.error.set(err?.error?.message || 'Error al guardar el registro.');
-      }
-    });
-  }
-
-  // --- Lógica de Apoderados ---
-  selectEstudiante(id: number) {
-    this.selectedEstudianteId.set(id);
-    this.loadApoderados(id);
-  }
-
-  loadApoderados(id: number) {
-    this.loading.set(true);
-    this.portal.getApoderados(id).subscribe({
-      next: (res) => {
-        this.apoderados.set(res);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Error al cargar apoderados.');
-        this.loading.set(false);
-      }
-    });
-  }
-
-  openAddApoderado() {
-    this.isAddingApoderado.set(true);
-    this.formApoderado.reset({ principal: false });
-  }
-
-  cancelAddApoderado() {
-    this.isAddingApoderado.set(false);
-  }
-
-  saveApoderado() {
-    const eId = this.selectedEstudianteId();
-    if (this.formApoderado.invalid || !eId) {
-      this.formApoderado.markAllAsTouched();
-      return;
-    }
-
-    const val = this.formApoderado.value;
-    const req: EstudianteApoderadoRequest = {
-      padreFamiliaId: val.padreFamiliaId!,
-      parentesco: val.parentesco!,
-      principal: val.principal || false
-    };
-
-    this.portal.asignarApoderado(eId, req).subscribe({
-      next: () => {
-        this.loadApoderados(eId);
-        this.cancelAddApoderado();
-        this.successMsg.set('Apoderado vinculado correctamente.');
-      },
-      error: (err) => {
-        this.error.set(err?.error?.message || 'Error al vincular apoderado.');
       }
     });
   }
