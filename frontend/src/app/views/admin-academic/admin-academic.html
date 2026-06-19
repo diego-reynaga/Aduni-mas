@@ -1,60 +1,419 @@
-<section class="page-stack">
-  <div class="page-heading">
-    <div>
-      <p class="section-kicker">Gestion academica</p>
-      <h2>Jerarquia curricular de Aduni+</h2>
-      <p>
-        Mantenga la relacion gestion, nivel, grado, paralelo, curso y materia que el backend registra con restricciones unicas.
-      </p>
+<div class="admin-dashboard-layout">
+  <!-- Cabecera -->
+  <header class="dashboard-header">
+    <div class="header-titles">
+      <h1 class="page-title">Estructura Académica</h1>
+      <p class="page-subtitle">Gestión de niveles, grados, materias y asignación de cursos</p>
     </div>
-  </div>
+    <div class="header-actions">
+      <!-- Alerts -->
+      @if (error()) {
+        <div class="alert alert-danger" role="alert">{{ error() }}</div>
+      }
+      @if (successMessage()) {
+        <div class="alert alert-success" role="alert">{{ successMessage() }}</div>
+      }
+    </div>
+  </header>
 
-  @if (error()) {
-    <p class="read-only-note">{{ error() }}</p>
+  <!-- Pestañas -->
+  <nav class="tabs-nav">
+    <button class="tab-btn" [class.active]="activeTab() === 'niveles'" (click)="setTab('niveles')">
+      Niveles Educativos
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'grados'" (click)="setTab('grados')">
+      Grados y Secciones
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'materias'" (click)="setTab('materias')">
+      Catálogo de Materias
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'oferta'" (click)="setTab('oferta')">
+      Oferta Educativa
+    </button>
+  </nav>
+
+  <main class="dashboard-content">
+    
+    <!-- ==================== TABS ==================== -->
+
+    <!-- TAB: NIVELES EDUCATIVOS -->
+    @if (activeTab() === 'niveles') {
+      <div class="card panel-card fade-in">
+        <div class="panel-header">
+          <h2>Niveles Educativos</h2>
+          <div class="header-actions-group">
+            <button class="btn-secondary" (click)="openClonarModal()">Clonar Estructura</button>
+            <button class="btn-primary" (click)="openAddNivel()">+ Nuevo Nivel</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Turno</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (nivel of niveles(); track nivel.id) {
+                <tr [class.inactive-row]="!nivel.activo">
+                  <td>{{ nivel.id }}</td>
+                  <td class="font-bold">{{ nivel.nombre }}</td>
+                  <td>{{ nivel.turno }}</td>
+                  <td>{{ nivel.descripcion || '-' }}</td>
+                  <td>
+                    <span class="status-badge" [class.status-active]="nivel.activo" [class.status-inactive]="!nivel.activo">
+                      {{ nivel.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <div class="action-row-btns">
+                      <button class="btn-primary-subtle" (click)="openEditNivel(nivel)">Editar</button>
+                      @if (nivel.activo) {
+                        <button class="btn-danger-subtle" (click)="deleteNivel(nivel.id)">Desactivar</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="text-center text-muted">No hay niveles educativos registrados.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- TAB: GRADOS Y SECCIONES (Tree View) -->
+    @if (activeTab() === 'grados') {
+      <div class="card panel-card fade-in">
+        <div class="panel-header">
+          <h2>Grados y Secciones</h2>
+          <p class="text-sm text-muted">Haga clic en un nivel para expandir sus grados.</p>
+        </div>
+        
+        <div class="tree-view-container">
+          @for (nivel of niveles(); track nivel.id) {
+            <div class="tree-node">
+              <div class="tree-node-header" (click)="toggleNivelExpansion(nivel.id)">
+                <div class="tree-node-info">
+                  <span class="tree-icon">{{ expandedNiveles().has(nivel.id) ? '▼' : '▶' }}</span>
+                  <span class="font-bold">{{ nivel.nombre }} ({{ nivel.turno }})</span>
+                </div>
+                <div class="tree-node-actions" (click)="$event.stopPropagation()">
+                  <button class="btn-primary-subtle text-xs" (click)="openAddGrado(nivel.id)">+ Añadir Grado</button>
+                </div>
+              </div>
+              
+              @if (expandedNiveles().has(nivel.id)) {
+                <div class="tree-node-children fade-in">
+                  @if (gradosPorNivel().get(nivel.id)?.length) {
+                    <table class="data-table tree-table">
+                      <thead>
+                        <tr>
+                          <th>Grado</th>
+                          <th>Paralelo / Sección</th>
+                          <th>Estado</th>
+                          <th class="text-right">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (grado of gradosPorNivel().get(nivel.id); track grado.id) {
+                          <tr [class.inactive-row]="!grado.activo">
+                            <td class="font-bold pl-4">{{ grado.nombre }}</td>
+                            <td>{{ grado.paralelo }}</td>
+                            <td>
+                              <span class="status-badge" [class.status-active]="grado.activo" [class.status-inactive]="!grado.activo">
+                                {{ grado.activo ? 'Activo' : 'Inactivo' }}
+                              </span>
+                            </td>
+                            <td class="text-right">
+                              <div class="action-row-btns">
+                                <button class="btn-primary-subtle" (click)="openEditGrado(grado)">Editar</button>
+                                @if (grado.activo) {
+                                  <button class="btn-danger-subtle" (click)="deleteGrado(grado)">Desactivar</button>
+                                }
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  } @else {
+                    <div class="empty-state-small">No hay grados registrados en este nivel.</div>
+                  }
+                </div>
+              }
+            </div>
+          } @empty {
+            <div class="empty-state">
+              <p>No hay niveles educativos registrados. Primero cree un Nivel Educativo.</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- TAB: MATERIAS -->
+    @if (activeTab() === 'materias') {
+      <div class="card panel-card fade-in">
+        <div class="panel-header with-search">
+          <div class="search-box">
+            <select class="form-input search-input" [ngModel]="selectedArea()" (ngModelChange)="selectedArea.set($event)">
+              <option value="">Todas las Áreas</option>
+              @for (area of areas(); track area) {
+                <option [value]="area">{{ area }}</option>
+              }
+            </select>
+            <input type="text" class="form-input search-input" placeholder="Buscar materia por código, nombre..." 
+                   [ngModel]="searchMateriaQuery()" (ngModelChange)="searchMateriaQuery.set($event)">
+          </div>
+          <button class="btn-primary" (click)="openAddMateria()">+ Nueva Materia</button>
+        </div>
+        
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre de Asignatura</th>
+                <th>Área Académica</th>
+                <th>Estado</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (materia of filteredMaterias(); track materia.id) {
+                <tr [class.inactive-row]="!materia.activa">
+                  <td class="font-mono">{{ materia.codigo }}</td>
+                  <td class="font-bold">{{ materia.nombre }}</td>
+                  <td><span class="area-chip">{{ materia.area }}</span></td>
+                  <td>
+                    <span class="status-badge" [class.status-active]="materia.activa" [class.status-inactive]="!materia.activa">
+                      {{ materia.activa ? 'Activa' : 'Inactiva' }}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    <div class="action-row-btns">
+                      <button class="btn-primary-subtle" (click)="openEditMateria(materia)">Editar</button>
+                      @if (materia.activa) {
+                        <button class="btn-danger-subtle" (click)="deleteMateria(materia.id)">Desactivar</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="text-center text-muted">No se encontraron materias.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- TAB: OFERTA EDUCATIVA (ASIGNACIÓN MASIVA) -->
+    @if (activeTab() === 'oferta') {
+      <div class="oferta-grid fade-in">
+        
+        <!-- Panel Izquierdo: Selección y Grados -->
+        <div class="card panel-card oferta-left">
+          <div class="panel-header">
+            <h3>Seleccionar Grado</h3>
+          </div>
+          <div class="form-group selector-grado">
+            <select class="form-input mb-3" (change)="onSelectNivelForOferta($event)" [value]="selectedNivelForOferta() || ''">
+              <option value="" disabled selected>-- Seleccione un Nivel --</option>
+              @for (nivel of niveles(); track nivel.id) {
+                <option [value]="nivel.id">{{ nivel.nombre }} ({{ nivel.turno }})</option>
+              }
+            </select>
+            @if (selectedNivelForOferta()) {
+              <select class="form-input" (change)="onSelectGradoForOferta($event)" [value]="selectedGradoForOferta() || ''">
+                <option value="" disabled selected>-- Seleccione un Grado --</option>
+                @for (grado of gradosForOferta(); track grado.id) {
+                  <option [value]="grado.id">{{ grado.nombre }} "{{ grado.paralelo }}"</option>
+                }
+              </select>
+            }
+          </div>
+
+          @if (selectedGradoForOferta()) {
+            <h4 class="mt-4 mb-2">Materias Actuales en este Grado:</h4>
+            <div class="current-courses-list">
+              @for (curso of cursos(); track curso.id) {
+                <div class="course-item">
+                  <div class="course-info">
+                    <span class="font-mono text-xs">{{ curso.materiaCodigo }}</span>
+                    <strong>{{ curso.materiaNombre }}</strong>
+                  </div>
+                  <button class="btn-icon text-danger" title="Remover" (click)="removeCurso(curso.id)">×</button>
+                </div>
+              } @empty {
+                <p class="text-muted text-sm">Este grado aún no tiene materias asignadas.</p>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Panel Derecho: Catálogo para asignar -->
+        <div class="card panel-card oferta-right" [class.disabled-panel]="!selectedGradoForOferta()">
+          <div class="panel-header">
+            <h3>Asignar Nuevas Materias</h3>
+            <button class="btn-primary" [disabled]="selectedMateriasToAssign().length === 0" (click)="assignMaterias()">
+              Asignar Seleccionadas ({{ selectedMateriasToAssign().length }})
+            </button>
+          </div>
+          
+          <div class="materias-checklist">
+            @for (materia of materias(); track materia.id) {
+              @if (materia.activa && !assignedMateriasIds().has(materia.id)) {
+                <label class="checklist-item">
+                  <input type="checkbox" 
+                         [checked]="selectedMateriasToAssign().includes(materia.id)"
+                         (change)="toggleMateriaSelection(materia.id)">
+                  <div class="checklist-content">
+                    <span class="materia-name">{{ materia.nombre }}</span>
+                    <span class="materia-area">{{ materia.area }}</span>
+                  </div>
+                </label>
+              }
+            }
+          </div>
+        </div>
+
+      </div>
+    }
+
+  </main>
+
+  <!-- ==================== MODALES ==================== -->
+
+  <!-- Modal Clonar -->
+  @if (isCloning()) {
+    <div class="modal-overlay">
+      <div class="modal-container">
+        <h2 class="modal-title">Clonar Estructura Académica</h2>
+        <p class="text-sm text-muted mb-4">
+          Esta acción copiará todos los niveles, grados y cursos de una gestión origen hacia una gestión destino. 
+          Solo se copian los elementos activos.
+        </p>
+        <form [formGroup]="clonarForm" (ngSubmit)="saveClonar()" class="modal-form">
+          <div class="form-group">
+            <label>Gestión Académica Origen</label>
+            <select class="form-input" formControlName="gestionOrigenId">
+              <option [ngValue]="null" disabled selected>-- Seleccione Origen --</option>
+              @for (g of gestiones(); track g.id) {
+                <option [ngValue]="g.id">{{ g.nombre }} ({{ g.anio }})</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Gestión Académica Destino</label>
+            <select class="form-input" formControlName="gestionDestinoId">
+              <option [ngValue]="null" disabled selected>-- Seleccione Destino --</option>
+              @for (g of gestiones(); track g.id) {
+                <option [ngValue]="g.id">{{ g.nombre }} ({{ g.anio }})</option>
+              }
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeClonarModal()">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="clonarForm.invalid">Clonar Estructura</button>
+          </div>
+        </form>
+      </div>
+    </div>
   }
 
-  <div class="two-column-grid">
-    @for (level of levels(); track level.nivel + level.turno) {
-      <article class="surface">
-        <div class="surface-header">
-          <div>
-            <p class="section-kicker">{{ level.turno }}</p>
-            <h3>{{ level.nivel }}</h3>
-            <p>{{ level.descripcion }}</p>
+  <!-- Modal Nivel -->
+  @if (isAddingNivel() || isEditingNivel()) {
+    <div class="modal-overlay">
+      <div class="modal-container">
+        <h2 class="modal-title">{{ isAddingNivel() ? 'Nuevo Nivel Educativo' : 'Editar Nivel Educativo' }}</h2>
+        <form [formGroup]="nivelForm" (ngSubmit)="saveNivel()" class="modal-form">
+          <div class="form-group">
+            <label>Nombre del Nivel (Ej. Primaria)</label>
+            <input type="text" class="form-input" formControlName="nombre" placeholder="Nombre...">
           </div>
-          <span class="status-pill is-good">Activo</span>
-        </div>
-
-        <div class="surface-body compact-list">
-          <div>
-            <strong>Grados y paralelos</strong>
-            <div class="data-chip-row mt-3">
-              @for (grado of level.grados; track grado) {
-                <span class="data-chip">{{ grado }}</span>
-              }
-            </div>
+          <div class="form-group">
+            <label>Turno</label>
+            <select class="form-input" formControlName="turno">
+              <option value="MANANA">Mañana</option>
+              <option value="TARDE">Tarde</option>
+              <option value="NOCHE">Noche</option>
+            </select>
           </div>
-
-          <div>
-            <strong>Materias catalogadas</strong>
-            <div class="data-chip-row mt-3">
-              @for (materia of level.materias; track materia) {
-                <span class="data-chip">{{ materia }}</span>
-              }
-            </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <textarea class="form-input" formControlName="descripcion" rows="3"></textarea>
           </div>
-        </div>
-      </article>
-    }
-  </div>
-
-  <section class="surface">
-    <div class="surface-header">
-      <div>
-        <h3>Estado de estructura</h3>
-        <p>Informacion cargada desde gestiones, niveles, grados, cursos y materias de la base de datos.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeNivelModal()">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="nivelForm.invalid">Guardar</button>
+          </div>
+        </form>
       </div>
-      <span class="status-pill is-good">{{ levels().length }} nivel(es)</span>
     </div>
-  </section>
-</section>
+  }
+
+  <!-- Modal Grado -->
+  @if (isAddingGrado() || isEditingGrado()) {
+    <div class="modal-overlay">
+      <div class="modal-container">
+        <h2 class="modal-title">{{ isAddingGrado() ? 'Nuevo Grado' : 'Editar Grado' }}</h2>
+        <form [formGroup]="gradoForm" (ngSubmit)="saveGrado()" class="modal-form">
+          <div class="form-group">
+            <label>Nombre del Grado (Ej. 1° Año)</label>
+            <input type="text" class="form-input" formControlName="nombre">
+          </div>
+          <div class="form-group">
+            <label>Paralelo / Sección (Ej. A, B, Única)</label>
+            <input type="text" class="form-input" formControlName="paralelo">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeGradoModal()">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="gradoForm.invalid">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Materia -->
+  @if (isAddingMateria() || isEditingMateria()) {
+    <div class="modal-overlay">
+      <div class="modal-container">
+        <h2 class="modal-title">{{ isAddingMateria() ? 'Nueva Materia' : 'Editar Materia' }}</h2>
+        <form [formGroup]="materiaForm" (ngSubmit)="saveMateria()" class="modal-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Código (Ej. MAT-101)</label>
+              <input type="text" class="form-input font-mono" formControlName="codigo">
+            </div>
+            <div class="form-group flex-2">
+              <label>Nombre de Asignatura</label>
+              <input type="text" class="form-input" formControlName="nombre">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Área Académica (Ej. Ciencias, Matemáticas)</label>
+            <input type="text" class="form-input" formControlName="area">
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeMateriaModal()">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="materiaForm.invalid">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+</div>

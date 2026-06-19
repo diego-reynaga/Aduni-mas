@@ -6,6 +6,7 @@ import { AdminDashboard } from './views/admin-dashboard/admin-dashboard';
 import { AdminInstitution } from './views/admin-institution/admin-institution';
 import { AdminSupervision } from './views/admin-supervision/admin-supervision';
 import { AdminUsers } from './views/admin-users/admin-users';
+import { AdminPersonal } from './views/admin-personal/admin-personal';
 import { FamilyPortal } from './views/family-portal/family-portal';
 import { Login } from './views/login/login';
 import { StudentPortal } from './views/student-portal/student-portal';
@@ -37,6 +38,11 @@ export const routes: Routes = [
       {
         path: 'admin/usuarios',
         component: AdminUsers,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/personal',
+        component: AdminPersonal,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
