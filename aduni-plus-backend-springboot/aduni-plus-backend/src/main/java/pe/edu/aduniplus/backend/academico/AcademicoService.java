@@ -247,6 +247,7 @@ public class AcademicoService {
             grado.getId(),
             grado.getNombre(),
             grado.getParalelo(),
+            grado.getCapacidad(),
             grado.getActivo(),
             grado.getNivelEducativo() != null ? grado.getNivelEducativo().getId() : null,
             grado.getNivelEducativo() != null ? grado.getNivelEducativo().getNombre() + " " + grado.getNivelEducativo().getTurno() : null

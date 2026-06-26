@@ -55,4 +55,22 @@ public class AuditoriaService {
                 a.getDetalle()
         );
     }
+
+    @Transactional
+    public void registrarAuditoria(String accion, String entidad, Long entidadId, String detalle) {
+        String usuario = "SISTEMA";
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
+            usuario = authentication.getName();
+        }
+
+        Auditoria auditoria = Auditoria.builder()
+                .accion(accion)
+                .entidad(entidad)
+                .entidadId(entidadId)
+                .usuarioResponsable(usuario)
+                .detalle(detalle)
+                .build();
+        auditoriaRepository.save(auditoria);
+    }
 }

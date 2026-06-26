@@ -113,7 +113,7 @@ public class AcademicPortalService {
             .distinct()
             .count();
         long enrolledStudents = matriculaRepository.findAll().stream()
-            .filter((matricula) -> matricula.getEstado() == EstadoMatricula.ACTIVA)
+            .filter((matricula) -> matricula.getEstado() == EstadoMatricula.ACTIVO)
             .count();
         long observedImports = importacionNotasRepository.findAll().stream()
             .filter((item) -> item.getEstado() == EstadoImportacionNotas.OBSERVADA || item.getEstado() == EstadoImportacionNotas.FALLIDA)
@@ -240,7 +240,7 @@ public class AcademicPortalService {
         long uniqueStudents = assignments.stream()
             .map((item) -> item.getCurso().getGrado().getId())
             .distinct()
-            .flatMap((gradeId) -> matriculaRepository.findByGradoIdAndEstado(gradeId, EstadoMatricula.ACTIVA).stream())
+            .flatMap((gradeId) -> matriculaRepository.findByGradoIdAndEstado(gradeId, EstadoMatricula.ACTIVO).stream())
             .map((matricula) -> matricula.getEstudiante().getId())
             .distinct()
             .count();
@@ -283,7 +283,7 @@ public class AcademicPortalService {
 
         List<Matricula> matriculas = matriculaRepository.findByGradoIdAndEstado(
             selected.getCurso().getGrado().getId(),
-            EstadoMatricula.ACTIVA
+            EstadoMatricula.ACTIVO
         );
         List<GradeEntryDto> rows = matriculas.stream()
             .map(Matricula::getEstudiante)
@@ -328,7 +328,7 @@ public class AcademicPortalService {
         );
         Map<String, Estudiante> studentsByCode = matriculaRepository.findByGradoIdAndEstado(
             assignment.getCurso().getGrado().getId(),
-            EstadoMatricula.ACTIVA
+            EstadoMatricula.ACTIVO
         ).stream().collect(Collectors.toMap(
             (matricula) -> matricula.getEstudiante().getCodigoEstudiante(),
             Matricula::getEstudiante,
@@ -725,7 +725,7 @@ public class AcademicPortalService {
         );
         List<Matricula> students = matriculaRepository.findByGradoIdAndEstado(
             assignment.getCurso().getGrado().getId(),
-            EstadoMatricula.ACTIVA
+            EstadoMatricula.ACTIVO
         );
         List<Nota> notes = notaRepository.findByAsignacionDocenteId(assignment.getId());
 
@@ -928,8 +928,8 @@ public class AcademicPortalService {
         Optional<Matricula> existing = matriculaRepository.findByEstudianteIdAndGradoId(student.getId(), grade.getId());
         if (existing.isPresent()) {
             Matricula enrollment = existing.get();
-            if (enrollment.getEstado() != EstadoMatricula.ACTIVA) {
-                enrollment.setEstado(EstadoMatricula.ACTIVA);
+            if (enrollment.getEstado() != EstadoMatricula.ACTIVO) {
+                enrollment.setEstado(EstadoMatricula.ACTIVO);
                 enrollment.setFechaMatricula(LocalDate.now());
                 matriculaRepository.save(enrollment);
                 return true;
@@ -948,7 +948,7 @@ public class AcademicPortalService {
                 .estudiante(student)
                 .grado(grade)
                 .fechaMatricula(LocalDate.now())
-                .estado(EstadoMatricula.ACTIVA)
+                .estado(EstadoMatricula.ACTIVO)
                 .build()
         );
         return true;
