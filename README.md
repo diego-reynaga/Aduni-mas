@@ -67,7 +67,7 @@ SoftEscolar/
 3. Ejecuta:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS aduni_plus
+CREATE DATABASE IF NOT EXISTS aduniplus
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 ```
@@ -83,14 +83,18 @@ aduni-plus-backend-springboot/aduni-plus-backend/src/main/resources/application.
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/aduni_plus?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/aduniplus?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
     username: root
-    password: TU_CONTRASEÑA_DE_MYSQL
+    password: 12345678
 ```
 
 Spring Boot generará y actualizará las tablas automáticamente porque el proyecto utiliza `spring.jpa.hibernate.ddl-auto=update`.
 
-El archivo `aduni_plus_schema.sql` contiene el esquema de referencia, pero no es necesario importarlo para iniciar el proyecto normalmente.
+El esquema limpio de referencia esta en `database/schema_aduniplus_limpio.sql`. Para borrar usuarios existentes y cargar usuarios de prueba controlados, ejecuta:
+
+```powershell
+mysql -u root -p aduniplus < database\seed_usuarios_prueba.sql
+```
 
 ## 5. Ejecutar el backend
 
@@ -133,15 +137,16 @@ El frontend está configurado para consumir la API en `http://localhost:8080/api
 
 ## Credenciales de prueba
 
-| Rol | Usuario | Contraseña |
-| --- | --- | --- |
-| Administrador | `admin.aduni` | `Aduni1234!` |
-| Docente | `docente.algebra` | `Aduni1234!` |
-| Estudiante | `estudiante.camila` | `Aduni1234!` |
-| Estudiante | `estudiante.diego` | `Aduni1234!` |
-| Padre | `padre.rojas` | `Aduni1234!` |
+Estas cuentas se crean con `database/seed_usuarios_prueba.sql`. El script elimina primero todos los usuarios existentes y luego crea solo estas cuentas:
 
-> Estas credenciales funcionarán cuando los usuarios de prueba correspondientes estén registrados en la base de datos.
+| Rol | Usuario | Contraseña | Persona vinculada |
+| --- | --- | --- | --- |
+| Administrador | `admin.test` | `Admin2026!` | ADMIN ADUNI |
+| Docente | `docente.test` | `Docente2026!` | DANIEL CARDENAS |
+| Padre/apoderado | `familia.test` | `Familia2026!` | FAMILIA PRUEBA |
+| Estudiante | `estudiante.aparco` | `Estudiante2026!` | APARCO BERROCAL YHOSHUA ADRIEL |
+| Estudiante | `estudiante.atao` | `Estudiante2026!` | ATAO MAUCAYLLE DANILO |
+| Estudiante | `estudiante.carbajal` | `Estudiante2026!` | CARBAJAL QUIQUINLLA BRITNY |
 
 ## Orden recomendado para iniciar el proyecto
 
@@ -221,7 +226,19 @@ GET  http://localhost:8080/api/notas/importaciones/{id}
 GET  http://localhost:8080/api/notas/importaciones/{id}/errores
 ```
 
-Los `POST` reciben `multipart/form-data` con `file`, `trimestre` y `assignmentId` o `cursoId`. El backend valida `.xlsx`, tamaño máximo de 10MB, hoja seleccionada, permisos por rol, asignación docente, matrícula activa y notas en rango 0 a 20. La confirmación guarda notas individuales en `calificacion_detalle_trimestre`, promedios de competencia en `calificacion_competencia_trimestre`, promedio final en `notas` y `promedios_academicos`, además de la trazabilidad en `importaciones_notas` y `error_importacion_excel`.
+Los `POST` reciben `multipart/form-data` con `file`, `trimestre` y `assignmentId` o `cursoId`. El backend valida `.xlsx`, tamaño máximo de 10MB, hoja seleccionada, permisos por rol, asignación docente, matrícula activa y notas en rango 0 a 20. La confirmación guarda notas individuales en `calificacion_detalle_trimestre`, promedios de competencia en `calificacion_competencia_trimestre`, promedio final en `calificacion`, `nota` y `promedio_academico`, además de la trazabilidad en `importacion_excel` y `error_importacion_excel`.
+
+## Modelo relacional limpio
+
+El backend apunta por defecto a la base MySQL `aduniplus`. Los scripts de respaldo, reinicio y esquema limpio están en `database/`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File database\backup_aduniplus.ps1
+mysql -u root -p < database\reset_database.sql
+mysql -u root -p aduniplus < database\seed_usuarios_prueba.sql
+```
+
+El esquema final está en `database/schema_aduniplus_limpio.sql` y la explicación de tablas conservadas, eliminadas, relaciones modificadas y rutas sin bucles está en `database/modelo_relacional_limpio.md`.
 
 Prueba rápida del parser sin depender de MySQL:
 
@@ -280,7 +297,3 @@ Verifica:
 1. Que `http://localhost:8080/api/health` responda correctamente.
 2. Que el frontend se abra desde `http://localhost:4200`.
 3. Que la constante `frontend/src/app/core/api.constants.ts` apunte a `http://localhost:8080/api`.
-
-## Nota sobre usuarios de prueba
-
-El repositorio no incluye actualmente un proceso automático que cree los usuarios indicados en la sección de credenciales de prueba. Si la base de datos está vacía, estos usuarios deben registrarse previamente con sus roles y la contraseña almacenada con BCrypt.

@@ -5,10 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.aduniplus.backend.academico.AsignacionDocente;
 import pe.edu.aduniplus.backend.academico.Curso;
+import pe.edu.aduniplus.backend.academico.DetalleMatricula;
+import pe.edu.aduniplus.backend.academico.DetalleMatriculaRepository;
 import pe.edu.aduniplus.backend.academico.Matricula;
 import pe.edu.aduniplus.backend.academico.PeriodoAcademico;
 import pe.edu.aduniplus.backend.auditoria.Auditoria;
 import pe.edu.aduniplus.backend.auditoria.AuditoriaRepository;
+import pe.edu.aduniplus.backend.notas.Calificacion;
+import pe.edu.aduniplus.backend.notas.CalificacionRepository;
 import pe.edu.aduniplus.backend.notas.EstadoImportacionNotas;
 import pe.edu.aduniplus.backend.notas.Evaluacion;
 import pe.edu.aduniplus.backend.notas.EvaluacionRepository;
@@ -26,6 +30,7 @@ import pe.edu.aduniplus.backend.usuario.Usuario;
 import pe.edu.aduniplus.backend.usuario.UsuarioRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +42,8 @@ public class CalificacionTrimestreImportacionService {
     private final ErrorImportacionExcelRepository errorImportacionExcelRepository;
     private final CalificacionDetalleTrimestreRepository detalleRepository;
     private final CalificacionCompetenciaTrimestreRepository competenciaRepository;
+    private final DetalleMatriculaRepository detalleMatriculaRepository;
+    private final CalificacionRepository calificacionRepository;
     private final EvaluacionRepository evaluacionRepository;
     private final NotaRepository notaRepository;
     private final PromedioAcademicoRepository promedioAcademicoRepository;
@@ -63,9 +70,7 @@ public class CalificacionTrimestreImportacionService {
         AsignacionDocente assignment = validation.asignacionDocente();
 
         ImportacionNotas batch = importacionNotasRepository.save(ImportacionNotas.builder()
-            .docente(assignment.getDocente())
-            .curso(validation.curso())
-            .periodoAcademico(validation.periodoAcademico())
+            .asignacionDocente(assignment)
             .usuarioResponsable(user)
             .nombreArchivo(originalFilename)
             .hashArchivo(fileHash)
@@ -98,22 +103,24 @@ public class CalificacionTrimestreImportacionService {
             }
 
             Matricula matricula = row.matricula();
+            DetalleMatricula detalleMatricula = ensureDetalleMatricula(matricula, validation.curso());
             int rowDetails = 0;
             for (RegistroNotasCompetenciaParsed competence : row.parsed().competencias()) {
-                upsertCompetence(validation, batch, matricula, competence);
+                upsertCompetence(validation, batch, detalleMatricula, competence);
                 savedCompetences++;
 
                 for (RegistroNotasNotaParsed note : competence.notas()) {
                     if (!note.valida()) {
                         continue;
                     }
-                    upsertDetail(validation, batch, matricula, competence, note, row.parsed().filaExcel());
+                    upsertDetail(validation, batch, detalleMatricula, competence, note, row.parsed().filaExcel());
                     savedDetails++;
                     rowDetails++;
                 }
             }
 
             if (row.parsed().promedioFinalTrimestre() != null) {
+                upsertFinalCalificacion(row, validation, detalleMatricula, user, batch);
                 upsertFinalGrade(row, validation, finalEvaluation, user, batch);
                 refreshAverage(row, validation, row.parsed().promedioFinalTrimestre());
                 savedFinals++;
@@ -140,7 +147,7 @@ public class CalificacionTrimestreImportacionService {
 
         audit(
             "CONFIRMAR_IMPORTACION_NOTAS_TRIMESTRE",
-            "importaciones_notas",
+            "importacion_excel",
             batch.getId(),
             user,
             "Archivo " + originalFilename + ". Trimestre: " + trimestre.name()
@@ -161,25 +168,32 @@ public class CalificacionTrimestreImportacionService {
         );
     }
 
+    private DetalleMatricula ensureDetalleMatricula(Matricula matricula, Curso curso) {
+        return detalleMatriculaRepository.findByMatriculaIdAndMateriaId(matricula.getId(), curso.getMateria().getId())
+            .orElseGet(() -> detalleMatriculaRepository.save(DetalleMatricula.builder()
+                .matricula(matricula)
+                .materia(curso.getMateria())
+                .fechaRegistro(LocalDate.now())
+                .estado(true)
+                .build()));
+    }
+
     private void upsertDetail(
         RegistroNotasTrimestreValidationResult validation,
         ImportacionNotas batch,
-        Matricula matricula,
+        DetalleMatricula detalleMatricula,
         RegistroNotasCompetenciaParsed competence,
         RegistroNotasNotaParsed note,
         int filaExcel
     ) {
         CalificacionDetalleTrimestre detail = detalleRepository
-            .findByMatriculaIdAndCursoIdAndTrimestreAndNumeroCompetenciaAndColumnaExcel(
-                matricula.getId(),
-                validation.curso().getId(),
+            .findByDetalleMatriculaIdAndTrimestreAndNumeroCompetenciaAndColumnaExcel(
+                detalleMatricula.getId(),
                 validation.parseResult().trimestre(),
                 competence.numero(),
                 note.columnaExcel()
             ).orElseGet(() -> CalificacionDetalleTrimestre.builder()
-                .matricula(matricula)
-                .curso(validation.curso())
-                .periodoAcademico(validation.periodoAcademico())
+                .detalleMatricula(detalleMatricula)
                 .trimestre(validation.parseResult().trimestre())
                 .numeroCompetencia(competence.numero())
                 .columnaExcel(note.columnaExcel())
@@ -189,26 +203,23 @@ public class CalificacionTrimestreImportacionService {
         detail.setNombreNota(trim(note.nombreNota(), 100));
         detail.setValorNota(note.valor() == null ? null : note.valor().setScale(2, RoundingMode.HALF_UP));
         detail.setFilaExcel(filaExcel);
-        detail.setImportacionNotas(batch);
+        detail.setImportacionId(batch.getId());
         detalleRepository.save(detail);
     }
 
     private void upsertCompetence(
         RegistroNotasTrimestreValidationResult validation,
         ImportacionNotas batch,
-        Matricula matricula,
+        DetalleMatricula detalleMatricula,
         RegistroNotasCompetenciaParsed competence
     ) {
         CalificacionCompetenciaTrimestre summary = competenciaRepository
-            .findByMatriculaIdAndCursoIdAndTrimestreAndNumeroCompetencia(
-                matricula.getId(),
-                validation.curso().getId(),
+            .findByDetalleMatriculaIdAndTrimestreAndNumeroCompetencia(
+                detalleMatricula.getId(),
                 validation.parseResult().trimestre(),
                 competence.numero()
             ).orElseGet(() -> CalificacionCompetenciaTrimestre.builder()
-                .matricula(matricula)
-                .curso(validation.curso())
-                .periodoAcademico(validation.periodoAcademico())
+                .detalleMatricula(detalleMatricula)
                 .trimestre(validation.parseResult().trimestre())
                 .numeroCompetencia(competence.numero())
                 .build());
@@ -216,8 +227,35 @@ public class CalificacionTrimestreImportacionService {
         summary.setNombreCompetencia(trim(competence.nombre(), 255));
         summary.setPromedioCompetencia(competence.promedioCompetencia() == null ? null : competence.promedioCompetencia().setScale(2, RoundingMode.HALF_UP));
         summary.setLogroLiteral(competence.logroLiteral());
-        summary.setImportacionNotas(batch);
+        summary.setImportacionId(batch.getId());
         competenciaRepository.save(summary);
+    }
+
+    private void upsertFinalCalificacion(
+        RegistroNotasTrimestreValidatedStudent row,
+        RegistroNotasTrimestreValidationResult validation,
+        DetalleMatricula detalleMatricula,
+        Usuario user,
+        ImportacionNotas batch
+    ) {
+        String trimestre = validation.parseResult().trimestre().name();
+        Calificacion calificacion = calificacionRepository
+            .findByDetalleMatriculaIdAndPeriodoAcademicoIdAndTrimestre(
+                detalleMatricula.getId(),
+                validation.periodoAcademico().getId(),
+                trimestre
+            ).orElseGet(() -> Calificacion.builder()
+                .detalleMatricula(detalleMatricula)
+                .periodoAcademico(validation.periodoAcademico())
+                .trimestre(trimestre)
+                .build());
+
+        calificacion.setValorFinal(row.parsed().promedioFinalTrimestre().setScale(2, RoundingMode.HALF_UP));
+        calificacion.setLogroLiteral(row.parsed().logroFinalTrimestre());
+        calificacion.setRegistradoPor(user);
+        calificacion.setImportacionId(batch.getId());
+        calificacion.setObservacion("Promedio final importado desde " + validation.parseResult().trimestre().nombre());
+        calificacionRepository.save(calificacion);
     }
 
     private void upsertFinalGrade(
@@ -231,14 +269,12 @@ public class CalificacionTrimestreImportacionService {
             .orElseGet(() -> Nota.builder()
                 .estudiante(row.estudiante())
                 .evaluacion(evaluation)
-                .asignacionDocente(validation.asignacionDocente())
                 .registradoPor(user)
                 .build());
 
         note.setValor(row.parsed().promedioFinalTrimestre().setScale(2, RoundingMode.HALF_UP));
         note.setObservacion("Promedio final importado desde " + validation.parseResult().trimestre().nombre());
-        note.setImportacionNotas(batch);
-        note.setAsignacionDocente(validation.asignacionDocente());
+        note.setImportacionId(batch.getId());
         note.setRegistradoPor(user);
         notaRepository.save(note);
     }
@@ -290,7 +326,7 @@ public class CalificacionTrimestreImportacionService {
     private void saveErrors(ImportacionNotas batch, List<ErrorImportacionDTO> errors) {
         for (ErrorImportacionDTO error : errors) {
             errorImportacionExcelRepository.save(ErrorImportacionExcel.builder()
-                .importacionNotas(batch)
+                .importacionId(batch.getId())
                 .filaExcel(error.filaExcel())
                 .estudianteTexto(trim(error.estudianteTexto(), 180))
                 .campo(trim(error.campo(), 80))

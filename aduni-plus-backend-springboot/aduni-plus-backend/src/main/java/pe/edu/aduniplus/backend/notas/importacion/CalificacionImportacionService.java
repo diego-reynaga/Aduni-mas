@@ -60,9 +60,7 @@ public class CalificacionImportacionService {
         AsignacionDocente representative = representativeAssignment(validation);
         RegistroNotasMetadataDTO metadata = validation.parseResult().metadata();
         ImportacionNotas batch = importacionNotasRepository.save(ImportacionNotas.builder()
-            .docente(representative.getDocente())
-            .curso(validation.curso())
-            .periodoAcademico(representative.getPeriodoAcademico())
+            .asignacionDocente(representative)
             .usuarioResponsable(user)
             .nombreArchivo(originalFilename)
             .hashArchivo(fileHash)
@@ -137,7 +135,7 @@ public class CalificacionImportacionService {
 
         audit(
             "CONFIRMAR_IMPORTACION_NOTAS",
-            "importaciones_notas",
+            "importacion_excel",
             batch.getId(),
             user,
             "Archivo " + originalFilename + ". Filas: " + totalRows + ", importadas: " + importedRows
@@ -205,14 +203,12 @@ public class CalificacionImportacionService {
             .orElseGet(() -> Nota.builder()
                 .estudiante(student)
                 .evaluacion(evaluation)
-                .asignacionDocente(assignment)
                 .registradoPor(user)
                 .build());
 
         note.setValor(score.setScale(2, RoundingMode.HALF_UP));
         note.setObservacion("Importado desde registro auxiliar Excel");
-        note.setImportacionNotas(batch);
-        note.setAsignacionDocente(assignment);
+        note.setImportacionId(batch.getId());
         note.setRegistradoPor(user);
         notaRepository.save(note);
     }
@@ -248,7 +244,7 @@ public class CalificacionImportacionService {
     private void saveErrors(ImportacionNotas batch, List<ErrorImportacionDTO> errors) {
         for (ErrorImportacionDTO error : errors) {
             errorImportacionExcelRepository.save(ErrorImportacionExcel.builder()
-                .importacionNotas(batch)
+                .importacionId(batch.getId())
                 .filaExcel(error.filaExcel())
                 .estudianteTexto(trim(error.estudianteTexto(), 180))
                 .campo(trim(error.campo(), 80))

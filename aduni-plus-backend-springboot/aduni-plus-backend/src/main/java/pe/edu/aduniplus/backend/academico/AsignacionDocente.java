@@ -14,14 +14,14 @@ import java.time.LocalDate;
 @SuperBuilder
 @Entity
 @Table(
-    name = "asignaciones_docente",
+    name = "asignaciondocente",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_asignaciones_docente_curso_periodo",
+        name = "uk_asignaciondocente_curso_periodo",
         columnNames = {"docente_id", "curso_id", "periodo_academico_id"}
     ),
     indexes = {
-        @Index(name = "idx_asignaciones_docente", columnList = "docente_id"),
-        @Index(name = "idx_asignaciones_curso", columnList = "curso_id")
+        @Index(name = "idx_asignaciondocente_docente", columnList = "docente_id"),
+        @Index(name = "idx_asignaciondocente_curso", columnList = "curso_id")
     }
 )
 public class AsignacionDocente extends BaseEntity {

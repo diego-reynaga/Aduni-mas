@@ -49,7 +49,7 @@ public class RegistroNotasExcelService {
         RegistroNotasValidationResult validation = validacionService.validar(parser.parse(content), user);
         audit(
             "PREVISUALIZAR_IMPORTACION_NOTAS",
-            "importaciones_notas",
+            "importacion_excel",
             null,
             user.userId(),
             "Archivo " + originalFilename(file) + ". Filas detectadas: " + validation.preview().resumen().totalFilas()
@@ -82,7 +82,7 @@ public class RegistroNotasExcelService {
         );
         audit(
             "PREVISUALIZAR_IMPORTACION_NOTAS_TRIMESTRE",
-            "importaciones_notas",
+            "importacion_excel",
             null,
             user.userId(),
             "Archivo " + originalFilename(file) + ". Trimestre: " + trimestre.name()
@@ -113,7 +113,7 @@ public class RegistroNotasExcelService {
     public List<ImportacionNotasHistorialDTO> listarImportaciones(AuthenticatedUser user) {
         List<ImportacionNotas> rows = hasRole(user, "ADMINISTRADOR")
             ? importacionNotasRepository.findAllByOrderByCreadoEnDesc()
-            : importacionNotasRepository.findByDocenteIdOrderByCreadoEnDesc(user.personaId());
+            : importacionNotasRepository.findByAsignacionDocenteDocenteIdOrderByCreadoEnDesc(user.personaId());
 
         return rows.stream()
             .map(this::toHistory)
@@ -141,7 +141,7 @@ public class RegistroNotasExcelService {
     @Transactional(readOnly = true)
     public List<ErrorImportacionDTO> listarErrores(Long id, AuthenticatedUser user) {
         loadAuthorizedImport(id, user);
-        return errorImportacionExcelRepository.findByImportacionNotasIdOrderByFilaExcelAscIdAsc(id).stream()
+        return errorImportacionExcelRepository.findByImportacionIdOrderByFilaExcelAscIdAsc(id).stream()
             .map((error) -> new ErrorImportacionDTO(
                 error.getFilaExcel(),
                 error.getEstudianteTexto(),

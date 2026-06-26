@@ -12,8 +12,8 @@ import pe.edu.aduniplus.backend.common.BaseEntity;
 @SuperBuilder
 @Entity
 @Table(
-    name = "configuraciones_institucionales",
-    uniqueConstraints = @UniqueConstraint(name = "uk_configuraciones_codigo", columnNames = "codigo")
+    name = "configuracion_institucional",
+    uniqueConstraints = @UniqueConstraint(name = "uk_configuracion_codigo", columnNames = "codigo")
 )
 public class ConfiguracionInstitucional extends BaseEntity {
     @Builder.Default

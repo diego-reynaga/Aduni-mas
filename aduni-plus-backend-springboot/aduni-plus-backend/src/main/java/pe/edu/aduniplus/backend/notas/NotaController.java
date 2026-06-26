@@ -12,14 +12,28 @@ public class NotaController {
     private final NotaRepository notaRepository;
 
     @GetMapping
-    public ResponseEntity<List<String>> listar() {
-        List<String> payload = notaRepository.findAll().stream()
-            .map((nota) -> nota.getEstudiante().getCodigoEstudiante()
-                + " | "
-                + nota.getEvaluacion().getTipo().name()
-                + " | "
-                + nota.getValor())
+    public ResponseEntity<List<NotaResponseDTO>> listar() {
+        List<NotaResponseDTO> payload = notaRepository.findAll().stream()
+            .map((nota) -> new NotaResponseDTO(
+                nota.getId(),
+                nota.getEstudiante().getId(),
+                nota.getEstudiante().getCodigoEstudiante(),
+                nota.getEvaluacion().getId(),
+                nota.getEvaluacion().getTipo().name(),
+                nota.getValor(),
+                nota.getObservacion()
+            ))
             .toList();
         return ResponseEntity.ok(payload);
     }
+
+    public record NotaResponseDTO(
+        Long id,
+        Long estudianteId,
+        String codigoEstudiante,
+        Long evaluacionId,
+        String tipoEvaluacion,
+        java.math.BigDecimal valor,
+        String observacion
+    ) {}
 }
