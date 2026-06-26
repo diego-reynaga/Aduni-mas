@@ -27,6 +27,7 @@ export interface Metric {
 }
 
 export interface UserRow {
+  id: number;
   codigo: string;
   persona: string;
   documento: string;
@@ -390,4 +391,106 @@ export function normalizeRole(role: string): RoleName {
 
 export function primaryRole(roles: RoleName[]): RoleName {
   return roles[0] ?? 'ADMINISTRADOR';
+}
+
+export interface UsuarioResponse {
+  id: number;
+  username: string;
+  activo: boolean;
+  personaId: number;
+  roles: string[];
+}
+
+export interface UsuarioRequest {
+  username: string;
+  password?: string;
+  personaId: number;
+  roles: string[];
+}
+
+export interface RolResponse {
+  id: number;
+  nombre: string;
+  creadoEn: string;
+  actualizadoEn?: string;
+}
+
+export interface RolRequest {
+  nombre: string;
+}
+
+export interface PersonaDropdown {
+  id: number;
+  nombreCompleto: string;
+  documentoIdentidad: string;
+}
+
+export interface PersonaRequest {
+  nombres: string;
+  apellidos: string;
+  documentoIdentidad: string;
+  fechaNacimiento?: string;
+  direccion?: string;
+  telefono?: string;
+  correo?: string;
+  tipoPersona: string;
+  codigo?: string;
+  cargo?: string;
+  especialidad?: string;
+  areaAcademica?: string;
+  ocupacion?: string;
+}
+
+export interface PersonaResponse {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  documentoIdentidad: string;
+  fechaNacimiento?: string;
+  direccion?: string;
+  telefono?: string;
+  correo?: string;
+  tipoPersona: string;
+  codigo?: string;
+  cargo?: string;
+  especialidad?: string;
+  areaAcademica?: string;
+  ocupacion?: string;
+  creadoEn: string;
+  actualizadoEn?: string;
+}
+
+export interface AuditoriaResponse {
+  id: number;
+  creadoEn: string;
+  accion: string;
+  entidad: string;
+  entidadId: number | null;
+  usuarioResponsable: string;
+  detalle: string;
+}
+
+
+
+export interface EstudianteApoderadoRequest {
+  padreFamiliaId: number;
+  parentesco: string;
+  principal: boolean;
+}
+
+export interface EstudianteApoderadoResponse {
+  id: number;
+  estudianteId: number;
+  padreFamiliaId: number;
+  padreNombreCompleto: string;
+  padreDocumento: string;
+  padreTelefono: string;
+  padreCorreo: string;
+  parentesco: string;
+  principal: boolean;
+}
+
+export interface ClonarEstructuraRequest {
+  gestionOrigenId: number;
+  gestionDestinoId: number;
 }

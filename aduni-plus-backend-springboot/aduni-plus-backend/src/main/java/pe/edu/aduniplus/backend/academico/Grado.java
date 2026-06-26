@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import pe.edu.aduniplus.backend.common.BaseEntity;
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -20,7 +22,7 @@ import pe.edu.aduniplus.backend.common.BaseEntity;
 )
 public class Grado extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "nivel_educativo_id", nullable = false, foreignKey = @ForeignKey(name = "fk_grados_nivel"))
+    @JoinColumn(name = "nivel_educativo_id", nullable = false, foreignKey = @ForeignKey(name = "fk_aula_nivel"))
     private NivelEducativo nivelEducativo;
 
     @Column(nullable = false, length = 80)
@@ -32,4 +34,16 @@ public class Grado extends BaseEntity {
     @Builder.Default
     @Column(nullable = false)
     private Boolean activo = true;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer capacidad = 30;
+
+    @OneToMany(mappedBy = "grado")
+    @Builder.Default
+    private Set<Curso> cursos = new HashSet<>();
+
+    @OneToMany(mappedBy = "grado")
+    @Builder.Default
+    private Set<Matricula> matriculas = new HashSet<>();
 }

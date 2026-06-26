@@ -37,7 +37,7 @@ public class Matricula extends BaseEntity {
     private LocalDate fechaMatricula;
 
     @Enumerated(EnumType.STRING)
-    @Builder.Default
-    @Column(nullable = false, length = 20)
-    private EstadoMatricula estado = EstadoMatricula.ACTIVA;
+@Builder.Default
+@Column(nullable = false, length = 20)
+private EstadoMatricula estado = EstadoMatricula.ACTIVA;
 }

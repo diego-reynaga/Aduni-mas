@@ -30,6 +30,7 @@ DROP TABLE IF EXISTS usuario;
 DROP TABLE IF EXISTS rol;
 DROP TABLE IF EXISTS apoderado;
 DROP TABLE IF EXISTS estudiante;
+DROP TABLE IF EXISTS administrativo;
 DROP TABLE IF EXISTS docente;
 DROP TABLE IF EXISTS persona;
 SET FOREIGN_KEY_CHECKS = 1;
@@ -95,6 +96,16 @@ CREATE TABLE docente (
   PRIMARY KEY (persona_id),
   UNIQUE KEY uk_docente_codigo (codigo_docente),
   CONSTRAINT fk_docente_persona FOREIGN KEY (persona_id) REFERENCES persona(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE administrativo (
+  persona_id BIGINT NOT NULL,
+  codigo_administrativo VARCHAR(30) NOT NULL,
+  cargo VARCHAR(80) NOT NULL,
+  activo BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (persona_id),
+  UNIQUE KEY uk_administrativo_codigo (codigo_administrativo),
+  CONSTRAINT fk_administrativo_persona FOREIGN KEY (persona_id) REFERENCES persona(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE estudiante (
@@ -164,6 +175,7 @@ CREATE TABLE aula (
   nombre VARCHAR(80) NOT NULL,
   paralelo VARCHAR(20) NOT NULL,
   activo BOOLEAN NOT NULL DEFAULT TRUE,
+  capacidad INT NOT NULL DEFAULT 30,
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en DATETIME NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -212,7 +224,7 @@ CREATE TABLE matricula (
   KEY idx_matricula_estudiante (estudiante_id),
   CONSTRAINT fk_matricula_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiante(persona_id),
   CONSTRAINT fk_matricula_aula FOREIGN KEY (aula_id) REFERENCES aula(id),
-  CONSTRAINT chk_matricula_estado CHECK (estado IN ('ACTIVA','RETIRADA','FINALIZADA','ANULADA'))
+  CONSTRAINT chk_matricula_estado CHECK (estado IN ('PRE_MATRICULADA','ACTIVA','RETIRADA','SUSPENDIDA','FINALIZADA','ANULADA'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE detallematricula (

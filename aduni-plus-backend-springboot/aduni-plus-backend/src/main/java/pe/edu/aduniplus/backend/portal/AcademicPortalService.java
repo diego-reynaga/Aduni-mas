@@ -139,6 +139,7 @@ public class AcademicPortalService {
     public List<UserRowDto> getAdminUsers() {
         return usuarioRepository.findAll(Sort.by(Sort.Direction.ASC, "username")).stream()
             .map((user) -> new UserRowDto(
+                user.getId(),
                 userCode(user),
                 fullName(user.getPersona()),
                 safe(user.getPersona().getDocumentoIdentidad(), "-"),
