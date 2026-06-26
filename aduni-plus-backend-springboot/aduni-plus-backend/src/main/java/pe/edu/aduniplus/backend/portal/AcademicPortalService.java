@@ -11,6 +11,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import pe.edu.aduniplus.backend.asistencia.Asistencia;
+import pe.edu.aduniplus.backend.asistencia.AsistenciaRepository;
+import pe.edu.aduniplus.backend.asistencia.EstadoAsistencia;
 import pe.edu.aduniplus.backend.academico.AsignacionDocente;
 import pe.edu.aduniplus.backend.academico.AsignacionDocenteRepository;
 import pe.edu.aduniplus.backend.academico.Curso;
@@ -97,6 +100,7 @@ public class AcademicPortalService {
     private final PeriodoAcademicoRepository periodoAcademicoRepository;
     private final EstudianteRepository estudianteRepository;
     private final PersonaRepository personaRepository;
+    private final AsistenciaRepository asistenciaRepository;
 
     @Transactional(readOnly = true)
     public AdminDashboardDto getAdminDashboard() {
@@ -603,7 +607,7 @@ public class AcademicPortalService {
             new MetricDto("Periodos cerrados", String.valueOf(closedPeriods), "Periodos academicos concluidos", "maroon")
         );
 
-        return new StudentPortalDto(metrics, reports);
+        return new StudentPortalDto(metrics, reports, calculateAsistenciaSummary(studentId), studentId);
     }
 
     @Transactional(readOnly = true)
@@ -637,7 +641,9 @@ public class AcademicPortalService {
                 fullName(student),
                 gradeLabel,
                 relation,
-                round2(average)
+                round2(average),
+                calculateAsistenciaSummary(student.getId()),
+                student.getId()
             ));
 
             if (reports.stream().anyMatch((report) -> report.promedio() < 11)) {
@@ -665,6 +671,23 @@ public class AcademicPortalService {
         }
 
         return new FamilyPortalDto(summary, reportsByStudent, alerts);
+    }
+
+    private StudentAsistenciaResumen calculateAsistenciaSummary(Long studentId) {
+        List<Asistencia> list = asistenciaRepository.findByPersonaIdAndFechaBetweenOrderByFechaAsc(studentId, LocalDate.of(2000, 1, 1), LocalDate.of(2100, 1, 1));
+        int total = list.size();
+        int presentes = 0;
+        int tardanzas = 0;
+        int faltas = 0;
+        int justificados = 0;
+        for (Asistencia a : list) {
+            if (a.getEstado() == EstadoAsistencia.PRESENTE) presentes++;
+            else if (a.getEstado() == EstadoAsistencia.TARDANZA) tardanzas++;
+            else if (a.getEstado() == EstadoAsistencia.FALTA) faltas++;
+            else if (a.getEstado() == EstadoAsistencia.JUSTIFICADO) justificados++;
+        }
+        double pct = total > 0 ? (double) (presentes + justificados) / total * 100 : 0;
+        return new StudentAsistenciaResumen(total, presentes, tardanzas, faltas, justificados, Math.round(pct * 100.0) / 100.0);
     }
 
     private AsignacionDocente resolveAssignment(List<AsignacionDocente> assignments, Long assignmentId) {

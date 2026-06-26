@@ -364,3 +364,111 @@ CREATE TABLE auditorias (
   CONSTRAINT fk_auditorias_usuario FOREIGN KEY (usuario_id)
     REFERENCES usuarios (id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE asistencias (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  creado_en DATETIME(6) NOT NULL,
+  actualizado_en DATETIME(6),
+  persona_id BIGINT NOT NULL,
+  fecha DATE NOT NULL,
+  hora_ingreso TIME,
+  estado VARCHAR(15) NOT NULL,
+  asignacion_docente_id BIGINT,
+  observacion TEXT,
+  registrado_por_id BIGINT NOT NULL,
+  PRIMARY KEY (id),
+  CONSTRAINT uk_asistencias_persona_fecha_curso UNIQUE (persona_id, fecha, asignacion_docente_id),
+  CONSTRAINT fk_asistencias_persona FOREIGN KEY (persona_id) REFERENCES personas(id),
+  CONSTRAINT fk_asistencias_asignacion FOREIGN KEY (asignacion_docente_id) REFERENCES asignaciones_docente(id),
+  CONSTRAINT fk_asistencias_registro FOREIGN KEY (registrado_por_id) REFERENCES usuarios(id),
+  INDEX idx_asistencias_fecha (fecha),
+  INDEX idx_asistencias_persona (persona_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE conceptos_cobro (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  codigo VARCHAR(20) NOT NULL,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion VARCHAR(250),
+  activo BIT(1) NOT NULL DEFAULT 1,
+  creado_en DATETIME(6) NOT NULL,
+  actualizado_en DATETIME(6),
+  CONSTRAINT uk_conceptos_cobro_codigo UNIQUE (codigo)
+) ENGINE=InnoDB;
+
+CREATE TABLE cronogramas_pago (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  estudiante_id BIGINT NOT NULL,
+  matricula_id BIGINT,
+  gestion_academica_id BIGINT,
+  total_cuotas INT NOT NULL,
+  monto_total DECIMAL(10,2) NOT NULL,
+  observacion VARCHAR(250),
+  activo BIT(1) NOT NULL DEFAULT 1,
+  usuario_creacion_id BIGINT NOT NULL,
+  creado_en DATETIME(6) NOT NULL,
+  actualizado_en DATETIME(6),
+  CONSTRAINT fk_cronogramas_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiantes(persona_id),
+  CONSTRAINT fk_cronogramas_matricula FOREIGN KEY (matricula_id) REFERENCES matriculas(id),
+  CONSTRAINT fk_cronogramas_gestion FOREIGN KEY (gestion_academica_id) REFERENCES gestiones_academicas(id),
+  CONSTRAINT fk_cronogramas_usuario FOREIGN KEY (usuario_creacion_id) REFERENCES usuarios(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE cuotas (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  cronograma_id BIGINT NOT NULL,
+  numero_cuota INT NOT NULL,
+  concepto_cobro_id BIGINT NOT NULL,
+  fecha_vencimiento DATE NOT NULL,
+  monto_programado DECIMAL(10,2) NOT NULL,
+  saldo_pendiente DECIMAL(10,2) NOT NULL,
+  estado VARCHAR(15) NOT NULL DEFAULT 'PENDIENTE',
+  creado_en DATETIME(6) NOT NULL,
+  actualizado_en DATETIME(6),
+  CONSTRAINT fk_cuotas_cronograma FOREIGN KEY (cronograma_id) REFERENCES cronogramas_pago(id),
+  CONSTRAINT fk_cuotas_concepto FOREIGN KEY (concepto_cobro_id) REFERENCES conceptos_cobro(id),
+  CONSTRAINT uk_cuotas_cronograma_numero UNIQUE (cronograma_id, numero_cuota)
+) ENGINE=InnoDB;
+
+CREATE TABLE pagos (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  cuota_id BIGINT,
+  cronograma_id BIGINT,
+  estudiante_id BIGINT NOT NULL,
+  monto_pagado DECIMAL(10,2) NOT NULL,
+  fecha_pago DATE NOT NULL,
+  metodo_pago VARCHAR(20) NOT NULL,
+  numero_comprobante VARCHAR(50),
+  observacion VARCHAR(250),
+  usuario_registro_id BIGINT NOT NULL,
+  anulado BIT(1) NOT NULL DEFAULT 0,
+  fecha_anulacion DATETIME(6),
+  motivo_anulacion VARCHAR(250),
+  recibo_generado BIT(1) NOT NULL DEFAULT 0,
+  creado_en DATETIME(6) NOT NULL,
+  actualizado_en DATETIME(6),
+  CONSTRAINT fk_pagos_cuota FOREIGN KEY (cuota_id) REFERENCES cuotas(id),
+  CONSTRAINT fk_pagos_cronograma FOREIGN KEY (cronograma_id) REFERENCES cronogramas_pago(id),
+  CONSTRAINT fk_pagos_estudiante FOREIGN KEY (estudiante_id) REFERENCES estudiantes(persona_id),
+  CONSTRAINT fk_pagos_usuario FOREIGN KEY (usuario_registro_id) REFERENCES usuarios(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE recibos (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  pago_id BIGINT NOT NULL,
+  numero_recibo VARCHAR(20) NOT NULL,
+  monto DECIMAL(10,2) NOT NULL,
+  fecha_emision DATETIME(6) NOT NULL,
+  ruta_pdf VARCHAR(250),
+  creado_en DATETIME(6) NOT NULL,
+  actualizado_en DATETIME(6),
+  CONSTRAINT fk_recibos_pago FOREIGN KEY (pago_id) REFERENCES pagos(id),
+  CONSTRAINT uk_recibos_numero UNIQUE (numero_recibo)
+) ENGINE=InnoDB;
+
+INSERT INTO conceptos_cobro (codigo, nombre, descripcion, activo, creado_en, actualizado_en) VALUES
+('MATRICULA', 'Matrícula', 'Cuota de matrícula anual', 1, NOW(), NOW()),
+('PENSION', 'Pensión Mensual', 'Pensión de enseñanza mensual', 1, NOW(), NOW()),
+('CUOTA_INGRESO', 'Cuota de Ingreso', 'Cuota única de ingreso al ciclo', 1, NOW(), NOW()),
+('CERTIFICADO', 'Certificado', 'Emisión de certificados y constancias', 1, NOW(), NOW()),
+('OTRO', 'Otros', 'Otros conceptos varios', 1, NOW(), NOW());

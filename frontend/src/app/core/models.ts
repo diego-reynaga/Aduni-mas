@@ -96,6 +96,8 @@ export interface FamilyStudent {
   grado: string;
   parentesco: string;
   promedioGeneral: number;
+  asistencia: StudentAsistenciaResumen;
+  estudianteId: number;
 }
 
 export interface AuditEntry {
@@ -178,6 +180,8 @@ export interface ExcelImportResult {
 export interface StudentPortalPayload {
   metrics: Metric[];
   reports: StudentCourseReport[];
+  asistencia: StudentAsistenciaResumen;
+  estudianteId?: number;
 }
 
 export interface FamilyAlert {
@@ -352,4 +356,165 @@ export interface EstudianteApoderadoResponse {
 export interface ClonarEstructuraRequest {
   gestionOrigenId: number;
   gestionDestinoId: number;
+}
+
+// --- Asistencia ---
+export type EstadoAsistencia = 'PRESENTE' | 'TARDANZA' | 'FALTA' | 'JUSTIFICADO';
+
+export interface AsistenciaResponse {
+  id: number | null;
+  personaId: number;
+  personaNombre: string;
+  personaCodigo: string;
+  tipoPersona: string;
+  fecha: string;
+  horaIngreso: string | null;
+  estado: EstadoAsistencia | null;
+  asignacionDocenteId: number | null;
+  cursoNombre: string | null;
+  materiaNombre: string | null;
+  periodoNombre: string | null;
+  observacion: string | null;
+  creadoEn: string | null;
+}
+
+export interface AsistenciaIndividualRequest {
+  estudianteId: number;
+  estado: EstadoAsistencia;
+  observacion?: string;
+}
+
+export interface AsistenciaBatchRequest {
+  asignacionDocenteId: number;
+  fecha: string;
+  registros: AsistenciaIndividualRequest[];
+}
+
+export interface AsistenciaDocenteBatchRequest {
+  fecha: string;
+  registros: AsistenciaIndividualRequest[];
+}
+
+export interface AsistenciaReporteRow {
+  personaId: number;
+  personaNombre: string;
+  personaCodigo: string;
+  totalDias: number;
+  presentes: number;
+  tardanzas: number;
+  faltas: number;
+  justificados: number;
+  porcentajeAsistencia: number;
+}
+
+export interface StudentAsistenciaResumen {
+  totalDias: number;
+  presentes: number;
+  tardanzas: number;
+  faltas: number;
+  justificados: number;
+  porcentajeAsistencia: number;
+}
+
+// --- Pagos y Cuotas ---
+export type MetodoPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'DEPOSITO' | 'TARJETA';
+export type EstadoCuota = 'PENDIENTE' | 'PAGADO' | 'PARCIAL' | 'VENCIDO' | 'ANULADO';
+
+export interface ConceptoCobroRequest {
+  codigo: string;
+  nombre: string;
+  descripcion?: string;
+  activo?: boolean;
+}
+
+export interface ConceptoCobroResponse {
+  id: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+}
+
+export interface CuotaProgramadaRequest {
+  numeroCuota: number;
+  conceptoCobroId: number;
+  fechaVencimiento: string;
+  montoProgramado: number;
+}
+
+export interface CronogramaRequest {
+  estudianteId: number;
+  matriculaId?: number;
+  gestionAcademicaId?: number;
+  cuotas: CuotaProgramadaRequest[];
+  observacion?: string;
+}
+
+export interface CuotaResponse {
+  id: number;
+  numeroCuota: number;
+  conceptoCobroId: number;
+  conceptoCobroNombre: string;
+  fechaVencimiento: string;
+  montoProgramado: number;
+  saldoPendiente: number;
+  estado: EstadoCuota;
+}
+
+export interface CronogramaResponse {
+  id: number;
+  estudianteId: number;
+  estudianteNombre: string;
+  estudianteCodigo: string;
+  matriculaId: number | null;
+  gestionAcademicaId: number | null;
+  totalCuotas: number;
+  montoTotal: number;
+  observacion: string;
+  activo: boolean;
+  cuotas: CuotaResponse[];
+}
+
+export interface PagoRequest {
+  cuotaId?: number;
+  cronogramaId?: number;
+  estudianteId: number;
+  montoPagado: number;
+  fechaPago: string;
+  metodoPago: MetodoPago;
+  numeroComprobante?: string;
+  observacion?: string;
+}
+
+export interface PagoResponse {
+  id: number;
+  cuotaId: number | null;
+  numeroCuota: number | null;
+  cronogramaId: number | null;
+  estudianteId: number;
+  estudianteNombre: string;
+  estudianteCodigo: string;
+  montoPagado: number;
+  fechaPago: string;
+  metodoPago: string;
+  numeroComprobante: string;
+  observacion: string;
+  anulado: boolean;
+  fechaAnulacion: string | null;
+  motivoAnulacion: string | null;
+  reciboGenerado: boolean;
+  numeroRecibo: string | null;
+}
+
+export interface AnularPagoRequest {
+  motivo: string;
+}
+
+export interface ReciboResponse {
+  id: number;
+  pagoId: number;
+  numeroRecibo: string;
+  monto: number;
+  fechaEmision: string;
+  rutaPdf: string;
 }

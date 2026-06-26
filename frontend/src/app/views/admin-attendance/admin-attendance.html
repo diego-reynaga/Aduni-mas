@@ -1,0 +1,201 @@
+<section class="page-stack">
+  <div class="page-heading">
+    <h2>Registro de Asistencia</h2>
+    <p>Control diario de asistencia de estudiantes y docentes.</p>
+  </div>
+
+  @if (error()) { <p class="form-error-note">{{ error() }}</p> }
+  @if (successMessage()) { <p class="read-only-note">{{ successMessage() }}</p> }
+
+  <!-- TABS -->
+  <div class="tab-container">
+    <button [class.active]="activeTab() === 'estudiantes'" (click)="setTab('estudiantes')">Asistencia Estudiantes</button>
+    <button [class.active]="activeTab() === 'docentes'" (click)="setTab('docentes')">Asistencia Docentes</button>
+    <button [class.active]="activeTab() === 'reportes'" (click)="setTab('reportes')">Reportes</button>
+  </div>
+
+  <!-- ===== TAB: ESTUDIANTES ===== -->
+  @if (activeTab() === 'estudiantes') {
+    <div class="surface mt-4">
+      <div class="surface-header">
+        <h3>Registro por Curso y Fecha</h3>
+        <div class="data-chip-row">
+          <select class="p-2 border rounded" (change)="onPeriodoChange($any($event.target).value)">
+            <option value="">-- Periodo --</option>
+            @for (p of periodos(); track p.id) {
+              <option [value]="p.id">{{ p.nombre }}</option>
+            }
+          </select>
+          <select class="p-2 border rounded" [(ngModel)]="selectedAsignacionId" (change)="loadEstudiantesAsistencia()">
+            <option [ngValue]="null">-- Curso --</option>
+            @for (a of asignaciones(); track a.id) {
+              <option [ngValue]="a.id">{{ a.materiaNombre }} - {{ a.gradoNombre }} ({{ a.docenteNombre }})</option>
+            }
+          </select>
+          <input type="date" class="p-2 border rounded" [(ngModel)]="selectedDate" (change)="loadEstudiantesAsistencia()">
+        </div>
+      </div>
+      <div class="surface-body">
+        @if (selectedAsignacionId() && estudiantesAsistencia().length > 0) {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Estudiante</th>
+                <th>PRESENTE</th>
+                <th>TARDANZA</th>
+                <th>FALTA</th>
+                <th>JUSTIFICADO</th>
+                <th>Observación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (est of estudiantesAsistencia(); track est.personaId) {
+                <tr>
+                  <td>{{ est.personaCodigo }}</td>
+                  <td>{{ est.personaNombre }}</td>
+                  @for (estado of ESTADOS; track estado) {
+                    <td class="text-center">
+                      <input type="radio" [name]="'estado_' + est.personaId" [value]="estado"
+                             [checked]="registrosForm()[est.personaId]?.estado === estado"
+                             (change)="registrosForm()[est.personaId].estado = estado">
+                    </td>
+                  }
+                  <td>
+                    <input type="text" class="p-1 border rounded text-sm" style="width: 120px;"
+                           [value]="registrosForm()[est.personaId]?.observacion || ''"
+                           (input)="registrosForm()[est.personaId].observacion = $any($event.target).value">
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="mt-4 text-right">
+            <button class="btn-primary" (click)="guardarAsistenciaEstudiantes()" [disabled]="loading()">
+              {{ loading() ? 'Guardando...' : 'Guardar Asistencia' }}
+            </button>
+          </div>
+        } @else if (selectedAsignacionId()) {
+          <p class="text-center text-muted py-4">Seleccione un curso y fecha para cargar estudiantes.</p>
+        } @else {
+          <p class="text-center text-muted py-4">Seleccione un periodo y curso.</p>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===== TAB: DOCENTES ===== -->
+  @if (activeTab() === 'docentes') {
+    <div class="surface mt-4">
+      <div class="surface-header">
+        <h3>Registro de Asistencia de Docentes</h3>
+        <input type="date" class="p-2 border rounded" [(ngModel)]="docDate" (change)="loadDocentesAsistencia()">
+      </div>
+      <div class="surface-body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Docente</th>
+              <th>PRESENTE</th>
+              <th>TARDANZA</th>
+              <th>FALTA</th>
+              <th>JUSTIFICADO</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of docentesAsistencia(); track d.personaId) {
+              <tr>
+                <td>{{ d.personaCodigo }}</td>
+                <td>{{ d.personaNombre }}</td>
+                @for (estado of ESTADOS; track estado) {
+                  <td class="text-center">
+                    <input type="radio" [name]="'doc_estado_' + d.personaId" [value]="estado"
+                           [checked]="registrosDocentes()[d.personaId]?.estado === estado"
+                           (change)="registrosDocentes()[d.personaId].estado = estado">
+                  </td>
+                }
+                <td>
+                  <input type="text" class="p-1 border rounded text-sm" style="width: 120px;"
+                         [value]="registrosDocentes()[d.personaId]?.observacion || ''"
+                         (input)="registrosDocentes()[d.personaId].observacion = $any($event.target).value">
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="text-center text-muted">Cargue una fecha para ver los docentes.</td></tr>
+            }
+          </tbody>
+        </table>
+        @if (docentesAsistencia().length > 0) {
+          <div class="mt-4 text-right">
+            <button class="btn-primary" (click)="guardarAsistenciaDocentes()" [disabled]="loading()">
+              {{ loading() ? 'Guardando...' : 'Guardar Asistencia' }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ===== TAB: REPORTES ===== -->
+  @if (activeTab() === 'reportes') {
+    <div class="surface mt-4">
+      <div class="surface-header">
+        <h3>Reporte de Asistencia por Curso</h3>
+      </div>
+      <div class="surface-body">
+        <div class="data-chip-row mb-4">
+          <select class="p-2 border rounded" (change)="onPeriodoChange($any($event.target).value)">
+            <option value="">-- Periodo --</option>
+            @for (p of periodos(); track p.id) {
+              <option [value]="p.id">{{ p.nombre }}</option>
+            }
+          </select>
+          <select class="p-2 border rounded" [(ngModel)]="reportAsignacionId">
+            <option [ngValue]="null">-- Curso --</option>
+            @for (a of asignaciones(); track a.id) {
+              <option [ngValue]="a.id">{{ a.materiaNombre }} - {{ a.gradoNombre }}</option>
+            }
+          </select>
+          <label>Desde: <input type="date" class="p-2 border rounded" [(ngModel)]="reportDateDesde"></label>
+          <label>Hasta: <input type="date" class="p-2 border rounded" [(ngModel)]="reportDateHasta"></label>
+          <button class="btn-primary" (click)="generarReporte()">Generar Reporte</button>
+        </div>
+
+        @if (reporteEstudiantes().length > 0) {
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Código</th>
+                <th>Total</th>
+                <th>Presente</th>
+                <th>Tardanza</th>
+                <th>Falta</th>
+                <th>Justificado</th>
+                <th>% Asistencia</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of reporteEstudiantes(); track r.personaId) {
+                <tr>
+                  <td>{{ r.personaNombre }}</td>
+                  <td>{{ r.personaCodigo }}</td>
+                  <td>{{ r.totalDias }}</td>
+                  <td>{{ r.presentes }}</td>
+                  <td>{{ r.tardanzas }}</td>
+                  <td>{{ r.faltas }}</td>
+                  <td>{{ r.justificados }}</td>
+                  <td [style]="getPorcentajeColor(r.porcentajeAsistencia)">
+                    <strong>{{ r.porcentajeAsistencia }}%</strong>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+  }
+</section>

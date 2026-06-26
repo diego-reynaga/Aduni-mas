@@ -14,6 +14,8 @@ import { TeacherDashboard } from './views/teacher-dashboard/teacher-dashboard';
 import { TeacherGrades } from './views/teacher-grades/teacher-grades';
 import { TeacherImport } from './views/teacher-import/teacher-import';
 import { AdminStudents } from './views/admin-students/admin-students';
+import { AdminAttendance } from './views/admin-attendance/admin-attendance';
+import { AdminPagosComponent } from './features/admin-pagos/admin-pagos';
 
 
 export const routes: Routes = [
@@ -64,6 +66,16 @@ export const routes: Routes = [
       {
         path: 'admin/alumnos',
         component: AdminStudents,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/asistencias',
+        component: AdminAttendance,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/pagos',
+        component: AdminPagosComponent,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {

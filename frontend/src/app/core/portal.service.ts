@@ -29,7 +29,23 @@ import {
   EstudianteApoderadoResponse,
   ClonarEstructuraRequest,
   PadreFamiliaRequest,
-  PadreFamiliaResponse
+  PadreFamiliaResponse,
+  AsistenciaResponse,
+  AsistenciaIndividualRequest,
+  AsistenciaBatchRequest,
+  AsistenciaDocenteBatchRequest,
+  AsistenciaReporteRow,
+  StudentAsistenciaResumen,
+  ConceptoCobroRequest,
+  ConceptoCobroResponse,
+  CuotaProgramadaRequest,
+  CronogramaRequest,
+  CuotaResponse,
+  CronogramaResponse,
+  PagoRequest,
+  PagoResponse,
+  AnularPagoRequest,
+  ReciboResponse
 } from './models';
 
 
@@ -390,6 +406,104 @@ export class PortalService {
 
   getDocentesDropdown(): Observable<PersonaDropdown[]> {
     return this.http.get<PersonaDropdown[]>(`${API_URL}/personas/docentes-dropdown`);
+  }
+
+  // --- Asistencia ---
+  getAsistenciasCurso(asignacionDocenteId: number, fecha?: string): Observable<AsistenciaResponse[]> {
+    let params = new HttpParams();
+    if (fecha) params = params.set('fecha', fecha);
+    return this.http.get<AsistenciaResponse[]>(`${API_URL}/asistencias/curso/${asignacionDocenteId}`, { params });
+  }
+
+  guardarAsistenciaBatch(req: AsistenciaBatchRequest): Observable<AsistenciaResponse[]> {
+    return this.http.post<AsistenciaResponse[]>(`${API_URL}/asistencias/curso/batch`, req);
+  }
+
+  getAsistenciasDocentes(fecha?: string): Observable<AsistenciaResponse[]> {
+    let params = new HttpParams();
+    if (fecha) params = params.set('fecha', fecha);
+    return this.http.get<AsistenciaResponse[]>(`${API_URL}/asistencias/docentes`, { params });
+  }
+
+  guardarAsistenciaDocentes(req: AsistenciaDocenteBatchRequest): Observable<AsistenciaResponse[]> {
+    return this.http.post<AsistenciaResponse[]>(`${API_URL}/asistencias/docentes/batch`, req);
+  }
+
+  getReporteAsistenciaCurso(asignacionDocenteId: number, desde: string, hasta: string): Observable<AsistenciaReporteRow[]> {
+    let params = new HttpParams().set('desde', desde).set('hasta', hasta);
+    return this.http.get<AsistenciaReporteRow[]>(`${API_URL}/asistencias/reporte/curso/${asignacionDocenteId}`, { params });
+  }
+
+  getHistorialAsistencia(estudianteId: number, desde?: string, hasta?: string): Observable<AsistenciaResponse[]> {
+    let params = new HttpParams();
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
+    return this.http.get<AsistenciaResponse[]>(`${API_URL}/asistencias/estudiante/${estudianteId}`, { params });
+  }
+
+  // --- Pagos y Cuotas ---
+  getConceptosCobro(): Observable<ConceptoCobroResponse[]> {
+    return this.http.get<ConceptoCobroResponse[]>(`${API_URL}/pagos/conceptos`);
+  }
+
+  crearConceptoCobro(req: ConceptoCobroRequest): Observable<ConceptoCobroResponse> {
+    return this.http.post<ConceptoCobroResponse>(`${API_URL}/pagos/conceptos`, req);
+  }
+
+  actualizarConceptoCobro(id: number, req: ConceptoCobroRequest): Observable<ConceptoCobroResponse> {
+    return this.http.put<ConceptoCobroResponse>(`${API_URL}/pagos/conceptos/${id}`, req);
+  }
+
+  crearCronograma(req: CronogramaRequest): Observable<CronogramaResponse> {
+    return this.http.post<CronogramaResponse>(`${API_URL}/pagos/cronogramas`, req);
+  }
+
+  getCronogramas(gestionId?: number, estudianteId?: number): Observable<CronogramaResponse[]> {
+    let params = new HttpParams();
+    if (gestionId) params = params.set('gestionId', gestionId.toString());
+    if (estudianteId) params = params.set('estudianteId', estudianteId.toString());
+    return this.http.get<CronogramaResponse[]>(`${API_URL}/pagos/cronogramas`, { params });
+  }
+
+  getCronograma(id: number): Observable<CronogramaResponse> {
+    return this.http.get<CronogramaResponse>(`${API_URL}/pagos/cronogramas/${id}`);
+  }
+
+  getCronogramasPorEstudiante(estudianteId: number): Observable<CronogramaResponse[]> {
+    return this.http.get<CronogramaResponse[]>(`${API_URL}/pagos/cronogramas/estudiante/${estudianteId}`);
+  }
+
+  getCuotasPorCronograma(cronogramaId: number): Observable<CuotaResponse[]> {
+    return this.http.get<CuotaResponse[]>(`${API_URL}/pagos/cronogramas/${cronogramaId}/cuotas`);
+  }
+
+  registrarPago(req: PagoRequest): Observable<PagoResponse> {
+    return this.http.post<PagoResponse>(`${API_URL}/pagos`, req);
+  }
+
+  getPagos(estudianteId?: number, desde?: string, hasta?: string, anulado?: boolean): Observable<PagoResponse[]> {
+    let params = new HttpParams();
+    if (estudianteId) params = params.set('estudianteId', estudianteId.toString());
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
+    if (anulado !== undefined) params = params.set('anulado', anulado.toString());
+    return this.http.get<PagoResponse[]>(`${API_URL}/pagos`, { params });
+  }
+
+  getPago(id: number): Observable<PagoResponse> {
+    return this.http.get<PagoResponse>(`${API_URL}/pagos/${id}`);
+  }
+
+  anularPago(id: number, req: AnularPagoRequest): Observable<PagoResponse> {
+    return this.http.post<PagoResponse>(`${API_URL}/pagos/${id}/anular`, req);
+  }
+
+  generarRecibo(id: number): Observable<ReciboResponse> {
+    return this.http.post<ReciboResponse>(`${API_URL}/pagos/${id}/recibo`, {});
+  }
+
+  obtenerPdfUrl(reciboId: number): string {
+    return `${API_URL}/pagos/recibo/${reciboId}/pdf`;
   }
 }
 

@@ -38,9 +38,10 @@ export class AdminAcademic {
   readonly nivelForm = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     turno: new FormControl('MANANA', { nonNullable: true, validators: [Validators.required] }),
+    modalidad: new FormControl('ANUAL', { nonNullable: true, validators: [Validators.required] }),
     descripcion: new FormControl('', { nonNullable: true }),
     activo: new FormControl(true, { nonNullable: true }),
-    gestionAcademicaId: new FormControl<number>(1, { nonNullable: true }), // Por defecto 1 (primera gestion)
+    gestionAcademicaId: new FormControl<number>(1, { nonNullable: true }),
   });
 
   // --- GRADOS (Tree View) ---
@@ -143,7 +144,7 @@ export class AdminAcademic {
   }
 
   openAddNivel() {
-    this.nivelForm.reset({ activo: true, gestionAcademicaId: 1, turno: 'MANANA' });
+    this.nivelForm.reset({ activo: true, gestionAcademicaId: 1, turno: 'MANANA', modalidad: 'ANUAL' });
     this.isAddingNivel.set(true);
     this.isEditingNivel.set(false);
   }

@@ -34,3 +34,5 @@ app:
   jwt:
     secret: cambiar-esta-clave-por-una-clave-segura-de-256-bits-minimo
     expiration-ms: 86400000
+  uploads:
+    recibos: uploads/recibos/

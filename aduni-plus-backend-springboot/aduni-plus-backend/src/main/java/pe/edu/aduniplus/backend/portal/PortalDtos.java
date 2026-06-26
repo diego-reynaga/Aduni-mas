@@ -166,9 +166,16 @@ record StudentCourseReportDto(
     String estado
 ) {}
 
+record StudentAsistenciaResumen(
+    int totalDias, int presentes, int tardanzas, int faltas, int justificados,
+    double porcentajeAsistencia
+) {}
+
 record StudentPortalDto(
     List<MetricDto> metrics,
-    List<StudentCourseReportDto> reports
+    List<StudentCourseReportDto> reports,
+    StudentAsistenciaResumen asistencia,
+    Long estudianteId
 ) {}
 
 record FamilyStudentDto(
@@ -176,7 +183,9 @@ record FamilyStudentDto(
     String estudiante,
     String grado,
     String parentesco,
-    double promedioGeneral
+    double promedioGeneral,
+    StudentAsistenciaResumen asistencia,
+    Long estudianteId
 ) {}
 
 record FamilyAlertDto(
