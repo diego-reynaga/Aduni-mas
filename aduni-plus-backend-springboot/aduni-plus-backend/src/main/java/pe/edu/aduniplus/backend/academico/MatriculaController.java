@@ -22,6 +22,11 @@ public class MatriculaController {
         return ResponseEntity.ok(matriculaService.listarMatriculas());
     }
 
+    @GetMapping("/estudiante/{estudianteId}")
+    public ResponseEntity<List<MatriculaResponse>> listarMatriculasPorEstudiante(@PathVariable Long estudianteId) {
+        return ResponseEntity.ok(matriculaService.listarMatriculasPorEstudiante(estudianteId));
+    }
+
     @PostMapping
     public ResponseEntity<?> matricularEstudiante(@Valid @RequestBody MatriculaRequest request) {
         try {

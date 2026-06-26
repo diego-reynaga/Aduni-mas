@@ -39,6 +39,9 @@ public class AcademicoService {
         NivelEducativo nivel = new NivelEducativo();
         nivel.setNombre(req.nombre());
         nivel.setTurno(req.turno());
+        nivel.setModalidad(req.modalidad());
+        nivel.setFechaInicio(req.fechaInicio());
+        nivel.setFechaFin(req.fechaFin());
         nivel.setDescripcion(req.descripcion());
         nivel.setActivo(req.activo());
         nivel.setGestionAcademica(gestion);
@@ -63,6 +66,9 @@ public class AcademicoService {
 
         nivel.setNombre(req.nombre());
         nivel.setTurno(req.turno());
+        nivel.setModalidad(req.modalidad());
+        nivel.setFechaInicio(req.fechaInicio());
+        nivel.setFechaFin(req.fechaFin());
         nivel.setDescripcion(req.descripcion());
         nivel.setActivo(req.activo());
         nivel.setGestionAcademica(gestion);
@@ -236,6 +242,9 @@ public class AcademicoService {
             nivel.getId(),
             nivel.getNombre(),
             nivel.getTurno() != null ? nivel.getTurno().name() : null,
+            nivel.getModalidad(),
+            nivel.getFechaInicio(),
+            nivel.getFechaFin(),
             nivel.getDescripcion(),
             nivel.getActivo(),
             nivel.getGestionAcademica() != null ? nivel.getGestionAcademica().getId() : null

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@a
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
+import { PadreFamiliaResponse } from '../../core/models';
 
 type Tab = 'directorio' | 'matriculas';
 
@@ -24,6 +25,27 @@ export class AdminStudents {
   // Directorio State
   readonly estudiantes = signal<any[]>([]);
   readonly searchControl = new FormControl('');
+  
+  // Detail & Edition
+  readonly editMode = signal(false);
+  readonly editandoId = signal<number | null>(null);
+  readonly selectedStudent = signal<any | null>(null);
+  readonly showDetail = signal(false);
+  readonly apoderados = signal<any[]>([]);
+  readonly matriculasEstudiante = signal<any[]>([]);
+  
+  // Apoderados Modals
+  readonly showAssignApoderado = signal(false);
+  readonly showEditApoderado = signal(false);
+  readonly editApoderadoId = signal<number | null>(null);
+  readonly searchApoderadoControl = new FormControl('');
+  readonly apoderadosDisponibles = signal<PadreFamiliaResponse[]>([]);
+  
+  readonly formApoderado = new FormGroup({
+    padreFamiliaId: new FormControl<number | null>(null, Validators.required),
+    parentesco: new FormControl('', Validators.required),
+    principal: new FormControl(false)
+  });
   
   // Modal de Alta Estudiante
   readonly showModalEstudiante = signal(false);
@@ -85,8 +107,42 @@ export class AdminStudents {
   }
 
   openModalEstudiante() {
+    this.editMode.set(false);
+    this.editandoId.set(null);
     this.formEstudiante.reset();
     this.showModalEstudiante.set(true);
+  }
+
+  openEditStudent(student: any) {
+    this.editMode.set(true);
+    this.editandoId.set(student.id);
+    this.formEstudiante.patchValue(student);
+    this.showModalEstudiante.set(true);
+  }
+
+  saveEstudianteAction() {
+    if (this.editMode()) {
+      this.updateStudent();
+    } else {
+      this.saveEstudiante();
+    }
+  }
+
+  updateStudent() {
+    if (this.formEstudiante.invalid) return;
+    this.loading.set(true);
+    this.portal.actualizarEstudiante(this.editandoId()!, this.formEstudiante.getRawValue()).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.showModalEstudiante.set(false);
+        this.loadEstudiantes();
+        this.success.set('Estudiante actualizado con éxito.');
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err?.error || 'Error al actualizar estudiante');
+      }
+    });
   }
 
   saveEstudiante() {
@@ -102,6 +158,104 @@ export class AdminStudents {
       error: (err) => {
         this.loading.set(false);
         this.error.set(err?.error || 'Error al crear estudiante');
+      }
+    });
+  }
+
+  // --- DETALLE ESTUDIANTE ---
+  viewDetail(student: any) {
+    this.selectedStudent.set(student);
+    this.showDetail.set(true);
+    this.loadApoderados(student.id);
+    this.loadMatriculasEstudiante(student.id);
+  }
+
+  loadApoderados(estudianteId: number) {
+    this.portal.getApoderados(estudianteId).subscribe(res => this.apoderados.set(res));
+  }
+
+  loadMatriculasEstudiante(estudianteId: number) {
+    this.portal.listarMatriculasPorEstudiante(estudianteId).subscribe(res => this.matriculasEstudiante.set(res));
+  }
+
+  searchApoderados() {
+    const val = this.searchApoderadoControl.value;
+    if (!val) return;
+    this.portal.buscarApoderados(val).subscribe(res => this.apoderadosDisponibles.set(res));
+  }
+
+  openAssignApoderado() {
+    this.formApoderado.reset({ principal: false });
+    this.searchApoderadoControl.reset('');
+    this.apoderadosDisponibles.set([]);
+    this.showAssignApoderado.set(true);
+  }
+
+  assignApoderado() {
+    if (this.formApoderado.invalid) return;
+    const est = this.selectedStudent();
+    if (!est) return;
+    this.loading.set(true);
+    const formVal = this.formApoderado.getRawValue();
+    this.portal.asignarApoderado(est.id, formVal as any).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.showAssignApoderado.set(false);
+        this.loadApoderados(est.id);
+        this.success.set('Apoderado asignado con éxito');
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('Error al asignar apoderado');
+      }
+    });
+  }
+
+  removeApoderado(id: number) {
+    if (!confirm('¿Está seguro de remover este apoderado?')) return;
+    const est = this.selectedStudent();
+    if (!est) return;
+    this.loading.set(true);
+    this.portal.removerApoderado(est.id, id).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.loadApoderados(est.id);
+        this.success.set('Apoderado removido');
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('Error al remover apoderado');
+      }
+    });
+  }
+
+  openEditApoderado(rel: any) {
+    this.editApoderadoId.set(rel.id);
+    this.formApoderado.patchValue({
+      padreFamiliaId: rel.padreFamiliaId,
+      parentesco: rel.parentesco,
+      principal: rel.principal
+    });
+    this.showEditApoderado.set(true);
+  }
+
+  saveEditApoderado() {
+    if (this.formApoderado.invalid) return;
+    const est = this.selectedStudent();
+    const relId = this.editApoderadoId();
+    if (!est || !relId) return;
+    this.loading.set(true);
+    const formVal = this.formApoderado.getRawValue();
+    this.portal.actualizarApoderado(est.id, relId, formVal as any).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.showEditApoderado.set(false);
+        this.loadApoderados(est.id);
+        this.success.set('Apoderado actualizado');
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('Error al actualizar apoderado');
       }
     });
   }

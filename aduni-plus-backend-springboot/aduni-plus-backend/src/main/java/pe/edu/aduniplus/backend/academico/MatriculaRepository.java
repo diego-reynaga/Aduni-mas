@@ -13,6 +13,11 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Long> {
     List<Matricula> findByGradoIdAndEstado(Long gradoId, EstadoMatricula estado);
     boolean existsByEstudianteIdAndGradoId(Long estudianteId, Long gradoId);
     
+    List<Matricula> findByEstudianteIdOrderByFechaMatriculaDesc(Long estudianteId);
+
+    @Query("SELECT m FROM Matricula m WHERE m.estudiante.id = :estId AND m.grado.nivelEducativo.id = :nivelId AND m.estado = :estado")
+    List<Matricula> findByEstudianteAndNivelAndEstado(@org.springframework.data.repository.query.Param("estId") Long estudianteId, @org.springframework.data.repository.query.Param("nivelId") Long nivelId, @org.springframework.data.repository.query.Param("estado") EstadoMatricula estado);
+
     @Query("SELECT COUNT(m) FROM Matricula m WHERE m.grado.id = :gradoId AND m.estado IN :estados")
     long countByGradoIdAndEstadoIn(@org.springframework.data.repository.query.Param("gradoId") Long gradoId, @org.springframework.data.repository.query.Param("estados") List<EstadoMatricula> estados);
 }

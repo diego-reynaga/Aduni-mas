@@ -30,6 +30,9 @@
     <button class="tab-btn" [class.active]="activeTab() === 'oferta'" (click)="setTab('oferta')">
       Oferta Educativa
     </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'asignaciones'" (click)="setTab('asignaciones')">
+      Asignación Docente
+    </button>
   </nav>
 
   <main class="dashboard-content">
@@ -292,6 +295,62 @@
       </div>
     }
 
+    <!-- TAB: ASIGNACIÓN DOCENTE -->
+    @if (activeTab() === 'asignaciones') {
+      <div class="card panel-card fade-in">
+        <div class="panel-header">
+          <h2>Asignación Docente</h2>
+          <div class="header-actions-group">
+            <select class="form-input" (change)="onSelectPeriodo($event)" style="width: 250px;">
+              <option value="">-- Seleccione Periodo --</option>
+              @for (p of periodos(); track p.id) {
+                <option [value]="p.id">{{ p.nombre }}</option>
+              }
+            </select>
+            <button class="btn-primary" [disabled]="!selectedPeriodoId()" (click)="openAsignarModal()">+ Asignar Docente</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Docente</th>
+                <th>Materia</th>
+                <th>Grado / Sección</th>
+                <th>Periodo</th>
+                <th>Desde</th>
+                <th>Estado</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of asignaciones(); track a.id) {
+                <tr>
+                  <td><strong>{{ a.docenteNombre }}</strong><br><small>{{ a.docenteCodigo }}</small></td>
+                  <td>{{ a.materiaNombre }}</td>
+                  <td>{{ a.gradoNombre }}{{ a.seccion ? ' - ' + a.seccion : '' }}</td>
+                  <td>{{ a.periodoNombre }}</td>
+                  <td>{{ a.fechaAsignacion | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <span class="status-badge" [class.status-active]="a.estado === 'ACTIVA'" [class.status-inactive]="a.estado !== 'ACTIVA'">
+                      {{ a.estado }}
+                    </span>
+                  </td>
+                  <td class="text-right">
+                    @if (a.estado === 'ACTIVA') {
+                      <button class="btn-danger-subtle" (click)="confirmarRemover(a.id)">Cerrar</button>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="7" class="text-center text-muted">No hay asignaciones en este periodo.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
   </main>
 
   <!-- ==================== MODALES ==================== -->
@@ -348,7 +407,6 @@
             <select class="form-input" formControlName="turno">
               <option value="MANANA">Mañana</option>
               <option value="TARDE">Tarde</option>
-              <option value="NOCHE">Noche</option>
             </select>
           </div>
           <div class="form-group">
@@ -410,6 +468,39 @@
           <div class="modal-actions">
             <button type="button" class="btn-secondary" (click)="closeMateriaModal()">Cancelar</button>
             <button type="submit" class="btn-primary" [disabled]="materiaForm.invalid">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Asignacion Docente -->
+  @if (showModalAsignacion()) {
+    <div class="modal-overlay">
+      <div class="modal-container">
+        <h2 class="modal-title">Asignar Docente a Curso</h2>
+        <form [formGroup]="formAsignacion" (ngSubmit)="saveAsignacion()" class="modal-form">
+          <div class="form-group">
+            <label>Docente *</label>
+            <select class="form-input" formControlName="docenteId">
+              <option [ngValue]="null" disabled>-- Seleccione --</option>
+              @for (d of docentes(); track d.id) {
+                <option [ngValue]="d.id">{{ d.nombreCompleto }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Curso (Materia - Grado) *</label>
+            <select class="form-input" formControlName="cursoId">
+              <option [ngValue]="null" disabled>-- Seleccione --</option>
+              @for (c of cursosDisponibles(); track c.id) {
+                <option [ngValue]="c.id">{{ c.materiaNombre }} - {{ c.gradoNombre }} {{ c.seccion }}</option>
+              }
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="showModalAsignacion.set(false)">Cancelar</button>
+            <button type="submit" class="btn-primary" [disabled]="formAsignacion.invalid">Asignar</button>
           </div>
         </form>
       </div>

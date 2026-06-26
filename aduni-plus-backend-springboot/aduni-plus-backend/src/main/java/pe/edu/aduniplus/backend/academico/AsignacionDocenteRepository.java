@@ -9,4 +9,5 @@ public interface AsignacionDocenteRepository extends JpaRepository<AsignacionDoc
     List<AsignacionDocente> findByCursoId(Long cursoId);
     List<AsignacionDocente> findByDocenteIdAndPeriodoAcademicoId(Long docenteId, Long periodoAcademicoId);
     boolean existsByDocenteIdAndCursoIdAndPeriodoAcademicoId(Long docenteId, Long cursoId, Long periodoAcademicoId);
+    java.util.Optional<AsignacionDocente> findByCursoIdAndPeriodoAcademicoIdAndEstado(Long cursoId, Long periodoId, EstadoAsignacionDocente estado);
 }

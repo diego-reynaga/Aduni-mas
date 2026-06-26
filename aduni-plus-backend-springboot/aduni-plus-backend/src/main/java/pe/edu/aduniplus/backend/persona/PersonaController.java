@@ -40,6 +40,12 @@ public class PersonaController {
         return ResponseEntity.ok(personas);
     }
 
+    @GetMapping("/docentes-dropdown")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<List<PersonaDropdownDto>> listarDocentesDropdown() {
+        return ResponseEntity.ok(personaService.listarDocentes());
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<PersonaResponse> obtenerPersona(@PathVariable Long id) {

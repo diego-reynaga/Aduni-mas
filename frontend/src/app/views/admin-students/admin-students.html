@@ -37,6 +37,7 @@
               <th>Documento</th>
               <th>Apellidos y Nombres</th>
               <th>Estado</th>
+              <th style="width:120px">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -46,9 +47,15 @@
                 <td>{{ est.documentoIdentidad }}</td>
                 <td>{{ est.apellidos }}, {{ est.nombres }}</td>
                 <td><span class="badge" [class.badge-success]="est.activo" [class.badge-neutral]="!est.activo">{{ est.activo ? 'ACTIVO' : 'INACTIVO' }}</span></td>
+                <td>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn-compact btn-secondary" (click)="viewDetail(est)">Ver</button>
+                    <button class="btn-compact btn-primary" (click)="openEditStudent(est)">Editar</button>
+                  </div>
+                </td>
               </tr>
             } @empty {
-              <tr><td colspan="4" class="text-center">No hay alumnos registrados.</td></tr>
+              <tr><td colspan="5" class="text-center">No hay alumnos registrados.</td></tr>
             }
           </tbody>
         </table>
@@ -123,7 +130,7 @@
     <div class="modal-overlay">
       <div class="modal-card" style="max-width: 600px;">
         <div class="modal-header">
-          <h3>Alta de Estudiante</h3>
+          <h3>{{ editMode() ? 'Editar Estudiante' : 'Alta de Estudiante' }}</h3>
           <button class="close-btn" (click)="showModalEstudiante.set(false)">×</button>
         </div>
         <div class="modal-body">
@@ -134,11 +141,12 @@
             <label class="field"><span>Nacimiento</span><input type="date" formControlName="fechaNacimiento"></label>
             <label class="field"><span>Correo</span><input type="email" formControlName="correo"></label>
             <label class="field"><span>Teléfono</span><input formControlName="telefono"></label>
+            <label class="field" style="grid-column: span 2"><span>Dirección</span><input formControlName="direccion"></label>
           </form>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" (click)="showModalEstudiante.set(false)">Cancelar</button>
-          <button class="btn-primary" (click)="saveEstudiante()" [disabled]="formEstudiante.invalid || loading()">Guardar</button>
+          <button class="btn-primary" (click)="saveEstudianteAction()" [disabled]="formEstudiante.invalid || loading()">Guardar</button>
         </div>
       </div>
     </div>
@@ -181,7 +189,7 @@
                 <select (change)="onNivelSelected($event)" class="p-2 border rounded">
                   <option value="">-- Nivel --</option>
                   @for (niv of niveles(); track niv.id) {
-                    <option [value]="niv.id">{{ niv.nombre }}</option>
+                    <option [value]="niv.id">{{ niv.nombre }} ({{ niv.modalidad }})</option>
                   }
                 </select>
               </label>
@@ -219,6 +227,143 @@
           } @else {
             <button class="btn-primary" (click)="confirmMatricula()" [disabled]="loading()">Finalizar Matrícula</button>
           }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- DETAIL FLYOUT -->
+  @if (showDetail()) {
+    <div class="modal-overlay" style="justify-content: flex-end;">
+      <div class="modal-card" style="width: 600px; height: 100vh; max-height: 100vh; margin: 0; border-radius: 0; display: flex; flex-direction: column;">
+        <div class="modal-header">
+          <h3>Detalle del Estudiante</h3>
+          <button class="close-btn" (click)="showDetail.set(false)">×</button>
+        </div>
+        <div class="modal-body" style="flex: 1; overflow-y: auto;">
+          <!-- 1. Datos -->
+          <div class="surface mt-0">
+            <div class="surface-header"><h4>Datos Personales</h4></div>
+            <div class="surface-body">
+              <p><strong>Nombres:</strong> {{ selectedStudent()?.nombres }}</p>
+              <p><strong>Apellidos:</strong> {{ selectedStudent()?.apellidos }}</p>
+              <p><strong>Documento:</strong> {{ selectedStudent()?.documentoIdentidad }}</p>
+              <p><strong>Código:</strong> {{ selectedStudent()?.codigoEstudiante }}</p>
+            </div>
+          </div>
+
+          <!-- 2. Apoderados -->
+          <div class="surface mt-4">
+            <div class="surface-header">
+              <h4>Apoderados</h4>
+              <button class="btn-compact btn-primary" (click)="openAssignApoderado()">+ Asignar</button>
+            </div>
+            <div class="surface-body p-0">
+              <table class="data-table">
+                <thead><tr><th>Familiar</th><th>Parentesco</th><th>Acciones</th></tr></thead>
+                <tbody>
+                  @for (rel of apoderados(); track rel.id) {
+                    <tr>
+                      <td>{{ rel.padreNombreCompleto }} @if(rel.principal) { <span class="badge badge-success">PRINCIPAL</span> }</td>
+                      <td>{{ rel.parentesco }}</td>
+                      <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                          <button class="btn-compact" (click)="openEditApoderado(rel)">Editar</button>
+                          <button class="btn-compact" style="color:red" (click)="removeApoderado(rel.id)">X</button>
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="3" class="text-center">No tiene apoderados asignados.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 3. Matriculas -->
+          <div class="surface mt-4">
+            <div class="surface-header"><h4>Historial Académico</h4></div>
+            <div class="surface-body p-0">
+              <table class="data-table">
+                <thead><tr><th>Periodo</th><th>Nivel</th><th>Estado</th></tr></thead>
+                <tbody>
+                  @for (m of matriculasEstudiante(); track m.id) {
+                    <tr>
+                      <td>{{ m.gradoNombre }} - {{ m.paralelo }}</td>
+                      <td>{{ m.nivelNombre }}</td>
+                      <td>{{ m.estado }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="3" class="text-center">No tiene matrículas.</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ASSIGN APODERADO MODAL -->
+  @if (showAssignApoderado()) {
+    <div class="modal-overlay">
+      <div class="modal-card" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3>Asignar Apoderado</h3>
+          <button class="close-btn" (click)="showAssignApoderado.set(false)">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="data-chip-row mb-4">
+            <input type="text" [formControl]="searchApoderadoControl" placeholder="Buscar por DNI o Nombres..." class="p-2 border rounded" style="flex: 1;">
+            <button class="btn-primary btn-compact" (click)="searchApoderados()">Buscar</button>
+          </div>
+          <form [formGroup]="formApoderado" class="form-grid">
+            <label class="field" style="grid-column: span 2;">
+              <span>Seleccionar Familiar *</span>
+              <select formControlName="padreFamiliaId" class="p-2 border rounded" style="width: 100%;">
+                <option [ngValue]="null">-- Seleccione --</option>
+                @for (p of apoderadosDisponibles(); track p.id) {
+                  <option [ngValue]="p.id">{{ p.documentoIdentidad }} - {{ p.apellidos }}, {{ p.nombres }}</option>
+                }
+              </select>
+            </label>
+            <label class="field" style="grid-column: span 2;"><span>Parentesco *</span><input formControlName="parentesco" placeholder="Ej. Padre, Madre, Tío..."></label>
+            <label class="field" style="flex-direction: row; align-items: center; gap: 0.5rem; grid-column: span 2;">
+              <input type="checkbox" formControlName="principal">
+              <span>Es apoderado principal</span>
+            </label>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="showAssignApoderado.set(false)">Cancelar</button>
+          <button class="btn-primary" (click)="assignApoderado()" [disabled]="formApoderado.invalid || loading()">Asignar</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- EDIT APODERADO MODAL -->
+  @if (showEditApoderado()) {
+    <div class="modal-overlay">
+      <div class="modal-card" style="max-width: 400px;">
+        <div class="modal-header">
+          <h3>Editar Parentesco</h3>
+          <button class="close-btn" (click)="showEditApoderado.set(false)">×</button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="formApoderado" class="form-grid">
+            <label class="field" style="grid-column: span 2;"><span>Parentesco *</span><input formControlName="parentesco"></label>
+            <label class="field" style="flex-direction: row; align-items: center; gap: 0.5rem; grid-column: span 2;">
+              <input type="checkbox" formControlName="principal">
+              <span>Es apoderado principal</span>
+            </label>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="showEditApoderado.set(false)">Cancelar</button>
+          <button class="btn-primary" (click)="saveEditApoderado()" [disabled]="formApoderado.invalid || loading()">Guardar</button>
         </div>
       </div>
     </div>

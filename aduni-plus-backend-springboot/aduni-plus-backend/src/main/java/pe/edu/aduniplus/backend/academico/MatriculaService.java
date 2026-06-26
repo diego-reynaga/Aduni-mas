@@ -30,6 +30,13 @@ public class MatriculaService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<MatriculaResponse> listarMatriculasPorEstudiante(Long estudianteId) {
+        return matriculaRepository.findByEstudianteIdOrderByFechaMatriculaDesc(estudianteId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     @Transactional
     public MatriculaResponse matricularEstudiante(MatriculaRequest request) {
         Estudiante estudiante = estudianteRepository.findById(request.estudianteId())
@@ -44,6 +51,23 @@ public class MatriculaService {
 
         if (!grado.getActivo()) {
             throw new IllegalArgumentException("El grado no se encuentra activo.");
+        }
+
+        // Validar que el estudiante no tenga otra matrícula ACTIVA en el mismo ciclo
+        List<Matricula> activasMismoCiclo = matriculaRepository.findByEstudianteAndNivelAndEstado(
+            estudiante.getId(), grado.getNivelEducativo().getId(), EstadoMatricula.ACTIVO);
+        if (!activasMismoCiclo.isEmpty()) {
+            throw new IllegalArgumentException("El estudiante ya tiene una matrícula ACTIVA en el mismo ciclo.");
+        }
+
+        // Validar que la fecha de matrícula esté dentro de [nivel.fechaInicio, nivel.fechaFin]
+        LocalDate hoy = LocalDate.now();
+        LocalDate fechaInicio = grado.getNivelEducativo().getFechaInicio();
+        LocalDate fechaFin = grado.getNivelEducativo().getFechaFin();
+        if (fechaInicio != null && fechaFin != null) {
+            if (hoy.isBefore(fechaInicio) || hoy.isAfter(fechaFin)) {
+                throw new IllegalArgumentException("La fecha actual no está dentro del periodo de matrícula del ciclo.");
+            }
         }
 
         // Control de Aforos
@@ -115,6 +139,7 @@ public class MatriculaService {
             m.getGrado().getId(),
             m.getGrado().getNombre(),
             m.getGrado().getParalelo(),
+            m.getGrado().getNivelEducativo().getId(),
             m.getGrado().getNivelEducativo().getNombre(),
             m.getFechaMatricula(),
             m.getEstado()

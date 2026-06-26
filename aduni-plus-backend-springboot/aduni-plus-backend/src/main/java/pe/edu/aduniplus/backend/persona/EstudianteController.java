@@ -24,6 +24,11 @@ public class EstudianteController {
         return ResponseEntity.ok(estudianteService.buscarEstudiantes(search, activo));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<EstudianteResponse> obtenerEstudiante(@PathVariable Long id) {
+        return ResponseEntity.ok(estudianteService.obtenerEstudiante(id));
+    }
+
     @PostMapping
     public ResponseEntity<EstudianteResponse> crearEstudiante(@Valid @RequestBody EstudianteRequest request) {
         return new ResponseEntity<>(estudianteService.crearEstudiante(request), HttpStatus.CREATED);

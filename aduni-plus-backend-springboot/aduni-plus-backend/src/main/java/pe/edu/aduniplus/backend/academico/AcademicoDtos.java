@@ -11,6 +11,9 @@ public class AcademicoDtos {
         Long id,
         String nombre,
         String turno,
+        ModalidadCiclo modalidad,
+        java.time.LocalDate fechaInicio,
+        java.time.LocalDate fechaFin,
         String descripcion,
         Boolean activo,
         Long gestionAcademicaId
@@ -21,6 +24,10 @@ public class AcademicoDtos {
         String nombre,
         @NotNull(message = "El turno es obligatorio")
         Turno turno,
+        @NotNull(message = "La modalidad es obligatoria")
+        ModalidadCiclo modalidad,
+        java.time.LocalDate fechaInicio,
+        java.time.LocalDate fechaFin,
         String descripcion,
         @NotNull(message = "El estado (activo) es obligatorio")
         Boolean activo,
@@ -157,6 +164,7 @@ public class AcademicoDtos {
         Long gradoId,
         String gradoNombre,
         String paralelo,
+        Long nivelId,
         String nivelNombre,
         java.time.LocalDate fechaMatricula,
         EstadoMatricula estado
@@ -167,5 +175,30 @@ public class AcademicoDtos {
         Long estudianteId,
         @NotNull(message = "El grado (aula) es obligatorio")
         Long gradoId
+    ) {}
+
+    // --- Asignacion Docente ---
+    public record AsignacionDocenteResponse(
+        Long id,
+        Long docenteId, String docenteNombre, String docenteCodigo,
+        Long cursoId, String cursoNombre,
+        String materiaNombre, String materiaCodigo,
+        String gradoNombre, String seccion,
+        Long periodoAcademicoId, String periodoNombre,
+        java.time.LocalDate fechaAsignacion,
+        String estado
+    ) {}
+
+    public record AsignacionDocenteRequest(
+        @NotNull(message = "El docente es obligatorio") Long docenteId,
+        @NotNull(message = "El curso es obligatorio") Long cursoId,
+        @NotNull(message = "El periodo es obligatorio") Long periodoAcademicoId
+    ) {}
+
+    // DTO para cursos disponibles (sin asignación docente en el periodo)
+    public record CursoDisponibleResponse(
+        Long id,
+        Long materiaId, String materiaNombre, String materiaCodigo,
+        Long gradoId, String gradoNombre, String seccion
     ) {}
 }

@@ -2,6 +2,9 @@ export interface NivelEducativoResponse {
   id: number;
   nombre: string;
   turno: string;
+  modalidad: string;
+  fechaInicio: string;
+  fechaFin: string;
   descripcion: string;
   activo: boolean;
   gestionAcademicaId: number;
@@ -10,6 +13,9 @@ export interface NivelEducativoResponse {
 export interface NivelEducativoRequest {
   nombre: string;
   turno: string;
+  modalidad: string;
+  fechaInicio?: string;
+  fechaFin?: string;
   descripcion: string;
   activo: boolean;
   gestionAcademicaId: number;
@@ -97,4 +103,37 @@ export interface PeriodoAcademicoRequest {
   fechaFin: string;
   cerrado: boolean;
   gestionAcademicaId: number;
+}
+
+export interface AsignacionDocenteResponse {
+  id: number;
+  docenteId: number;
+  docenteNombre: string;
+  docenteCodigo: string;
+  cursoId: number;
+  cursoNombre: string;
+  materiaNombre: string;
+  materiaCodigo: string;
+  gradoNombre: string;
+  seccion: string;
+  periodoAcademicoId: number;
+  periodoNombre: string;
+  fechaAsignacion: string;
+  estado: string;
+}
+
+export interface AsignacionDocenteRequest {
+  docenteId: number;
+  cursoId: number;
+  periodoAcademicoId: number;
+}
+
+export interface CursoDisponibleResponse {
+  id: number;
+  materiaId: number;
+  materiaNombre: string;
+  materiaCodigo: string;
+  gradoId: number;
+  gradoNombre: string;
+  seccion: string;
 }

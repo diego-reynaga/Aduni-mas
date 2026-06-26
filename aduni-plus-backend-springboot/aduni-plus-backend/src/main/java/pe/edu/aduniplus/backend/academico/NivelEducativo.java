@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import pe.edu.aduniplus.backend.common.BaseEntity;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,6 +32,13 @@ public class NivelEducativo extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Turno turno;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ModalidadCiclo modalidad;
+
+    private LocalDate fechaInicio;
+    private LocalDate fechaFin;
 
     @Column(length = 250)
     private String descripcion;

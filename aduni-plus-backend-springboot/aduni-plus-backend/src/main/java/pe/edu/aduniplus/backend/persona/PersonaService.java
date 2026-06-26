@@ -31,6 +31,13 @@ public class PersonaService {
     }
 
     @Transactional(readOnly = true)
+    public List<pe.edu.aduniplus.backend.persona.dto.PersonaDropdownDto> listarDocentes() {
+        return docenteRepository.findAll().stream()
+            .map(d -> new pe.edu.aduniplus.backend.persona.dto.PersonaDropdownDto(d.getId(), d.getNombres() + " " + d.getApellidos(), d.getDocumentoIdentidad()))
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public PersonaResponse obtenerPersona(Long id) {
         Persona persona = personaRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Persona no encontrada con ID: " + id));

@@ -26,6 +26,13 @@ public class EstudianteService {
             .toList();
     }
 
+    @Transactional(readOnly = true)
+    public EstudianteResponse obtenerEstudiante(Long id) {
+        Estudiante estudiante = estudianteRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Estudiante no encontrado"));
+        return mapToResponse(estudiante);
+    }
+
     @Transactional
     public EstudianteResponse crearEstudiante(EstudianteRequest request) {
         String codigoGenerado = generarCodigoEstudiante();

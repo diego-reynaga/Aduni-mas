@@ -19,8 +19,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Map<String, String>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "Error de integridad de datos. Posible duplicado de registro único."));
+    public ResponseEntity<Map<String, String>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String msg = "Error de integridad de datos";
+        if (ex.getMessage() != null) {
+            if (ex.getMessage().contains("uk_personas_documento")) msg = "El documento de identidad ya existe";
+            else if (ex.getMessage().contains("uk_personas_correo")) msg = "El correo ya está registrado";
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", msg));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

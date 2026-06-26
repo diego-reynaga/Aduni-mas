@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
     Optional<Estudiante> findByCodigoEstudiante(String codigoEstudiante);
     boolean existsByCodigoEstudiante(String codigoEstudiante);
+    Optional<Estudiante> findByDocumentoIdentidad(String documentoIdentidad);
 
     @Query("SELECT e FROM Estudiante e WHERE " +
            "(:activo IS NULL OR e.activo = :activo) AND " +

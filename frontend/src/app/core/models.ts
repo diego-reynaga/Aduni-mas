@@ -307,8 +307,30 @@ export interface AuditoriaResponse {
   detalle: string;
 }
 
+export interface PadreFamiliaRequest {
+  nombres: string;
+  apellidos: string;
+  documentoIdentidad: string;
+  fechaNacimiento?: string;
+  direccion?: string;
+  telefono?: string;
+  correo?: string;
+  ocupacion?: string;
+  activo?: boolean;
+}
 
-
+export interface PadreFamiliaResponse {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  documentoIdentidad: string;
+  fechaNacimiento?: string;
+  direccion?: string;
+  telefono?: string;
+  correo?: string;
+  ocupacion?: string;
+  activo: boolean;
+}
 export interface EstudianteApoderadoRequest {
   padreFamiliaId: number;
   parentesco: string;

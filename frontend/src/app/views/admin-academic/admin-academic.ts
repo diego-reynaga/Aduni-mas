@@ -3,8 +3,9 @@ import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { CommonModule } from '@angular/common';
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
+import { PersonaDropdown } from '../../core/models';
 
-type Tab = 'niveles' | 'grados' | 'materias' | 'oferta';
+type Tab = 'niveles' | 'grados' | 'materias' | 'oferta' | 'asignaciones';
 
 @Component({
   selector: 'app-admin-academic',
@@ -91,6 +92,19 @@ export class AdminAcademic {
   // Checklist de asignación masiva
   selectedMateriasToAssign = signal<number[]>([]);
 
+  // --- ASIGNACION DOCENTE ---
+  readonly periodos = signal<Academico.PeriodoAcademicoResponse[]>([]);
+  readonly asignaciones = signal<Academico.AsignacionDocenteResponse[]>([]);
+  readonly cursosDisponibles = signal<Academico.CursoDisponibleResponse[]>([]);
+  readonly docentes = signal<PersonaDropdown[]>([]);
+  readonly selectedPeriodoId = signal<number | null>(null);
+  readonly showModalAsignacion = signal(false);
+
+  readonly formAsignacion = new FormGroup({
+    docenteId: new FormControl<number | null>(null, { nonNullable: true, validators: [Validators.required] }),
+    cursoId: new FormControl<number | null>(null, { nonNullable: true, validators: [Validators.required] }),
+  });
+
   constructor() {
     this.loadGestiones();
     this.loadNiveles();
@@ -108,6 +122,14 @@ export class AdminAcademic {
     this.activeTab.set(tab);
     this.error.set('');
     this.successMessage.set('');
+
+    if (tab === 'asignaciones') {
+      if (this.gestiones().length > 0) {
+        this.portal.getPeriodos(this.gestiones()[0].id).subscribe({
+          next: (data) => this.periodos.set(data)
+        });
+      }
+    }
   }
 
   // --- LÓGICA NIVELES ---
@@ -420,6 +442,77 @@ export class AdminAcademic {
         this.loadCursos();
       },
       error: () => this.error.set('Error al remover materia.')
+    });
+  }
+
+  // --- LÓGICA ASIGNACIÓN DOCENTE ---
+  onSelectPeriodo(event: Event) {
+    const id = Number((event.target as HTMLSelectElement).value);
+    if (!id) {
+      this.selectedPeriodoId.set(null);
+      this.asignaciones.set([]);
+      return;
+    }
+    this.selectedPeriodoId.set(id);
+    this.loadAsignaciones();
+  }
+
+  loadAsignaciones() {
+    const periodoId = this.selectedPeriodoId();
+    if (!periodoId) return;
+    this.portal.getAsignaciones(periodoId).subscribe({
+      next: (data) => this.asignaciones.set(data),
+      error: () => this.error.set('Error al cargar asignaciones.')
+    });
+  }
+
+  openAsignarModal() {
+    const periodoId = this.selectedPeriodoId();
+    if (!periodoId) return;
+    
+    this.formAsignacion.reset();
+    this.showModalAsignacion.set(true);
+    
+    this.portal.getDocentesDropdown().subscribe({
+      next: (data) => this.docentes.set(data),
+      error: () => this.error.set('Error al cargar docentes.')
+    });
+
+    this.portal.getCursosDisponibles(periodoId).subscribe({
+      next: (data) => this.cursosDisponibles.set(data),
+      error: () => this.error.set('Error al cargar cursos disponibles.')
+    });
+  }
+
+  saveAsignacion() {
+    if (this.formAsignacion.invalid) return;
+    const periodoId = this.selectedPeriodoId();
+    if (!periodoId) return;
+
+    const req: Academico.AsignacionDocenteRequest = {
+      docenteId: this.formAsignacion.value.docenteId!,
+      cursoId: this.formAsignacion.value.cursoId!,
+      periodoAcademicoId: periodoId
+    };
+
+    this.portal.asignarDocente(req).subscribe({
+      next: () => {
+        this.successMessage.set('Docente asignado exitosamente.');
+        this.showModalAsignacion.set(false);
+        this.loadAsignaciones();
+      },
+      error: (err) => this.error.set(err.error?.message || 'Error al asignar docente.')
+    });
+  }
+
+  confirmarRemover(id: number) {
+    if (!confirm('¿Cerrar esta asignación docente?')) return;
+    this.portal.removerAsignacion(id).subscribe({
+      next: () => {
+        this.successMessage.set('Asignación cerrada exitosamente.');
+        this.loadAsignaciones();
+      },
+      error: () => this.error.set('Error al remover asignación.')
     });
   }
 }

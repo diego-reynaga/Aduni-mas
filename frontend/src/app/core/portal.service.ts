@@ -27,7 +27,9 @@ import {
   AuditoriaResponse,
   EstudianteApoderadoRequest,
   EstudianteApoderadoResponse,
-  ClonarEstructuraRequest
+  ClonarEstructuraRequest,
+  PadreFamiliaRequest,
+  PadreFamiliaResponse
 } from './models';
 
 
@@ -273,6 +275,14 @@ export class PortalService {
     return this.http.post<any>(`${API_URL}/estudiantes`, req);
   }
 
+  actualizarEstudiante(id: number, req: any): Observable<any> {
+    return this.http.put<any>(`${API_URL}/estudiantes/${id}`, req);
+  }
+
+  obtenerEstudiante(id: number): Observable<any> {
+    return this.http.get<any>(`${API_URL}/estudiantes/${id}`);
+  }
+
   // --- CRUD Matriculas ---
   listarMatriculas(): Observable<any[]> {
     return this.http.get<any[]>(`${API_URL}/matriculas`);
@@ -280,6 +290,10 @@ export class PortalService {
 
   matricularEstudiante(req: any): Observable<any> {
     return this.http.post<any>(`${API_URL}/matriculas`, req);
+  }
+
+  listarMatriculasPorEstudiante(estudianteId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/matriculas/estudiante/${estudianteId}`);
   }
 
   cambiarEstadoMatricula(id: number, estado: string): Observable<void> {
@@ -334,6 +348,48 @@ export class PortalService {
 
   removerApoderado(estudianteId: number, id: number): Observable<void> {
     return this.http.delete<void>(`${API_URL}/estudiantes/${estudianteId}/apoderados/${id}`);
+  }
+
+  buscarApoderados(search?: string): Observable<PadreFamiliaResponse[]> {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    return this.http.get<PadreFamiliaResponse[]>(`${API_URL}/apoderados/search`, { params });
+  }
+
+  obtenerApoderado(id: number): Observable<PadreFamiliaResponse> {
+    return this.http.get<PadreFamiliaResponse>(`${API_URL}/apoderados/${id}`);
+  }
+
+  crearApoderado(req: PadreFamiliaRequest): Observable<PadreFamiliaResponse> {
+    return this.http.post<PadreFamiliaResponse>(`${API_URL}/apoderados`, req);
+  }
+
+  actualizarPadreFamilia(id: number, req: PadreFamiliaRequest): Observable<PadreFamiliaResponse> {
+    return this.http.put<PadreFamiliaResponse>(`${API_URL}/apoderados/${id}`, req);
+  }
+
+  // --- Asignación Docente ---
+  getAsignaciones(periodoId?: number, docenteId?: number): Observable<Academico.AsignacionDocenteResponse[]> {
+    let params = new HttpParams();
+    if (periodoId) params = params.set('periodoId', periodoId);
+    if (docenteId) params = params.set('docenteId', docenteId);
+    return this.http.get<Academico.AsignacionDocenteResponse[]>(`${API_URL}/academico/asignaciones`, { params });
+  }
+
+  getCursosDisponibles(periodoId: number): Observable<Academico.CursoDisponibleResponse[]> {
+    return this.http.get<Academico.CursoDisponibleResponse[]>(`${API_URL}/academico/asignaciones/disponibles`, { params: new HttpParams().set('periodoId', periodoId) });
+  }
+
+  asignarDocente(req: Academico.AsignacionDocenteRequest): Observable<Academico.AsignacionDocenteResponse> {
+    return this.http.post<Academico.AsignacionDocenteResponse>(`${API_URL}/academico/asignaciones`, req);
+  }
+
+  removerAsignacion(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/academico/asignaciones/${id}`);
+  }
+
+  getDocentesDropdown(): Observable<PersonaDropdown[]> {
+    return this.http.get<PersonaDropdown[]>(`${API_URL}/personas/docentes-dropdown`);
   }
 }
 
