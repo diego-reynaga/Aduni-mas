@@ -30,16 +30,12 @@ public class RolService {
 
     @Transactional
     public RolResponse crearRol(RolRequest request) {
-        RolNombre rolNombre = validarYObtenerRolNombre(request.nombre());
-        
-        if (rolRepository.findByNombre(rolNombre).isPresent()) {
-            throw new IllegalArgumentException("El rol " + rolNombre + " ya existe");
+        if (rolRepository.findByNombre(request.nombre()).isPresent()) {
+            throw new IllegalArgumentException("El rol " + request.nombre() + " ya existe");
         }
 
-        Rol rol = Rol.builder()
-            .nombre(rolNombre)
-            .build();
-
+        Rol rol = new Rol();
+        rol.setNombre(request.nombre());
         rol = rolRepository.save(rol);
         return mapToResponse(rol);
     }
@@ -49,15 +45,13 @@ public class RolService {
         Rol rol = rolRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + id));
 
-        RolNombre nuevoNombre = validarYObtenerRolNombre(request.nombre());
-        
-        rolRepository.findByNombre(nuevoNombre).ifPresent(r -> {
+        rolRepository.findByNombre(request.nombre()).ifPresent(r -> {
             if (!r.getId().equals(id)) {
-                throw new IllegalArgumentException("Ya existe otro rol con el nombre " + nuevoNombre);
+                throw new IllegalArgumentException("Ya existe otro rol con el nombre " + request.nombre());
             }
         });
 
-        rol.setNombre(nuevoNombre);
+        rol.setNombre(request.nombre());
         rol = rolRepository.save(rol);
         return mapToResponse(rol);
     }
@@ -66,24 +60,13 @@ public class RolService {
     public void eliminarRol(Long id) {
         Rol rol = rolRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + id));
-        
         rolRepository.delete(rol);
-    }
-
-    private RolNombre validarYObtenerRolNombre(String nombre) {
-        try {
-            return RolNombre.valueOf(nombre.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Nombre de rol no válido: " + nombre + ". Debe ser uno de: ADMINISTRADOR, DOCENTE, ESTUDIANTE, PADRE_FAMILIA");
-        }
     }
 
     private RolResponse mapToResponse(Rol rol) {
         return new RolResponse(
             rol.getId(),
-            rol.getNombre().name(),
-            rol.getCreadoEn(),
-            rol.getActualizadoEn()
+            rol.getNombre()
         );
     }
 }

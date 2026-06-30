@@ -1,52 +1,41 @@
 package pe.edu.aduniplus.backend.pago;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import pe.edu.aduniplus.backend.academico.GestionAcademica;
-import pe.edu.aduniplus.backend.common.BaseEntity;
-import pe.edu.aduniplus.backend.persona.Estudiante;
 import pe.edu.aduniplus.backend.academico.Matricula;
-import pe.edu.aduniplus.backend.usuario.Usuario;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.LocalDate;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
-@Table(name = "cronogramas_pago")
-public class CronogramaPago extends BaseEntity {
+@Table(name = "cronograma_pagos")
+public class CronogramaPago {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_cronograma")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "estudiante_id", nullable = false)
-    private Estudiante estudiante;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "matricula_id")
+    @JoinColumn(name = "matricula_id", nullable = false)
     private Matricula matricula;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "gestion_academica_id")
-    private GestionAcademica gestionAcademica;
+    @Column(name = "numero_cuota", nullable = false)
+    private int numeroCuota;
 
-    @Column(name = "total_cuotas", nullable = false)
-    private Integer totalCuotas;
+    @Column(name = "monto_cuota", nullable = false, precision = 10, scale = 2)
+    private BigDecimal montoCuota;
 
-    @Column(name = "monto_total", nullable = false, precision = 10, scale = 2)
-    private BigDecimal montoTotal;
+    @Column(name = "fecha_vencimiento", nullable = false)
+    private LocalDate fechaVencimiento;
 
-    @Column(length = 250)
-    private String observacion;
-
-    @Column(nullable = false)
-    private Boolean activo = true;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_creacion_id", nullable = false)
-    private Usuario usuarioCreacion;
-
-    @OneToMany(mappedBy = "cronograma", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Cuota> cuotas = new HashSet<>();
+    @Column(name = "estado_cuota", nullable = false, length = 20)
+    private String estadoCuota = "Pendiente";
 }

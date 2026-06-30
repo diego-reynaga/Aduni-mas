@@ -4,6 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface EvaluacionRepository extends JpaRepository<Evaluacion, Long> {
-    List<Evaluacion> findByCursoIdAndPeriodoAcademicoIdOrderByOrdenAsc(Long cursoId, Long periodoAcademicoId);
-    boolean existsByCursoIdAndPeriodoAcademicoIdAndNombre(Long cursoId, Long periodoAcademicoId, String nombre);
+    List<Evaluacion> findByCicloId(Long cicloId);
+    boolean existsByCicloIdAndNombre(Long cicloId, String nombre);
 }

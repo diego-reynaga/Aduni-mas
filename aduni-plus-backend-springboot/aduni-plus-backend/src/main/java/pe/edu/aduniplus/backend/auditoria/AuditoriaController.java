@@ -1,31 +1,40 @@
 package pe.edu.aduniplus.backend.auditoria;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import pe.edu.aduniplus.backend.auditoria.dto.AuditoriaResponse;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @RestController
-@RequestMapping("/auditorias")
+@RequestMapping("/auditoria")
 @RequiredArgsConstructor
 public class AuditoriaController {
 
     private final AuditoriaService auditoriaService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<List<AuditoriaResponse>> listarAuditorias(
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA', 'DIRECCION_ADMINISTRATIVA')")
+    public Page<LogAuditoria> listarLogs(
             @RequestParam(required = false) String usuario,
             @RequestParam(required = false) String accion,
-            @RequestParam(required = false) String entidad,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin
+            @RequestParam(required = false) String tabla,
+            @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(auditoriaService.listarAuditorias(usuario, accion, entidad, fechaInicio, fechaFin));
+        return auditoriaService.listarConFiltros(usuario, accion, tabla, pageable);
+    }
+
+    @GetMapping("/ultimos")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA', 'DIRECCION_ADMINISTRATIVA')")
+    public java.util.List<LogAuditoria> listarUltimosLogs() {
+        return auditoriaService.obtenerUltimosLogs();
+    }
+
+    @ExceptionHandler(Exception.class)
+    public org.springframework.http.ResponseEntity<java.util.Map<String, String>> handleExceptions(Exception ex) {
+        return org.springframework.http.ResponseEntity.status(500).body(java.util.Map.of(
+            "message", "Error interno: " + ex.getMessage() + " | Clase: " + ex.getClass().getSimpleName()
+        ));
     }
 }

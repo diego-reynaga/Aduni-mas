@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.aduniplus.backend.usuario.Usuario;
 import pe.edu.aduniplus.backend.usuario.UsuarioRepository;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +20,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-
         return toAuthenticatedUser(usuario);
     }
 
@@ -27,7 +27,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public AuthenticatedUser loadById(Long userId) {
         Usuario usuario = usuarioRepository.findById(userId)
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-
         return toAuthenticatedUser(usuario);
     }
 
@@ -38,10 +37,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             usuario.getUsername(),
             usuario.getPassword(),
             Boolean.TRUE.equals(usuario.getActivo()),
-            usuario.getRoles().stream()
-                .map((rol) -> rol.getNombre().name())
-                .sorted()
-                .toList()
+            List.of(usuario.getRol().getNombre())
         );
     }
 }

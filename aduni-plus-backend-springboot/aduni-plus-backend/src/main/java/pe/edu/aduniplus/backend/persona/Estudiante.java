@@ -1,37 +1,35 @@
 package pe.edu.aduniplus.backend.persona;
 
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import pe.edu.aduniplus.backend.academico.Matricula;
-import java.util.HashSet;
-import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
 @Entity
-@Table(
-    name = "estudiantes",
-    uniqueConstraints = @UniqueConstraint(name = "uk_estudiantes_codigo", columnNames = "codigo_estudiante")
-)
-@PrimaryKeyJoinColumn(name = "persona_id", foreignKey = @ForeignKey(name = "fk_estudiantes_persona"))
-@DiscriminatorValue("ESTUDIANTE")
-public class Estudiante extends Persona {
-    @Column(name = "codigo_estudiante", nullable = false, length = 30)
+@Table(name = "estudiantes")
+public class Estudiante {
+
+    @Id
+    @Column(name = "id_estudiante")
+    private Long id;
+
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "id_estudiante")
+    private Persona persona;
+
+    @ManyToOne
+    @JoinColumn(name = "id_apoderado")
+    private Apoderado apoderado;
+
+    @Column(name = "codigo_estudiante", length = 20, unique = true)
     private String codigoEstudiante;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean activo = true;
-
-    @OneToMany(mappedBy = "estudiante")
-    @Builder.Default
-    private Set<Matricula> matriculas = new HashSet<>();
-
-    @OneToMany(mappedBy = "estudiante")
-    @Builder.Default
-    private Set<EstudianteApoderado> apoderados = new HashSet<>();
+    @Column(name = "estado_academico", length = 20)
+    private String estadoAcademico = "Regular";
 }

@@ -12,14 +12,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
-import pe.edu.aduniplus.backend.security.TokenBlacklistService;
-
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
-    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -39,12 +36,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (tokenBlacklistService.esTokenInvalido(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"message\": \"Token invalidado (logout)\"}");
-            return;
-        }
-
         String username = jwtService.extractUsername(token);
         if (username == null || SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
@@ -53,9 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         AuthenticatedUser user = (AuthenticatedUser) userDetailsService.loadUserByUsername(username);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-            user,
-            null,
-            user.getAuthorities()
+            user, null, user.getAuthorities()
         );
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);

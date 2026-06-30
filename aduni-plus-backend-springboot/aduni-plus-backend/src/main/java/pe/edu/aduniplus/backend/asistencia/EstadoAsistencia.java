@@ -1,8 +1,7 @@
 package pe.edu.aduniplus.backend.asistencia;
 
 public enum EstadoAsistencia {
-    PRESENTE,
+    ASISTIO,
     TARDANZA,
-    FALTA,
-    JUSTIFICADO
+    FALTO
 }

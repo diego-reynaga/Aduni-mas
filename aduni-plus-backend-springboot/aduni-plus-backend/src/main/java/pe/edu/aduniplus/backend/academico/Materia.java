@@ -2,33 +2,24 @@ package pe.edu.aduniplus.backend.academico;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
-import pe.edu.aduniplus.backend.common.BaseEntity;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
+@Builder
 @Entity
-@Table(
-    name = "materias",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_materias_nombre", columnNames = "nombre"),
-        @UniqueConstraint(name = "uk_materias_codigo", columnNames = "codigo")
-    }
-)
-public class Materia extends BaseEntity {
-    @Column(length = 20)
-    private String codigo;
+@Table(name = "materias")
+public class Materia {
 
-    @Column(nullable = false, length = 100)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_materia")
+    private Long id;
+
+    @Column(name = "nombre_materia", nullable = false, length = 100)
     private String nombre;
 
-    @Column(length = 20)
+    @Column(nullable = false, length = 20)
     private String area;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean activa = true;
 }

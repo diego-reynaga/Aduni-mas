@@ -4,51 +4,48 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import pe.edu.aduniplus.backend.academico.AcademicoDtos.MatriculaRequest;
-import pe.edu.aduniplus.backend.academico.AcademicoDtos.MatriculaResponse;
+import pe.edu.aduniplus.backend.academico.dto.MatriculaRequest;
+import pe.edu.aduniplus.backend.academico.dto.MatriculaResponse;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/matriculas")
+@RequestMapping("/matriculas")
 @RequiredArgsConstructor
 public class MatriculaController {
 
-    private final MatriculaService matriculaService;
+    private final MatriculaService service;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA', 'SECRETARIA')")
     public ResponseEntity<List<MatriculaResponse>> listarMatriculas() {
-        return ResponseEntity.ok(matriculaService.listarMatriculas());
+        return ResponseEntity.ok(service.listar());
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA', 'SECRETARIA')")
+    public ResponseEntity<MatriculaResponse> obtenerMatricula(@PathVariable Long id) {
+        return ResponseEntity.ok(service.obtener(id));
     }
 
     @GetMapping("/estudiante/{estudianteId}")
-    public ResponseEntity<List<MatriculaResponse>> listarMatriculasPorEstudiante(@PathVariable Long estudianteId) {
-        return ResponseEntity.ok(matriculaService.listarMatriculasPorEstudiante(estudianteId));
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA', 'SECRETARIA', 'ESTUDIANTE')")
+    public ResponseEntity<List<MatriculaResponse>> listarPorEstudiante(@PathVariable Long estudianteId) {
+        return ResponseEntity.ok(service.listarPorEstudiante(estudianteId));
     }
 
     @PostMapping
-    public ResponseEntity<?> matricularEstudiante(@Valid @RequestBody MatriculaRequest request) {
-        try {
-            MatriculaResponse res = matriculaService.matricularEstudiante(request);
-            return new ResponseEntity<>(res, HttpStatus.CREATED);
-        } catch (AforoExcedidoException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'SECRETARIA')")
+    public ResponseEntity<MatriculaResponse> crearMatricula(@Valid @RequestBody MatriculaRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.registrar(request));
     }
-
-    @PatchMapping("/{id}/estado")
-    public ResponseEntity<Void> cambiarEstadoMatricula(
-            @PathVariable Long id,
-            @RequestBody java.util.Map<String, String> body
-    ) {
-        try {
-            matriculaService.cambiarEstado(id, EstadoMatricula.valueOf(body.get("estado")));
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    
+    @PutMapping("/{id}/retirar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA')")
+    public ResponseEntity<Void> retirarMatricula(@PathVariable Long id) {
+        service.retirar(id);
+        return ResponseEntity.noContent().build();
     }
 }

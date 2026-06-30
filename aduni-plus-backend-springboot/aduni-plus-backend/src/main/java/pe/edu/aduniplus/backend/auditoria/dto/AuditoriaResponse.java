@@ -4,10 +4,11 @@ import java.time.LocalDateTime;
 
 public record AuditoriaResponse(
     Long id,
-    LocalDateTime creadoEn,
     String accion,
-    String entidad,
-    Long entidadId,
+    String tablaAfectada,
     String usuarioResponsable,
-    String detalle
+    String descripcionCambio,
+    Long idRegistroAfectado,
+    String ipOrigen,
+    LocalDateTime fechaHora
 ) {}

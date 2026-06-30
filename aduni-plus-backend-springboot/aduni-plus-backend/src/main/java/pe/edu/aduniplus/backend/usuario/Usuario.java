@@ -1,52 +1,53 @@
 package pe.edu.aduniplus.backend.usuario;
 
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import pe.edu.aduniplus.backend.common.BaseEntity;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import pe.edu.aduniplus.backend.persona.Persona;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
+@Builder
 @Entity
-@Table(
-    name = "usuarios",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_usuarios_username", columnNames = "username"),
-        @UniqueConstraint(name = "uk_usuarios_persona", columnNames = "persona_id")
-    }
-)
-public class Usuario extends BaseEntity {
-    @Column(nullable = false, length = 80)
+@Table(name = "usuarios", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_usuarios_username", columnNames = "username"),
+    @UniqueConstraint(name = "uk_usuarios_persona", columnNames = "id_persona")
+})
+public class Usuario {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_usuario")
+    private Long id;
+
+    @OneToOne(optional = false)
+    @JoinColumn(name = "id_persona", nullable = false, foreignKey = @ForeignKey(name = "fk_usuarios_persona"))
+    private Persona persona;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "id_rol", nullable = false, foreignKey = @ForeignKey(name = "fk_usuarios_rol"))
+    private Rol rol;
+
+    @Column(nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String password;
 
-    @Builder.Default
     @Column(nullable = false)
     private Boolean activo = true;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-        name = "persona_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_usuarios_persona")
-    )
-    private Persona persona;
+    @Column(name = "fecha_creacion", updatable = false)
+    private LocalDateTime fechaCreacion;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "usuario_roles",
-        joinColumns = @JoinColumn(name = "usuario_id", foreignKey = @ForeignKey(name = "fk_usuario_roles_usuario")),
-        inverseJoinColumns = @JoinColumn(name = "rol_id", foreignKey = @ForeignKey(name = "fk_usuario_roles_rol")),
-        uniqueConstraints = @UniqueConstraint(name = "uk_usuario_roles_usuario_rol", columnNames = {"usuario_id", "rol_id"})
-    )
-    @Builder.Default
-    private Set<Rol> roles = new HashSet<>();
+    @PrePersist
+    protected void onCreate() {
+        this.fechaCreacion = LocalDateTime.now();
+    }
 }
