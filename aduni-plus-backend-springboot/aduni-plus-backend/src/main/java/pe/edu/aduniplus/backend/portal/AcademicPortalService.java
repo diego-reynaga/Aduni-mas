@@ -375,7 +375,7 @@ public class AcademicPortalService {
 
     @Transactional(readOnly = true)
     public TeacherImportContextDto getTeacherImportContext(Long docenteId) {
-        List<CourseAssignmentDto> courses = asignacionDocenteRepository.findByDocenteId(docenteId).stream()
+        List<CourseAssignmentDto> courses = asignacionDocenteRepository.findByDocenteIdAndEstado(docenteId, EstadoAsignacionDocente.ACTIVA).stream()
             .sorted(Comparator.comparing(AsignacionDocente::getId))
             .map(this::toCourseAssignment)
             .toList();

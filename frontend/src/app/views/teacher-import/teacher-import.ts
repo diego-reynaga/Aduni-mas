@@ -181,6 +181,13 @@ export class TeacherImport {
     this.downloadErrorCsv(errors, 'errores-preview-importacion-trimestre.csv');
   }
 
+  downloadResultErrors(): void {
+    const errors = this.result()?.errores ?? [];
+    if (errors.length > 0) {
+      this.downloadErrorCsv(errors, `reporte-importacion-${this.result()?.idImportacion ?? 'notas'}.csv`);
+    }
+  }
+
   statusClass(status: string): string {
     if (status === 'PROCESADA') {
       return 'status-pill is-good';

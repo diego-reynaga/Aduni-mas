@@ -26,6 +26,7 @@ export class AdminStudents {
   readonly searchControl = new FormControl('');
   // Modal de Alta Estudiante
   readonly showModalEstudiante = signal(false);
+  readonly editingStudent = signal<any | null>(null);
   readonly formEstudiante = new FormGroup({
     nombres: new FormControl('', Validators.required),
     apellidos: new FormControl('', Validators.required),
@@ -82,24 +83,51 @@ export class AdminStudents {
   }
 
   openModalEstudiante() {
+    this.editingStudent.set(null);
     this.formEstudiante.reset();
+    this.showModalEstudiante.set(true);
+  }
+
+  editEstudiante(student: any) {
+    this.editingStudent.set(student);
+    this.formEstudiante.reset({
+      nombres: student.nombres,
+      apellidos: student.apellidos,
+      documentoIdentidad: student.documentoIdentidad,
+      fechaNacimiento: student.fechaNacimiento || '',
+      correo: student.correo || '',
+      telefono: student.telefono || '',
+      direccion: student.direccion || '',
+    });
     this.showModalEstudiante.set(true);
   }
 
   saveEstudiante() {
     if (this.formEstudiante.invalid) return;
     this.loading.set(true);
-    this.portal.crearEstudiante(this.formEstudiante.getRawValue()).subscribe({
+    const edit = this.editingStudent();
+    const request = { ...this.formEstudiante.getRawValue(), activo: edit?.activo ?? true };
+    const action = edit ? this.portal.actualizarEstudiante(edit.id, request) : this.portal.crearEstudiante(request);
+    action.subscribe({
       next: () => {
         this.loading.set(false);
         this.showModalEstudiante.set(false);
         this.loadEstudiantes();
-        this.success.set('Estudiante registrado con éxito.');
+        this.editingStudent.set(null);
+        this.success.set(edit ? 'Estudiante actualizado con éxito.' : 'Estudiante registrado con éxito.');
       },
       error: (err) => {
         this.loading.set(false);
         this.error.set(err?.error || 'Error al crear estudiante');
       }
+    });
+  }
+
+  desactivarEstudiante(student: any) {
+    if (!confirm(`¿Desactivar a ${student.nombres} ${student.apellidos}?`)) return;
+    this.portal.desactivarEstudiante(student.id).subscribe({
+      next: () => { this.success.set('Estudiante desactivado.'); this.loadEstudiantes(); },
+      error: err => this.error.set(err?.error?.message ?? 'No se pudo desactivar al estudiante.'),
     });
   }
 

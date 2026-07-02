@@ -2,6 +2,7 @@ package pe.edu.aduniplus.backend.notas;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -12,6 +13,7 @@ public class NotaController {
     private final NotaRepository notaRepository;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DOCENTE')")
     public ResponseEntity<List<NotaResponseDTO>> listar() {
         List<NotaResponseDTO> payload = notaRepository.findAll().stream()
             .map((nota) -> new NotaResponseDTO(

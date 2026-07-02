@@ -227,6 +227,34 @@ public class AcademicoService {
         cursoRepository.delete(curso);
     }
 
+    @Transactional
+    public CursoResponse crearCurso(CursoRequest req) {
+        if (cursoRepository.existsByGradoIdAndMateriaId(req.gradoId(), req.materiaId())) {
+            throw new IllegalArgumentException("La materia ya forma parte de la oferta del grado seleccionado.");
+        }
+        Grado grado = gradoRepository.findById(req.gradoId())
+            .orElseThrow(() -> new IllegalArgumentException("Grado no encontrado."));
+        Materia materia = materiaRepository.findById(req.materiaId())
+            .orElseThrow(() -> new IllegalArgumentException("Materia no encontrada."));
+        return toCursoResponse(cursoRepository.save(Curso.builder()
+            .grado(grado).materia(materia).activo(req.activo()).build()));
+    }
+
+    @Transactional
+    public CursoResponse actualizarCurso(Long id, CursoRequest req) {
+        Curso curso = cursoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Curso no encontrado."));
+        cursoRepository.findByGradoIdAndMateriaId(req.gradoId(), req.materiaId())
+            .filter(existing -> !existing.getId().equals(id))
+            .ifPresent(existing -> { throw new IllegalArgumentException("Ya existe esa combinación de grado y materia."); });
+        curso.setGrado(gradoRepository.findById(req.gradoId())
+            .orElseThrow(() -> new IllegalArgumentException("Grado no encontrado.")));
+        curso.setMateria(materiaRepository.findById(req.materiaId())
+            .orElseThrow(() -> new IllegalArgumentException("Materia no encontrada.")));
+        curso.setActivo(req.activo());
+        return toCursoResponse(cursoRepository.save(curso));
+    }
+
 
     // --- Helpers Mappers ---
 
@@ -289,10 +317,10 @@ public class AcademicoService {
     @Transactional
     public GestionAcademicaResponse crearGestion(GestionAcademicaRequest req) {
         if (gestionAcademicaRepository.existsByAnio(req.anio())) {
-            throw new RuntimeException("Ya existe una gestión académica para el año: " + req.anio());
+            throw new IllegalArgumentException("Ya existe una gestión académica para el año: " + req.anio());
         }
         if (req.fechaInicio().isAfter(req.fechaFin())) {
-            throw new RuntimeException("La fecha de inicio no puede ser posterior a la fecha de fin");
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin");
         }
 
         if (Boolean.TRUE.equals(req.activa())) {
@@ -315,11 +343,11 @@ public class AcademicoService {
             .orElseThrow(() -> new RuntimeException("Gestión académica no encontrada"));
 
         if (!gestion.getAnio().equals(req.anio()) && gestionAcademicaRepository.existsByAnio(req.anio())) {
-            throw new RuntimeException("Ya existe una gestión académica para el año: " + req.anio());
+            throw new IllegalArgumentException("Ya existe una gestión académica para el año: " + req.anio());
         }
 
         if (req.fechaInicio().isAfter(req.fechaFin())) {
-            throw new RuntimeException("La fecha de inicio no puede ser posterior a la fecha de fin");
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin");
         }
 
         if (Boolean.TRUE.equals(req.activa()) && !Boolean.TRUE.equals(gestion.getActiva())) {
@@ -333,6 +361,14 @@ public class AcademicoService {
         gestion.setActiva(req.activa());
 
         return toGestionResponse(gestionAcademicaRepository.save(gestion));
+    }
+
+    @Transactional
+    public void desactivarGestion(Long id) {
+        GestionAcademica gestion = gestionAcademicaRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Gestión académica no encontrada."));
+        gestion.setActiva(false);
+        gestionAcademicaRepository.save(gestion);
     }
 
     private void desactivarGestionesActuales() {
@@ -410,7 +446,7 @@ public class AcademicoService {
             .orElseThrow(() -> new RuntimeException("Gestión académica no encontrada"));
 
         if (periodoAcademicoRepository.existsByGestionAcademicaIdAndNombre(gestion.getId(), req.nombre())) {
-            throw new RuntimeException("Ya existe un periodo con ese nombre en la gestión seleccionada");
+            throw new IllegalArgumentException("Ya existe un periodo con ese nombre en la gestión seleccionada");
         }
 
         validarSolapamientoPeriodos(gestion.getId(), null, req.fechaInicio(), req.fechaFin());
@@ -434,7 +470,7 @@ public class AcademicoService {
             .orElseThrow(() -> new RuntimeException("Gestión académica no encontrada"));
 
         if (!periodo.getNombre().equals(req.nombre()) && periodoAcademicoRepository.existsByGestionAcademicaIdAndNombre(gestion.getId(), req.nombre())) {
-            throw new RuntimeException("Ya existe un periodo con ese nombre en la gestión seleccionada");
+            throw new IllegalArgumentException("Ya existe un periodo con ese nombre en la gestión seleccionada");
         }
 
         validarSolapamientoPeriodos(gestion.getId(), periodo.getId(), req.fechaInicio(), req.fechaFin());
@@ -447,6 +483,14 @@ public class AcademicoService {
         periodo.setGestionAcademica(gestion);
 
         return toPeriodoResponse(periodoAcademicoRepository.save(periodo));
+    }
+
+    @Transactional
+    public void cerrarPeriodo(Long id) {
+        PeriodoAcademico periodo = periodoAcademicoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Periodo académico no encontrado."));
+        periodo.setCerrado(true);
+        periodoAcademicoRepository.save(periodo);
     }
 
     private GestionAcademicaResponse toGestionResponse(GestionAcademica gestion) {
@@ -474,7 +518,7 @@ public class AcademicoService {
 
     private void validarSolapamientoPeriodos(Long gestionId, Long periodoIdAExcluir, java.time.LocalDate inicio, java.time.LocalDate fin) {
         if (inicio.isAfter(fin)) {
-            throw new RuntimeException("La fecha de inicio no puede ser posterior a la fecha de fin");
+            throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin");
         }
         List<PeriodoAcademico> periodos = periodoAcademicoRepository.findByGestionAcademicaIdOrderByOrdenAsc(gestionId);
         for (PeriodoAcademico p : periodos) {
@@ -482,7 +526,7 @@ public class AcademicoService {
                 continue;
             }
             if (!inicio.isAfter(p.getFechaFin()) && !fin.isBefore(p.getFechaInicio())) {
-                throw new RuntimeException("Las fechas se solapan con el periodo: " + p.getNombre());
+                throw new IllegalArgumentException("Las fechas se solapan con el periodo: " + p.getNombre());
             }
         }
     }

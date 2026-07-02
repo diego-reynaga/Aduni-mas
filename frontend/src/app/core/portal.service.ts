@@ -109,6 +109,30 @@ export class PortalService {
     return this.http.put<Academico.PeriodoAcademicoResponse>(`${API_URL}/academico/periodos/${id}`, req);
   }
 
+  deleteGestion(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/academico/gestiones/${id}`);
+  }
+
+  deletePeriodo(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/academico/periodos/${id}`);
+  }
+
+  getAsignacionesDocentes(): Observable<Academico.AsignacionDocenteResponse[]> {
+    return this.http.get<Academico.AsignacionDocenteResponse[]>(`${API_URL}/academico/asignaciones-docentes`);
+  }
+
+  createAsignacionDocente(req: Academico.AsignacionDocenteRequest): Observable<Academico.AsignacionDocenteResponse> {
+    return this.http.post<Academico.AsignacionDocenteResponse>(`${API_URL}/academico/asignaciones-docentes`, req);
+  }
+
+  updateAsignacionDocente(id: number, req: Academico.AsignacionDocenteRequest): Observable<Academico.AsignacionDocenteResponse> {
+    return this.http.put<Academico.AsignacionDocenteResponse>(`${API_URL}/academico/asignaciones-docentes/${id}`, req);
+  }
+
+  closeAsignacionDocente(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/academico/asignaciones-docentes/${id}`);
+  }
+
   teacherDashboard(): Observable<TeacherDashboardPayload> {
     return this.http.get<TeacherDashboardPayload>(`${API_URL}/portal/teacher/dashboard`);
   }
@@ -271,6 +295,14 @@ export class PortalService {
 
   crearEstudiante(req: any): Observable<any> {
     return this.http.post<any>(`${API_URL}/estudiantes`, req);
+  }
+
+  actualizarEstudiante(id: number, req: any): Observable<any> {
+    return this.http.put<any>(`${API_URL}/estudiantes/${id}`, req);
+  }
+
+  desactivarEstudiante(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/estudiantes/${id}`);
   }
 
   // --- CRUD Matriculas ---

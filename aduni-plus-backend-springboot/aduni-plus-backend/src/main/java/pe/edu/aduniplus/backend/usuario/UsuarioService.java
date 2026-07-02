@@ -40,11 +40,11 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponse crearUsuario(UsuarioRequest request) {
         if (request.password() == null || request.password().isBlank()) {
-            throw new RuntimeException("La contraseña es obligatoria para nuevos usuarios");
+            throw new IllegalArgumentException("La contraseña es obligatoria para nuevos usuarios");
         }
 
         if (usuarioRepository.findByUsername(request.username()).isPresent()) {
-            throw new RuntimeException("El nombre de usuario ya existe");
+            throw new IllegalArgumentException("El nombre de usuario ya existe");
         }
 
         Persona persona = personaRepository.findById(request.personaId())
@@ -112,7 +112,7 @@ public class UsuarioService {
                     .orElseThrow(() -> new RuntimeException("Rol no encontrado en la base de datos: " + nombre));
                 roles.add(rol);
             } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Nombre de rol inválido: " + nombre);
+                throw new IllegalArgumentException("Nombre de rol inválido: " + nombre);
             }
         }
         return roles;

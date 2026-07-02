@@ -90,6 +90,12 @@ public class AcademicoDtos {
         @NotNull(message = "La lista de IDs de materias es obligatoria")
         List<Long> materiasIds
     ) {}
+
+    public record CursoRequest(
+        @NotNull(message = "El grado es obligatorio") Long gradoId,
+        @NotNull(message = "La materia es obligatoria") Long materiaId,
+        @NotNull(message = "El estado es obligatorio") Boolean activo
+    ) {}
     // --- Gestion Academica ---
     public record GestionAcademicaResponse(
         Long id,

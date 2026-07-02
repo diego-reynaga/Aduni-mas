@@ -100,3 +100,25 @@ export interface PeriodoAcademicoRequest {
   cerrado: boolean;
   gestionAcademicaId: number;
 }
+
+export interface AsignacionDocenteResponse {
+  id: number;
+  docenteId: number;
+  docenteCodigo: string;
+  docenteNombre: string;
+  cursoId: number;
+  materia: string;
+  grado: string;
+  seccion: string;
+  periodoAcademicoId: number;
+  periodo: string;
+  fechaAsignacion: string;
+  estado: 'ACTIVA' | 'CERRADA';
+}
+
+export interface AsignacionDocenteRequest {
+  docenteId: number;
+  cursoId: number;
+  periodoAcademicoId: number;
+  estado: 'ACTIVA' | 'CERRADA';
+}

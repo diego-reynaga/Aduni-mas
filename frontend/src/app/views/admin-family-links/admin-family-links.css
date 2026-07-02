@@ -1,0 +1,6 @@
+.student-selector { max-width: 620px; }
+.link-form { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; align-items: end; }
+.link-form .action-row { grid-column: 1 / -1; }
+.check-line { display: flex; gap: .6rem; align-items: center; min-height: 42px; }
+.btn-subtle + .btn-subtle { margin-left: .35rem; }
+@media (max-width: 800px) { .link-form { grid-template-columns: 1fr; } .link-form .action-row { grid-column: auto; } }

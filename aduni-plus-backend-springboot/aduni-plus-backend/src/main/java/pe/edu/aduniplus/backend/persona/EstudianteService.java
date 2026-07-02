@@ -76,6 +76,15 @@ public class EstudianteService {
         return mapToResponse(estudiante);
     }
 
+    @Transactional
+    public void desactivarEstudiante(Long id) {
+        Estudiante estudiante = estudianteRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Estudiante no encontrado"));
+        estudiante.setActivo(false);
+        estudiante.setEstadoPersona(false);
+        estudianteRepository.save(estudiante);
+    }
+
     private String generarCodigoEstudiante() {
         int year = LocalDate.now().getYear();
         long count = estudianteRepository.count() + 1;

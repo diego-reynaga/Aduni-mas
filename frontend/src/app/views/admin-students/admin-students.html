@@ -37,6 +37,7 @@
               <th>Documento</th>
               <th>Apellidos y Nombres</th>
               <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -46,9 +47,10 @@
                 <td>{{ est.documentoIdentidad }}</td>
                 <td>{{ est.apellidos }}, {{ est.nombres }}</td>
                 <td><span class="badge" [class.badge-success]="est.activo" [class.badge-neutral]="!est.activo">{{ est.activo ? 'ACTIVO' : 'INACTIVO' }}</span></td>
+                <td><button class="btn-subtle" (click)="editEstudiante(est)">Editar</button> <button class="btn-subtle" (click)="desactivarEstudiante(est)" [disabled]="!est.activo">Desactivar</button></td>
               </tr>
             } @empty {
-              <tr><td colspan="4" class="text-center">No hay alumnos registrados.</td></tr>
+              <tr><td colspan="5" class="text-center">No hay alumnos registrados.</td></tr>
             }
           </tbody>
         </table>
@@ -122,7 +124,7 @@
     <div class="modal-overlay">
       <div class="modal-card" style="max-width: 600px;">
         <div class="modal-header">
-          <h3>Alta de Estudiante</h3>
+          <h3>{{ editingStudent() ? 'Editar estudiante' : 'Alta de Estudiante' }}</h3>
           <button class="close-btn" (click)="showModalEstudiante.set(false)">×</button>
         </div>
         <div class="modal-body">
@@ -137,7 +139,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" (click)="showModalEstudiante.set(false)">Cancelar</button>
-          <button class="btn-primary" (click)="saveEstudiante()" [disabled]="formEstudiante.invalid || loading()">Guardar</button>
+          <button class="btn-primary" (click)="saveEstudiante()" [disabled]="formEstudiante.invalid || loading()">{{ editingStudent() ? 'Actualizar' : 'Guardar' }}</button>
         </div>
       </div>
     </div>

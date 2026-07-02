@@ -120,6 +120,18 @@ public class AcademicoController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/cursos")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<CursoResponse> crearCurso(@Valid @RequestBody CursoRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(academicoService.crearCurso(request));
+    }
+
+    @PutMapping("/cursos/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<CursoResponse> actualizarCurso(@PathVariable Long id, @Valid @RequestBody CursoRequest request) {
+        return ResponseEntity.ok(academicoService.actualizarCurso(id, request));
+    }
+
     @DeleteMapping("/cursos/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<Void> removerCurso(@PathVariable Long id) {
@@ -147,6 +159,13 @@ public class AcademicoController {
         return ResponseEntity.ok(academicoService.actualizarGestion(id, request));
     }
 
+    @DeleteMapping("/gestiones/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Void> desactivarGestion(@PathVariable Long id) {
+        academicoService.desactivarGestion(id);
+        return ResponseEntity.noContent().build();
+    }
+
     // --- Periodos Academicos ---
 
     @GetMapping("/periodos")
@@ -165,5 +184,12 @@ public class AcademicoController {
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<PeriodoAcademicoResponse> actualizarPeriodo(@PathVariable Long id, @Valid @RequestBody PeriodoAcademicoRequest request) {
         return ResponseEntity.ok(academicoService.actualizarPeriodo(id, request));
+    }
+
+    @DeleteMapping("/periodos/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Void> cerrarPeriodo(@PathVariable Long id) {
+        academicoService.cerrarPeriodo(id);
+        return ResponseEntity.noContent().build();
     }
 }

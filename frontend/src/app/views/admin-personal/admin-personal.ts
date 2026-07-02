@@ -4,7 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { PortalService } from '../../core/portal.service';
 import { PersonaResponse, PersonaRequest } from '../../core/models';
 
-type Tab = 'general' | 'docentes' | 'administrativos';
+type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
 
 @Component({
   selector: 'app-admin-personal',
@@ -32,7 +32,8 @@ export class AdminPersonal {
     return this.personas().filter(p => {
       const matchTab = tab === 'general' ||
                        (tab === 'docentes' && p.tipoPersona === 'DOCENTE') ||
-                       (tab === 'administrativos' && p.tipoPersona === 'ADMINISTRATIVO');
+                       (tab === 'administrativos' && p.tipoPersona === 'ADMINISTRATIVO') ||
+                       (tab === 'familias' && p.tipoPersona === 'PADRE_FAMILIA');
       if (!matchTab) return false;
 
       if (!q) return true;

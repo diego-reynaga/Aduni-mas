@@ -8,6 +8,7 @@
     <button class="tab-btn" [class.active]="activeTab() === 'general'" (click)="setTab('general')">General (Todas las Personas)</button>
     <button class="tab-btn" [class.active]="activeTab() === 'docentes'" (click)="setTab('docentes')">Cuerpo Docente</button>
     <button class="tab-btn" [class.active]="activeTab() === 'administrativos'" (click)="setTab('administrativos')">Personal Administrativo</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'familias'" (click)="setTab('familias')">Padres y Apoderados</button>
   </div>
 
   @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
@@ -24,8 +25,8 @@
           <div style="flex-grow: 1; max-width: 400px;">
             <input type="text" class="search-input" placeholder="Buscar por DNI, Nombres o Apellidos..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
           </div>
-          <button class="btn-primary" (click)="openAdd(activeTab() === 'general' ? 'PERSONA' : activeTab() === 'docentes' ? 'DOCENTE' : 'ADMINISTRATIVO')">
-            + Añadir {{ activeTab() === 'general' ? 'Persona' : activeTab() === 'docentes' ? 'Docente' : 'Administrativo' }}
+          <button class="btn-primary" (click)="openAdd(activeTab() === 'general' ? 'PERSONA' : activeTab() === 'docentes' ? 'DOCENTE' : activeTab() === 'familias' ? 'PADRE_FAMILIA' : 'ADMINISTRATIVO')">
+            + Añadir {{ activeTab() === 'general' ? 'Persona' : activeTab() === 'docentes' ? 'Docente' : activeTab() === 'familias' ? 'Apoderado' : 'Administrativo' }}
           </button>
         </div>
 

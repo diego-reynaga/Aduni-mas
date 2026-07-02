@@ -8,9 +8,9 @@ spring:
     name: aduni-plus-backend
 
   datasource:
-    url: jdbc:mysql://localhost:3306/aduniplus?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true
-    username: root
-    password: 12345678
+    url: ${DB_URL:jdbc:mysql://localhost:3306/aduniplus?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345678}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -21,7 +21,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
 
   servlet:
     multipart:
@@ -32,5 +32,7 @@ app:
   cors:
     allowed-origins: http://localhost:4200
   jwt:
-    secret: cambiar-esta-clave-por-una-clave-segura-de-256-bits-minimo
-    expiration-ms: 86400000
+    secret: ${JWT_SECRET:cambiar-esta-clave-por-una-clave-segura-de-256-bits-minimo}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  seed:
+    enabled: ${SEED_ENABLED:true}

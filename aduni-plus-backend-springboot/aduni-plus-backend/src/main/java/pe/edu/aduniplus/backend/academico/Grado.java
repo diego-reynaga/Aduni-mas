@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import pe.edu.aduniplus.backend.common.BaseEntity;
-import java.util.HashSet;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -39,11 +37,4 @@ public class Grado extends BaseEntity {
     @Column(nullable = false)
     private Integer capacidad = 30;
 
-    @OneToMany(mappedBy = "grado")
-    @Builder.Default
-    private Set<Curso> cursos = new HashSet<>();
-
-    @OneToMany(mappedBy = "grado")
-    @Builder.Default
-    private Set<Matricula> matriculas = new HashSet<>();
 }

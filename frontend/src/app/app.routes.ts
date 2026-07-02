@@ -15,6 +15,8 @@ import { TeacherDashboard } from './views/teacher-dashboard/teacher-dashboard';
 import { TeacherGrades } from './views/teacher-grades/teacher-grades';
 import { TeacherImport } from './views/teacher-import/teacher-import';
 import { AdminStudents } from './views/admin-students/admin-students';
+import { AdminAssignments } from './views/admin-assignments/admin-assignments';
+import { AdminFamilyLinks } from './views/admin-family-links/admin-family-links';
 
 
 export const routes: Routes = [
@@ -70,6 +72,16 @@ export const routes: Routes = [
       {
         path: 'admin/alumnos',
         component: AdminStudents,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/asignaciones',
+        component: AdminAssignments,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/familias',
+        component: AdminFamilyLinks,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
