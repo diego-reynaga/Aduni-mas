@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { matriculaApi } from '../../../services/matriculaApi';
 import type { Matricula, MatriculaRequest } from '../../../types/academico';
 import MatriculaTable from '../../../components/academico/MatriculaTable';
-import MatriculaForm from '../../../components/academico/MatriculaForm';
+import MatriculaWizard from '../../../components/academico/MatriculaWizard';
 
 export default function MatriculasPage() {
   const [matriculas, setMatriculas] = useState<Matricula[]>([]);
@@ -24,19 +24,14 @@ export default function MatriculasPage() {
       setError('');
     } catch (err: any) {
       console.error(err);
-      setError('No se pudo cargar las matrículas.');
+      setError('No se pudo cargar las matriculas.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
 
   const handleSubmit = async (data: MatriculaRequest) => {
     try {
@@ -46,24 +41,32 @@ export default function MatriculasPage() {
       fetchMatriculas();
     } catch (err: any) {
       console.error(err);
-      if (err.response?.data?.errorCode === 'CONCURRENCIA_CUPO') {
-        alert(err.response.data.detail);
-      } else {
-        alert('Ocurrió un error al matricular. Ver la consola.');
-      }
+      const msg = err.response?.data?.detail || err.response?.data?.title || 'Ocurrio un error al matricular.';
+      alert(msg);
     } finally {
       setFormLoading(false);
     }
   };
 
+  const handleCambiarEstado = async (id: number, estado: string) => {
+    if (!window.confirm(Esta seguro de cambiar el estado de la matricula a ""?)) return;
+    try {
+      await matriculaApi.cambiarEstado(id, { estado });
+      fetchMatriculas();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.detail || 'Error al cambiar estado');
+    }
+  };
+
   const handleRetirar = async (id: number) => {
-    if (window.confirm('¿Está seguro de retirar al estudiante de esta matrícula? Esta acción liberará el cupo.')) {
+    if (window.confirm('Esta seguro de retirar al estudiante de esta matricula? Esta accion liberara el cupo.')) {
       try {
         await matriculaApi.retirar(id);
         fetchMatriculas();
       } catch (err: any) {
         console.error(err);
-        alert('Ocurrió un error al retirar.');
+        alert('Ocurrio un error al retirar.');
       }
     }
   };
@@ -73,12 +76,12 @@ export default function MatriculasPage() {
     <div className="animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.875rem', marginBottom: '0.5rem' }}>Gestión de Matrículas</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Administra las matrículas de los estudiantes.</p>
+          <h1 style={{ fontSize: '1.875rem', marginBottom: '0.5rem' }}>Gestion de Matriculas</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Administra las matriculas de los estudiantes.</p>
         </div>
         <button className="btn-primary" onClick={handleOpenModal}>
           <Plus size={20} />
-          Nueva Matrícula
+          Nueva Matricula
         </button>
       </div>
 
@@ -90,21 +93,25 @@ export default function MatriculasPage() {
 
       <div className="glass-panel" style={{ borderRadius: '1rem', padding: '1.5rem', backgroundColor: 'var(--color-surface)' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>Cargando matrículas...</div>
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>Cargando matriculas...</div>
         ) : (
-          <MatriculaTable matriculas={matriculas} onRetirar={handleRetirar} />
+          <MatriculaTable
+            matriculas={matriculas}
+            onRetirar={handleRetirar}
+            onCambiarEstado={handleCambiarEstado}
+          />
         )}
       </div>
-
     </div>
+
     {isModalOpen && (
       <div className="modal-overlay">
           <div className="modal-content animate-fade-in" style={{
-            maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto'
+            maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto'
           }}>
-            <h2 style={{ marginBottom: '1.5rem' }}>Nueva Matrícula</h2>
-            <MatriculaForm 
-              onSubmit={handleSubmit} 
+            <h2 style={{ marginBottom: '1.5rem' }}>Nueva Matricula</h2>
+            <MatriculaWizard
+              onSubmit={handleSubmit}
               onCancel={handleCloseModal}
               isLoading={formLoading}
             />

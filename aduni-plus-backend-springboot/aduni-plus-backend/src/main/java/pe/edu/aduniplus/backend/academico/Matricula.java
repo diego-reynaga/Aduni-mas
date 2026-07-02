@@ -20,6 +20,9 @@ public class Matricula {
     @Column(name = "id_matricula")
     private Long id;
 
+    @Column(name = "codigo_matricula", length = 30, unique = true)
+    private String codigoMatricula;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "estudiante_id", nullable = false)
     private Persona estudiante;
@@ -36,5 +39,15 @@ public class Matricula {
 
     @Builder.Default
     @Column(name = "estado_matricula", nullable = false, length = 20)
-    private String estado = "Activo";
+    private String estado = EstadoMatricula.PRE_MATRICULADO.name();
+
+    public EstadoMatricula getEstadoEnum() {
+        return EstadoMatricula.fromString(this.estado);
+    }
+
+    public void setEstadoEnum(EstadoMatricula nuevoEstado) {
+        if (nuevoEstado != null) {
+            this.estado = nuevoEstado.name();
+        }
+    }
 }

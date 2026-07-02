@@ -26,9 +26,26 @@ public class SeccionService {
     }
 
     @Transactional(readOnly = true)
+    public List<SeccionResponse> listarDisponibles(Long cicloId, Long turnoId) {
+        List<Seccion> secciones;
+        if (cicloId != null && turnoId != null) {
+            secciones = seccionRepository.findByCicloIdAndTurnoId(cicloId, turnoId);
+        } else if (cicloId != null) {
+            secciones = seccionRepository.findByCicloId(cicloId);
+        } else if (turnoId != null) {
+            secciones = seccionRepository.findByTurnoId(turnoId);
+        } else {
+            secciones = seccionRepository.findAll();
+        }
+        return secciones.stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public SeccionResponse obtener(Long id) {
         Seccion s = seccionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Sección no encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Seccion no encontrada"));
         return mapToResponse(s);
     }
 
@@ -51,7 +68,7 @@ public class SeccionService {
     @Transactional
     public SeccionResponse actualizar(Long id, SeccionRequest request) {
         Seccion s = seccionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Sección no encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Seccion no encontrada"));
         CicloAcademico ciclo = cicloRepository.findById(request.cicloId())
                 .orElseThrow(() -> new IllegalArgumentException("Ciclo no encontrado"));
         Turno turno = turnoRepository.findById(request.turnoId())
@@ -67,13 +84,13 @@ public class SeccionService {
     @Transactional
     public void eliminar(Long id) {
         if (!seccionRepository.existsById(id)) {
-            throw new IllegalArgumentException("Sección no encontrada");
+            throw new IllegalArgumentException("Seccion no encontrada");
         }
         seccionRepository.deleteById(id);
     }
 
     private SeccionResponse mapToResponse(Seccion s) {
-        int ocupados = matriculaRepository.countBySeccionIdAndEstado(s.getId(), "Activo");
+        int ocupados = matriculaRepository.countBySeccionIdAndEstado(s.getId(), EstadoMatricula.ACTIVO.name());
         int disponibles = s.getCupoMaximo() - ocupados;
         return new SeccionResponse(
                 s.getId(),
@@ -83,7 +100,7 @@ public class SeccionService {
                 s.getTurno().getNombre(),
                 s.getNombre(),
                 s.getCupoMaximo(),
-                disponibles,
+                Math.max(disponibles, 0),
                 s.getVersion()
         );
     }

@@ -23,6 +23,7 @@ public class PersonaService {
     private final EstudianteRepository estudianteRepository;
     private final ApoderadoRepository apoderadoRepository;
     private final PersonalInstitucionalRepository personalInstitucionalRepository;
+    private final CodigoEstudianteGenerator codigoEstudianteGenerator;
 
     @Transactional(readOnly = true)
     public List<PersonaResponse> listarPersonas() {
@@ -41,7 +42,7 @@ public class PersonaService {
     @Transactional
     public PersonaConPerfilesResponse crearPersonaConPerfiles(PersonaConPerfilesRequest request) {
         if (personaRepository.existsByNumeroDocumento(request.numeroDocumento())) {
-            throw new IllegalArgumentException("El número de documento '" + request.numeroDocumento() + "' ya existe");
+            throw new IllegalArgumentException("El numero de documento '" + request.numeroDocumento() + "' ya existe");
         }
 
         Persona persona = new Persona();
@@ -59,10 +60,19 @@ public class PersonaService {
         if (request.perfiles().contains(PerfilPersona.ESTUDIANTE)) {
             PerfilEstudianteRequest estReq = request.estudiante();
             if (estReq == null) throw new IllegalArgumentException("Datos de estudiante requeridos");
+
+            String codigoEstudiante = estReq.codigoEstudiante();
+            if (codigoEstudiante == null || codigoEstudiante.isBlank()) {
+                codigoEstudiante = codigoEstudianteGenerator.generarSiguiente();
+            }
+            if (estudianteRepository.existsByCodigoEstudiante(codigoEstudiante)) {
+                throw new IllegalArgumentException("El codigo de estudiante '" + codigoEstudiante + "' ya existe");
+            }
+
             Estudiante estudiante = new Estudiante();
             estudiante.setId(persona.getId());
             estudiante.setPersona(persona);
-            estudiante.setCodigoEstudiante(estReq.codigoEstudiante());
+            estudiante.setCodigoEstudiante(codigoEstudiante);
             estudiante.setEstadoAcademico(estReq.estadoAcademico() != null ? estReq.estadoAcademico() : "Regular");
             if (estReq.idApoderado() != null) {
                 Apoderado ap = apoderadoRepository.findById(estReq.idApoderado())
@@ -140,7 +150,7 @@ public class PersonaService {
     @Transactional
     public PersonaResponse crearPersona(PersonaRequest request) {
         if (personaRepository.existsByNumeroDocumento(request.numeroDocumento())) {
-            throw new IllegalArgumentException("El número de documento ya existe");
+            throw new IllegalArgumentException("El numero de documento ya existe");
         }
         Persona persona = new Persona();
         persona.setTipoDocumento(request.tipoDocumento());

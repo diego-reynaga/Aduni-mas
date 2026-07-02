@@ -24,6 +24,14 @@ public class SeccionController {
         return ResponseEntity.ok(service.listar());
     }
 
+    @GetMapping("/disponibles")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA', 'SECRETARIA')")
+    public ResponseEntity<List<SeccionResponse>> listarDisponibles(
+            @RequestParam(required = false) Long cicloId,
+            @RequestParam(required = false) Long turnoId) {
+        return ResponseEntity.ok(service.listarDisponibles(cicloId, turnoId));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA', 'SECRETARIA')")
     public ResponseEntity<SeccionResponse> obtener(@PathVariable Long id) {

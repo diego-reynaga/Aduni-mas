@@ -54,8 +54,11 @@ export interface SeccionRequest {
   cupoMaximo: number;
 }
 
+export type EstadoMatricula = 'PRE_MATRICULADO' | 'ACTIVO' | 'RETIRADO' | 'SUSPENDIDO' | 'EGRESADO';
+
 export interface Matricula {
   id: number;
+  codigoMatricula: string;
   estudianteId: number;
   estudianteNombre: string;
   seccionId: number;
@@ -69,4 +72,25 @@ export interface MatriculaRequest {
   estudianteId: number;
   seccionId: number;
   montoTotalPactado: number;
+  fechaMatricula?: string;
 }
+
+export interface CambioEstadoRequest {
+  estado: string;
+}
+
+export const TRANSICIONES_ESTADO: Record<string, string[]> = {
+  PRE_MATRICULADO: ['ACTIVO', 'RETIRADO'],
+  ACTIVO: ['RETIRADO', 'SUSPENDIDO', 'EGRESADO'],
+  SUSPENDIDO: ['ACTIVO', 'RETIRADO'],
+  RETIRADO: [],
+  EGRESADO: [],
+};
+
+export const COLORES_ESTADO: Record<string, string> = {
+  PRE_MATRICULADO: '#F59E0B',
+  ACTIVO: '#10B981',
+  RETIRADO: '#EF4444',
+  SUSPENDIDO: '#F97316',
+  EGRESADO: '#6366F1',
+};

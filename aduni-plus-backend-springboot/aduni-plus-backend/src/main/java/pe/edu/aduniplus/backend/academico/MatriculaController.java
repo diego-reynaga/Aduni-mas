@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import pe.edu.aduniplus.backend.academico.dto.CambioEstadoRequest;
 import pe.edu.aduniplus.backend.academico.dto.MatriculaRequest;
 import pe.edu.aduniplus.backend.academico.dto.MatriculaResponse;
 
@@ -41,7 +42,15 @@ public class MatriculaController {
     public ResponseEntity<MatriculaResponse> crearMatricula(@Valid @RequestBody MatriculaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.registrar(request));
     }
-    
+
+    @PutMapping("/{id}/estado")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA')")
+    public ResponseEntity<MatriculaResponse> cambiarEstado(
+            @PathVariable Long id,
+            @Valid @RequestBody CambioEstadoRequest request) {
+        return ResponseEntity.ok(service.cambiarEstado(id, request.estado()));
+    }
+
     @PutMapping("/{id}/retirar")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'DIRECCION_ACADEMICA')")
     public ResponseEntity<Void> retirarMatricula(@PathVariable Long id) {

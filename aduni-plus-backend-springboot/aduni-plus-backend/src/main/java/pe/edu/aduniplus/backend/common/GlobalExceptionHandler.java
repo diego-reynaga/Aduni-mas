@@ -26,6 +26,15 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail handleIllegalState(IllegalStateException ex, WebRequest request) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        pd.setTitle("Conflict");
+        pd.setProperty("timestamp", Instant.now().toString());
+        pd.setProperty("errorCode", "REGLA_NEGOCIO_ERROR");
+        return pd;
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
         String msg = "Error de integridad de datos";
@@ -35,8 +44,17 @@ public class GlobalExceptionHandler {
                 msg = "El documento de identidad ya se encuentra registrado";
                 errorCode = "DOCUMENTO_DUPLICADO";
             } else if (ex.getMessage().contains("uk_personas_correo")) {
-                msg = "El correo electrónico ya se encuentra registrado";
+                msg = "El correo electr�nico ya se encuentra registrado";
                 errorCode = "CORREO_DUPLICADO";
+            } else if (ex.getMessage().contains("uk_estudiantes_codigo")) {
+                msg = "El codigo de estudiante generado ya existe. Intente nuevamente.";
+                errorCode = "CODIGO_ESTUDIANTE_DUPLICADO";
+            } else if (ex.getMessage().contains("uk_matriculas_estudiante_seccion")) {
+                msg = "El estudiante ya se encuentra matriculado en esta seccion";
+                errorCode = "MATRICULA_DUPLICADA";
+            } else if (ex.getMessage().contains("uk_matriculas_codigo")) {
+                msg = "El codigo de matricula generado ya existe. Intente nuevamente.";
+                errorCode = "CODIGO_MATRICULA_DUPLICADO";
             }
         }
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, msg);
@@ -52,7 +70,7 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors().forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
         ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         pd.setTitle("Bad Request");
-        pd.setDetail("Error de validación en los campos de entrada");
+        pd.setDetail("Error de validacion en los campos de entrada");
         pd.setProperty("timestamp", Instant.now().toString());
         pd.setProperty("errors", errors);
         return pd;
@@ -61,7 +79,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
     public ProblemDetail handleOptimisticLock(org.springframework.dao.OptimisticLockingFailureException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-            "La operación no pudo completarse debido a un conflicto de concurrencia. " +
+            "La operacion no pudo completarse debido a un conflicto de concurrencia. " +
             "Es posible que el cupo se haya agotado. Por favor, intente nuevamente.");
         pd.setTitle("Conflict");
         pd.setProperty("timestamp", Instant.now().toString());

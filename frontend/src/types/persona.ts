@@ -27,6 +27,40 @@ export interface Estudiante {
   estadoAcademico: string;
 }
 
+export interface EstudianteBuscarResponse {
+  id: number;
+  codigoEstudiante: string;
+  nombres: string;
+  apellidos: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  estadoAcademico: string;
+}
+
+export interface EstudiantePaginadoResponse {
+  contenido: EstudianteBuscarResponse[];
+  pagina: number;
+  totalPaginas: number;
+  totalElementos: number;
+  tamanioPagina: number;
+}
+
+export interface EstudianteExpedienteResponse {
+  id: number;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  nombres: string;
+  apellidos: string;
+  correo: string | null;
+  telefono: string | null;
+  direccion: string | null;
+  codigoEstudiante: string;
+  estadoAcademico: string;
+  apoderadoNombre: string | null;
+  relacionParentesco: string | null;
+  historialMatriculas: any[];
+}
+
 export interface Apoderado {
   id: number;
   persona: Persona;

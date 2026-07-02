@@ -6,9 +6,17 @@ export const seccionApi = {
     const response = await api.get<Seccion[]>('/api/secciones');
     return response.data;
   },
-  
+
+  getDisponibles: async (cicloId?: number, turnoId?: number) => {
+    const params: Record<string, number> = {};
+    if (cicloId !== undefined) params.cicloId = cicloId;
+    if (turnoId !== undefined) params.turnoId = turnoId;
+    const response = await api.get<Seccion[]>('/api/secciones/disponibles', { params });
+    return response.data;
+  },
+
   getById: async (id: number) => {
-    const response = await api.get<Seccion>(`/api/secciones/${id}`);
+    const response = await api.get<Seccion>(/api/secciones/);
     return response.data;
   },
 
@@ -18,11 +26,11 @@ export const seccionApi = {
   },
 
   update: async (id: number, data: SeccionRequest) => {
-    const response = await api.put<Seccion>(`/api/secciones/${id}`, data);
+    const response = await api.put<Seccion>(/api/secciones/, data);
     return response.data;
   },
 
   delete: async (id: number) => {
-    await api.delete(`/api/secciones/${id}`);
+    await api.delete(/api/secciones/);
   }
 };
