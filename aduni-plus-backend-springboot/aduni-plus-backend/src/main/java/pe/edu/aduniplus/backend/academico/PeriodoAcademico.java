@@ -13,10 +13,10 @@ import java.time.LocalDate;
 @SuperBuilder
 @Entity
 @Table(
-    name = "periodos_academicos",
+    name = "periodo_academico",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_periodos_gestion_nombre", columnNames = {"gestion_academica_id", "nombre"}),
-        @UniqueConstraint(name = "uk_periodos_gestion_orden", columnNames = {"gestion_academica_id", "orden"})
+        @UniqueConstraint(name = "uk_periodo_gestion_nombre", columnNames = {"gestion_academica_id", "nombre"}),
+        @UniqueConstraint(name = "uk_periodo_gestion_orden", columnNames = {"gestion_academica_id", "orden"})
     }
 )
 public class PeriodoAcademico extends BaseEntity {

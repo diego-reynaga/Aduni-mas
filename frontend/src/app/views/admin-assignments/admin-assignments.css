@@ -1,0 +1,6 @@
+.two-column { display: grid; grid-template-columns: minmax(280px, .75fr) minmax(0, 1.4fr); gap: 1.5rem; align-items: start; }
+.assignment-form { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.assignment-form .action-row { grid-column: 1 / -1; }
+.check-line { display: flex; gap: .6rem; align-items: center; }
+.btn-subtle + .btn-subtle { margin-left: .35rem; }
+@media (max-width: 1000px) { .two-column, .assignment-form { grid-template-columns: 1fr; } .assignment-form .action-row { grid-column: auto; } }

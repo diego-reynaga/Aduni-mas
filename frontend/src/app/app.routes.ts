@@ -7,12 +7,16 @@ import { AdminImportacionesNotas } from './views/admin-importaciones-notas/admin
 import { AdminInstitution } from './views/admin-institution/admin-institution';
 import { AdminSupervision } from './views/admin-supervision/admin-supervision';
 import { AdminUsers } from './views/admin-users/admin-users';
+import { AdminPersonal } from './views/admin-personal/admin-personal';
 import { FamilyPortal } from './views/family-portal/family-portal';
 import { Login } from './views/login/login';
 import { StudentPortal } from './views/student-portal/student-portal';
 import { TeacherDashboard } from './views/teacher-dashboard/teacher-dashboard';
 import { TeacherGrades } from './views/teacher-grades/teacher-grades';
 import { TeacherImport } from './views/teacher-import/teacher-import';
+import { AdminStudents } from './views/admin-students/admin-students';
+import { AdminAssignments } from './views/admin-assignments/admin-assignments';
+import { AdminFamilyLinks } from './views/admin-family-links/admin-family-links';
 
 
 export const routes: Routes = [
@@ -41,6 +45,11 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
+        path: 'admin/personal',
+        component: AdminPersonal,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
         path: 'admin/academico',
         component: AdminAcademic,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
@@ -58,6 +67,21 @@ export const routes: Routes = [
       {
         path: 'admin/configuracion',
         component: AdminInstitution,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/alumnos',
+        component: AdminStudents,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/asignaciones',
+        component: AdminAssignments,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/familias',
+        component: AdminFamilyLinks,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {

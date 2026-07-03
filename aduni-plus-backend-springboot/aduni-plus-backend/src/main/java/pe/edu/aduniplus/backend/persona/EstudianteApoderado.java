@@ -12,25 +12,29 @@ import pe.edu.aduniplus.backend.common.BaseEntity;
 @SuperBuilder
 @Entity
 @Table(
-    name = "estudiante_apoderados",
+    name = "apoderadoestudiante",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_estudiante_apoderado",
-        columnNames = {"estudiante_id", "padre_familia_id"}
+        name = "uk_apoderadoestudiante",
+        columnNames = {"estudiante_id", "apoderado_id"}
     )
 )
 public class EstudianteApoderado extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "estudiante_id", nullable = false, foreignKey = @ForeignKey(name = "fk_estudiante_apoderados_estudiante"))
+    @JoinColumn(name = "estudiante_id", nullable = false, foreignKey = @ForeignKey(name = "fk_apoderadoestudiante_estudiante"))
     private Estudiante estudiante;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "padre_familia_id", nullable = false, foreignKey = @ForeignKey(name = "fk_estudiante_apoderados_padre"))
+    @JoinColumn(name = "apoderado_id", nullable = false, foreignKey = @ForeignKey(name = "fk_apoderadoestudiante_apoderado"))
     private PadreFamilia padreFamilia;
 
     @Column(nullable = false, length = 40)
     private String parentesco;
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column(name = "es_principal", nullable = false)
     private Boolean principal = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean estado = true;
 }

@@ -18,12 +18,12 @@ import java.time.LocalDateTime;
 @SuperBuilder
 @Entity
 @Table(
-    name = "promedios_academicos",
+    name = "promedio_academico",
     uniqueConstraints = @UniqueConstraint(
-        name = "uk_promedios_estudiante_curso_periodo",
+        name = "uk_promedio_estudiante_curso_periodo",
         columnNames = {"estudiante_id", "curso_id", "periodo_academico_id"}
     ),
-    indexes = @Index(name = "idx_promedios_estudiante", columnList = "estudiante_id")
+    indexes = @Index(name = "idx_promedio_estudiante", columnList = "estudiante_id")
 )
 @Check(constraints = "promedio >= 0 and promedio <= 20")
 public class PromedioAcademico extends BaseEntity {

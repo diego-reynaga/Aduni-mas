@@ -1,6 +1,7 @@
 package pe.edu.aduniplus.backend.academico;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,4 +12,6 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Long> {
     List<Matricula> findByGradoId(Long gradoId);
     List<Matricula> findByGradoIdAndEstado(Long gradoId, EstadoMatricula estado);
     boolean existsByEstudianteIdAndGradoId(Long estudianteId, Long gradoId);
+    @Query("SELECT COUNT(m) FROM Matricula m WHERE m.grado.id = :gradoId AND m.estado IN :estados")
+    long countByGradoIdAndEstadoIn(@org.springframework.data.repository.query.Param("gradoId") Long gradoId, @org.springframework.data.repository.query.Param("estados") List<EstadoMatricula> estados);
 }

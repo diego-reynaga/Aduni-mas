@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface ImportacionNotasRepository extends JpaRepository<ImportacionNotas, Long> {
     List<ImportacionNotas> findAllByOrderByCreadoEnDesc();
-    List<ImportacionNotas> findByDocenteId(Long docenteId);
-    List<ImportacionNotas> findByDocenteIdOrderByCreadoEnDesc(Long docenteId);
-    List<ImportacionNotas> findByCursoIdAndPeriodoAcademicoId(Long cursoId, Long periodoAcademicoId);
+    List<ImportacionNotas> findByAsignacionDocenteDocenteId(Long docenteId);
+    List<ImportacionNotas> findByAsignacionDocenteDocenteIdOrderByCreadoEnDesc(Long docenteId);
+    List<ImportacionNotas> findByAsignacionDocenteCursoIdAndAsignacionDocentePeriodoAcademicoId(Long cursoId, Long periodoAcademicoId);
 }

@@ -7,4 +7,5 @@ public interface EstudianteApoderadoRepository extends JpaRepository<EstudianteA
     List<EstudianteApoderado> findByEstudianteId(Long estudianteId);
     List<EstudianteApoderado> findByPadreFamiliaId(Long padreFamiliaId);
     boolean existsByEstudianteIdAndPadreFamiliaId(Long estudianteId, Long padreFamiliaId);
+    java.util.Optional<EstudianteApoderado> findByEstudianteIdAndPrincipalTrue(Long estudianteId);
 }

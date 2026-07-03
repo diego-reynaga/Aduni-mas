@@ -20,6 +20,19 @@
   }
 
   <section class="surface">
+    <div class="surface-header"><div><p class="section-kicker">Guía rápida</p><h3>Importe en cinco pasos</h3></div></div>
+    <div class="surface-body">
+      <ol class="help-steps">
+        <li><strong>Paso 1:</strong> seleccionar curso</li>
+        <li><strong>Paso 2:</strong> seleccionar trimestre</li>
+        <li><strong>Paso 3:</strong> subir Excel .xlsx</li>
+        <li><strong>Paso 4:</strong> previsualizar y corregir observaciones</li>
+        <li><strong>Paso 5:</strong> confirmar la importación</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="surface">
     <div class="surface-header">
       <div>
         <p class="section-kicker">Configuracion</p>
@@ -299,6 +312,9 @@
           <strong>{{ saved.totalConError }}</strong>
         </article>
       </div>
+      @if (saved.errores.length > 0) {
+        <button class="btn-secondary" type="button" (click)="downloadResultErrors()">Descargar reporte de errores</button>
+      }
     </section>
   }
 

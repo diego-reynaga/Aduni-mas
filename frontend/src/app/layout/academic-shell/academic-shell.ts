@@ -13,7 +13,11 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
   ADMINISTRADOR: [
     { label: 'Resumen institucional', route: '/admin', eyebrow: 'Panel' },
     { label: 'Personas y usuarios', route: '/admin/usuarios', eyebrow: 'Accesos' },
+    { label: 'Personal y Familia', route: '/admin/personal', eyebrow: 'Recursos Humanos' },
     { label: 'Gestion academica', route: '/admin/academico', eyebrow: 'Estructura' },
+    { label: 'Periodos y asignaciones', route: '/admin/asignaciones', eyebrow: 'Planificación' },
+    { label: 'Matriculas y Alumnos', route: '/admin/alumnos', eyebrow: 'Gestion' },
+    { label: 'Vínculos familiares', route: '/admin/familias', eyebrow: 'Familias' },
     { label: 'Supervision docente', route: '/admin/supervision', eyebrow: 'Notas' },
     { label: 'Importaciones notas', route: '/admin/importaciones-notas', eyebrow: 'Excel' },
     { label: 'Configuracion', route: '/admin/configuracion', eyebrow: 'Institucion' },

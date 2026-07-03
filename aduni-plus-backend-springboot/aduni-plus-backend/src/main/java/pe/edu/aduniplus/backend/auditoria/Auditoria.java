@@ -12,7 +12,7 @@ import pe.edu.aduniplus.backend.usuario.Usuario;
 @AllArgsConstructor
 @SuperBuilder
 @Entity
-@Table(name = "auditorias")
+@Table(name = "auditoria")
 public class Auditoria extends BaseEntity {
     @Column(nullable = false, length = 80)
     private String accion;
