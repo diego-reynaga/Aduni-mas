@@ -23,7 +23,7 @@ export class Login {
   readonly form = new FormGroup({
     username: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, Validators.minLength(3)],
+      validators: [Validators.required, Validators.email],
     }),
     password: new FormControl('', {
       nonNullable: true,
@@ -36,7 +36,7 @@ export class Login {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.error.set('Ingrese usuario y contrasena institucional.');
+      this.error.set('Ingrese correo y contraseña institucional.');
       return;
     }
 
@@ -46,9 +46,9 @@ export class Login {
         this.loading.set(false);
         void this.router.navigate([ROLE_HOME[session.preferredRole]]);
       },
-      error: () => {
+      error: (reason) => {
         this.loading.set(false);
-        this.error.set('No se pudo iniciar sesion. Verifique sus credenciales o la conexion con el backend.');
+        this.error.set(reason?.message || 'No se pudo iniciar sesión. Verifique sus credenciales de Supabase Auth.');
       },
     });
   }

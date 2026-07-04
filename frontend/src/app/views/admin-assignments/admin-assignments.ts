@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
-import { PersonaResponse } from '../../core/models';
+import { EntityId, PersonaResponse } from '../../core/models';
 import { fadeIn } from '../../core/animations';
 
 @Component({
@@ -23,10 +23,10 @@ export class AdminAssignments {
   readonly docentes = signal<PersonaResponse[]>([]);
   readonly cursos = signal<Academico.CursoResponse[]>([]);
   readonly asignaciones = signal<Academico.AsignacionDocenteResponse[]>([]);
-  readonly selectedGestionId = signal<number | null>(null);
-  readonly editingGestionId = signal<number | null>(null);
-  readonly editingPeriodoId = signal<number | null>(null);
-  readonly editingAsignacionId = signal<number | null>(null);
+  readonly selectedGestionId = signal<EntityId | null>(null);
+  readonly editingGestionId = signal<EntityId | null>(null);
+  readonly editingPeriodoId = signal<EntityId | null>(null);
+  readonly editingAsignacionId = signal<EntityId | null>(null);
   readonly error = signal('');
   readonly success = signal('');
 
@@ -47,9 +47,9 @@ export class AdminAssignments {
   });
 
   readonly asignacionForm = new FormGroup({
-    docenteId: new FormControl<number | null>(null, Validators.required),
-    cursoId: new FormControl<number | null>(null, Validators.required),
-    periodoAcademicoId: new FormControl<number | null>(null, Validators.required),
+    docenteId: new FormControl<EntityId | null>(null, Validators.required),
+    cursoId: new FormControl<EntityId | null>(null, Validators.required),
+    periodoAcademicoId: new FormControl<EntityId | null>(null, Validators.required),
     estado: new FormControl<'ACTIVA' | 'CERRADA'>('ACTIVA', { nonNullable: true }),
   });
 
@@ -84,13 +84,13 @@ export class AdminAssignments {
   }
 
   selectGestion(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value) || null;
+    const id = (event.target as HTMLSelectElement).value || null;
     this.selectedGestionId.set(id);
     this.periodos.set([]);
     if (id) this.loadPeriodos(id);
   }
 
-  loadPeriodos(gestionId: number): void {
+  loadPeriodos(gestionId: EntityId): void {
     this.portal.getPeriodos(gestionId).subscribe({
       next: rows => this.periodos.set(rows),
       error: () => this.error.set('No se pudieron cargar los periodos.'),

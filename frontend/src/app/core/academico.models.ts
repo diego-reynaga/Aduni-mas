@@ -1,10 +1,12 @@
+import { EntityId } from './models';
+
 export interface NivelEducativoResponse {
-  id: number;
+  id: EntityId;
   nombre: string;
   turno: string;
   descripcion: string;
   activo: boolean;
-  gestionAcademicaId: number;
+  gestionAcademicaId: EntityId;
 }
 
 export interface NivelEducativoRequest {
@@ -12,16 +14,16 @@ export interface NivelEducativoRequest {
   turno: string;
   descripcion: string;
   activo: boolean;
-  gestionAcademicaId: number;
+  gestionAcademicaId: EntityId;
 }
 
 export interface GradoResponse {
-  id: number;
+  id: EntityId;
   nombre: string;
   paralelo: string;
   capacidad: number;
   activo: boolean;
-  nivelEducativoId: number;
+  nivelEducativoId: EntityId;
   nivelEducativoNombre: string;
 }
 
@@ -30,11 +32,11 @@ export interface GradoRequest {
   paralelo: string;
   capacidad: number;
   activo: boolean;
-  nivelEducativoId: number;
+  nivelEducativoId: EntityId;
 }
 
 export interface MateriaResponse {
-  id: number;
+  id: EntityId;
   codigo: string;
   nombre: string;
   area: string;
@@ -49,11 +51,11 @@ export interface MateriaRequest {
 }
 
 export interface CursoResponse {
-  id: number;
-  gradoId: number;
+  id: EntityId;
+  gradoId: EntityId;
   gradoNombre: string;
   paralelo: string;
-  materiaId: number;
+  materiaId: EntityId;
   materiaCodigo: string;
   materiaNombre: string;
   area: string;
@@ -61,12 +63,12 @@ export interface CursoResponse {
 }
 
 export interface CursoAsignacionMasivaRequest {
-  gradoId: number;
-  materiasIds: number[];
+  gradoId: EntityId;
+  materiasIds: EntityId[];
 }
 
 export interface GestionAcademicaResponse {
-  id: number;
+  id: EntityId;
   anio: number;
   nombre: string;
   fechaInicio: string;
@@ -83,13 +85,13 @@ export interface GestionAcademicaRequest {
 }
 
 export interface PeriodoAcademicoResponse {
-  id: number;
+  id: EntityId;
   nombre: string;
   orden: number;
   fechaInicio: string;
   fechaFin: string;
   cerrado: boolean;
-  gestionAcademicaId: number;
+  gestionAcademicaId: EntityId;
 }
 
 export interface PeriodoAcademicoRequest {
@@ -98,27 +100,27 @@ export interface PeriodoAcademicoRequest {
   fechaInicio: string;
   fechaFin: string;
   cerrado: boolean;
-  gestionAcademicaId: number;
+  gestionAcademicaId: EntityId;
 }
 
 export interface AsignacionDocenteResponse {
-  id: number;
-  docenteId: number;
+  id: EntityId;
+  docenteId: EntityId;
   docenteCodigo: string;
   docenteNombre: string;
-  cursoId: number;
+  cursoId: EntityId;
   materia: string;
   grado: string;
   seccion: string;
-  periodoAcademicoId: number;
+  periodoAcademicoId: EntityId;
   periodo: string;
   fechaAsignacion: string;
   estado: 'ACTIVA' | 'CERRADA';
 }
 
 export interface AsignacionDocenteRequest {
-  docenteId: number;
-  cursoId: number;
-  periodoAcademicoId: number;
+  docenteId: EntityId;
+  cursoId: EntityId;
+  periodoAcademicoId: EntityId;
   estado: 'ACTIVA' | 'CERRADA';
 }

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { ROLE_LABELS, RoleName, UserRow, PersonaDropdown, RolResponse, ALL_ROLES, UsuarioRequest, AuditoriaResponse } from '../../core/models';
+import { EntityId, ROLE_LABELS, RoleName, UserRow, PersonaDropdown, RolResponse, ALL_ROLES, UsuarioRequest, AuditoriaResponse } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
 import {
   fadeIn, staggerRows, slideInRight, slideAlert,
@@ -86,7 +86,7 @@ export class AdminUsers {
   // Modales Usuario
   readonly showUserModal = signal(false);
   readonly isEditingUser = signal(false);
-  readonly editingUserId = signal<number | null>(null);
+  readonly editingUserId = signal<EntityId | null>(null);
   // Modales Rol
   readonly showRoleModal = signal(false);
 
@@ -101,7 +101,7 @@ export class AdminUsers {
     password: new FormControl('', {
       nonNullable: true,
     }),
-    personaId: new FormControl<number | null>(null, {
+    personaId: new FormControl<EntityId | null>(null, {
       validators: [Validators.required],
     }),
     roles: new FormControl<string[]>([], {
@@ -426,7 +426,7 @@ export class AdminUsers {
     }
   }
 
-  private executeSaveUser(personaId: number, formVal: any): void {
+  private executeSaveUser(personaId: EntityId, formVal: any): void {
     const req: UsuarioRequest = {
       username: formVal.username,
       personaId: personaId,

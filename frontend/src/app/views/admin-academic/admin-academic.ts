@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
 import { fadeIn } from '../../core/animations';
+import { EntityId } from '../../core/models';
 
 type Tab = 'niveles' | 'grados' | 'materias' | 'oferta';
 
@@ -26,14 +27,14 @@ export class AdminAcademic {
   readonly niveles = signal<Academico.NivelEducativoResponse[]>([]);
   readonly isAddingNivel = signal(false);
   readonly isEditingNivel = signal(false);
-  readonly editingNivelId = signal<number | null>(null);
+  readonly editingNivelId = signal<EntityId | null>(null);
 
   // --- CLONAR ESTRUCTURA ---
   readonly gestiones = signal<Academico.GestionAcademicaResponse[]>([]);
   readonly isCloning = signal(false);
   readonly clonarForm = new FormGroup({
-    gestionOrigenId: new FormControl<number | null>(null, { nonNullable: true, validators: [Validators.required] }),
-    gestionDestinoId: new FormControl<number | null>(null, { nonNullable: true, validators: [Validators.required] }),
+    gestionOrigenId: new FormControl<EntityId | null>(null, { validators: [Validators.required] }),
+    gestionDestinoId: new FormControl<EntityId | null>(null, { validators: [Validators.required] }),
   });
 
   readonly nivelForm = new FormGroup({
@@ -41,29 +42,29 @@ export class AdminAcademic {
     turno: new FormControl('MANANA', { nonNullable: true, validators: [Validators.required] }),
     descripcion: new FormControl('', { nonNullable: true }),
     activo: new FormControl(true, { nonNullable: true }),
-    gestionAcademicaId: new FormControl<number>(1, { nonNullable: true }), // Por defecto 1 (primera gestion)
+    gestionAcademicaId: new FormControl<EntityId>('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   // --- GRADOS (Tree View) ---
-  readonly expandedNiveles = signal<Set<number>>(new Set());
-  readonly gradosPorNivel = signal<Map<number, Academico.GradoResponse[]>>(new Map());
+  readonly expandedNiveles = signal<Set<EntityId>>(new Set());
+  readonly gradosPorNivel = signal<Map<EntityId, Academico.GradoResponse[]>>(new Map());
   readonly isAddingGrado = signal(false);
   readonly isEditingGrado = signal(false);
-  readonly editingGradoId = signal<number | null>(null);
+  readonly editingGradoId = signal<EntityId | null>(null);
 
   readonly gradoForm = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     paralelo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     capacidad: new FormControl(30, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
     activo: new FormControl(true, { nonNullable: true }),
-    nivelEducativoId: new FormControl<number | null>(null, { nonNullable: true, validators: [Validators.required] }),
+    nivelEducativoId: new FormControl<EntityId | null>(null, { validators: [Validators.required] }),
   });
 
   // --- MATERIAS ---
   readonly materias = signal<Academico.MateriaResponse[]>([]);
   readonly isAddingMateria = signal(false);
   readonly isEditingMateria = signal(false);
-  readonly editingMateriaId = signal<number | null>(null);
+  readonly editingMateriaId = signal<EntityId | null>(null);
   readonly searchMateriaQuery = signal('');
 
   readonly filteredMaterias = computed(() => {
@@ -85,12 +86,12 @@ export class AdminAcademic {
 
   // --- OFERTA EDUCATIVA (CURSOS) ---
   readonly cursos = signal<Academico.CursoResponse[]>([]);
-  readonly selectedNivelForOferta = signal<number | null>(null);
+  readonly selectedNivelForOferta = signal<EntityId | null>(null);
   readonly gradosForOferta = signal<Academico.GradoResponse[]>([]);
-  readonly selectedGradoForOferta = signal<number | null>(null);
+  readonly selectedGradoForOferta = signal<EntityId | null>(null);
   readonly assignedMateriasIds = computed(() => new Set(this.cursos().map(c => c.materiaId)));
   // Checklist de asignación masiva
-  selectedMateriasToAssign = signal<number[]>([]);
+  selectedMateriasToAssign = signal<EntityId[]>([]);
 
   constructor() {
     this.loadGestiones();
@@ -122,7 +123,7 @@ export class AdminAcademic {
   }
 
   openAddNivel() {
-    this.nivelForm.reset({ activo: true, gestionAcademicaId: 1, turno: 'MANANA' });
+    this.nivelForm.reset({ activo: true, gestionAcademicaId: this.gestiones()[0]?.id ?? '', turno: 'MANANA' });
     this.isAddingNivel.set(true);
     this.isEditingNivel.set(false);
   }
@@ -165,7 +166,7 @@ export class AdminAcademic {
     }
   }
 
-  deleteNivel(id: number) {
+  deleteNivel(id: EntityId) {
     if (!confirm('¿Desactivar este nivel educativo?')) return;
     this.portal.deleteNivel(id).subscribe({
       next: () => {
@@ -208,7 +209,7 @@ export class AdminAcademic {
   }
 
   // --- LÓGICA GRADOS (Tree View) ---
-  toggleNivelExpansion(nivelId: number) {
+  toggleNivelExpansion(nivelId: EntityId) {
     const current = new Set(this.expandedNiveles());
     if (current.has(nivelId)) {
       current.delete(nivelId);
@@ -222,7 +223,7 @@ export class AdminAcademic {
     }
   }
 
-  loadGradosForNivel(nivelId: number) {
+  loadGradosForNivel(nivelId: EntityId) {
     this.portal.getGrados(nivelId).subscribe({
       next: (data) => {
         const map = new Map(this.gradosPorNivel());
@@ -233,7 +234,7 @@ export class AdminAcademic {
     });
   }
 
-  openAddGrado(nivelId: number) {
+  openAddGrado(nivelId: EntityId) {
     this.gradoForm.reset({ activo: true, capacidad: 30, nivelEducativoId: nivelId });
     this.isAddingGrado.set(true);
     this.isEditingGrado.set(false);
@@ -346,7 +347,7 @@ export class AdminAcademic {
     }
   }
 
-  deleteMateria(id: number) {
+  deleteMateria(id: EntityId) {
     if (!confirm('¿Desactivar esta materia?')) return;
     this.portal.deleteMateria(id).subscribe({
       next: () => {
@@ -359,7 +360,7 @@ export class AdminAcademic {
 
   // --- LÓGICA OFERTA EDUCATIVA (CURSOS) ---
   onSelectNivelForOferta(event: Event) {
-    const id = Number((event.target as HTMLSelectElement).value);
+    const id = (event.target as HTMLSelectElement).value;
     this.selectedNivelForOferta.set(id);
     this.selectedGradoForOferta.set(null);
     this.cursos.set([]);
@@ -370,7 +371,7 @@ export class AdminAcademic {
   }
 
   onSelectGradoForOferta(event: Event) {
-    const id = Number((event.target as HTMLSelectElement).value);
+    const id = (event.target as HTMLSelectElement).value;
     this.selectedGradoForOferta.set(id);
     this.loadCursos();
   }
@@ -387,7 +388,7 @@ export class AdminAcademic {
     });
   }
 
-  toggleMateriaSelection(materiaId: number) {
+  toggleMateriaSelection(materiaId: EntityId) {
     const current = this.selectedMateriasToAssign();
     if (current.includes(materiaId)) {
       this.selectedMateriasToAssign.set(current.filter(id => id !== materiaId));
@@ -410,7 +411,7 @@ export class AdminAcademic {
     });
   }
 
-  removeCurso(id: number) {
+  removeCurso(id: EntityId) {
     if (!confirm('¿Remover esta materia del grado?')) return;
     this.portal.removerCurso(id).subscribe({
       next: () => {

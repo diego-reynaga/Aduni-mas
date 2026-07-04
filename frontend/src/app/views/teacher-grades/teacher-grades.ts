@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GradeEntry } from '../../core/models';
+import { EntityId, GradeEntry } from '../../core/models';
 import { ActivatedRoute } from '@angular/router';
 import { PortalService } from '../../core/portal.service';
 import { CourseAssignment } from '../../core/models';
@@ -18,7 +18,7 @@ export class TeacherGrades {
   private readonly portal = inject(PortalService);
   private readonly route = inject(ActivatedRoute);
 
-  readonly assignmentId = signal<number | null>(null);
+  readonly assignmentId = signal<EntityId | null>(null);
   readonly selectedCourse = signal<CourseAssignment | null>(null);
   readonly rows = signal<GradeEntry[]>([]);
   readonly loading = signal(true);
@@ -29,8 +29,7 @@ export class TeacherGrades {
   constructor() {
     this.route.queryParamMap.subscribe((params) => {
       const rawId = params.get('assignmentId');
-      const assignmentId = rawId ? Number(rawId) : undefined;
-      this.loadGrades(Number.isFinite(assignmentId) ? assignmentId : undefined);
+      this.loadGrades(rawId ?? undefined);
     });
   }
 
@@ -71,7 +70,7 @@ export class TeacherGrades {
     });
   }
 
-  private loadGrades(assignmentId?: number): void {
+  private loadGrades(assignmentId?: EntityId): void {
     this.loading.set(true);
     this.error.set('');
     this.message.set('');

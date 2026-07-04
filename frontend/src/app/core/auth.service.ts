@@ -1,121 +1,103 @@
-import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { map, Observable, tap } from 'rxjs';
-import {
-  LoginRequest,
-  LoginResponse,
-  normalizeRole,
-  primaryRole,
-  RoleName,
-  Session,
-} from './models';
-import { API_URL } from './api.constants';
+import { from, Observable } from 'rxjs';
+import { LoginRequest, RoleName, Session } from './models';
+import { supabase } from './supabase.client';
 
-const STORAGE_KEY = 'aduni-plus-session';
+type ProfileRow = {
+  id: string;
+  persona_id: string;
+  rol: RoleName;
+  username: string;
+  activo: boolean;
+};
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly browser = isPlatformBrowser(this.platformId);
-  private readonly sessionState = signal<Session | null>(this.readStoredSession());
+  private readonly sessionState = signal<Session | null>(null);
+  private initialized = false;
+  private readonly initialization: Promise<void>;
 
   readonly session = this.sessionState.asReadonly();
   readonly isAuthenticated = computed(() => Boolean(this.sessionState()?.token));
   readonly activeRole = computed(() => this.sessionState()?.preferredRole ?? null);
 
+  constructor() {
+    this.initialization = this.restoreSession();
+    supabase.auth.onAuthStateChange((_event, authSession) => {
+      if (!authSession) {
+        this.sessionState.set(null);
+        return;
+      }
+      void this.loadProfile(authSession.access_token).catch(() => this.sessionState.set(null));
+    });
+  }
+
   login(request: LoginRequest): Observable<Session> {
-    return this.http.post<LoginResponse>(`${API_URL}/auth/login`, request).pipe(
-      map((response) => this.createSession(response)),
-      tap((session) => this.storeSession(session)),
-    );
+    return from(this.signIn(request));
+  }
+
+  async ensureInitialized(): Promise<void> {
+    await this.initialization;
   }
 
   switchRole(role: RoleName): void {
     const session = this.sessionState();
-    if (!session) {
-      return;
+    if (session?.roles.includes(role)) {
+      this.sessionState.set({ ...session, preferredRole: role });
     }
-
-    const canSwitch = session.roles.includes(role) || session.roles.includes('ADMINISTRADOR');
-    if (!canSwitch) {
-      return;
-    }
-
-    this.storeSession({
-      ...session,
-      preferredRole: role,
-    });
   }
 
   logout(): void {
     this.sessionState.set(null);
-    if (this.browser) {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    void this.router.navigate(['/login']);
+    void supabase.auth.signOut().finally(() => this.router.navigate(['/login']));
   }
 
   hasAnyRole(roles: RoleName[]): boolean {
-    const session = this.sessionState();
-    if (!session) {
-      return false;
-    }
-
-    return roles.some((role) => session.roles.includes(role));
+    return roles.some((role) => this.sessionState()?.roles.includes(role));
   }
 
   availableRoles(): RoleName[] {
-    const session = this.sessionState();
-    if (!session) {
-      return [];
-    }
-
-    return session.roles;
+    return this.sessionState()?.roles ?? [];
   }
 
-  private createSession(response: LoginResponse): Session {
-    const roles = response.roles.map(normalizeRole);
+  private async restoreSession(): Promise<void> {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (data.session) await this.loadProfile(data.session.access_token);
+    } finally {
+      this.initialized = true;
+    }
+  }
 
-    return {
-      token: response.token,
-      username: response.username,
-      roles,
-      preferredRole: primaryRole(roles),
+  private async signIn(request: LoginRequest): Promise<Session> {
+    const email = request.username.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: request.password });
+    if (error || !data.session) throw error ?? new Error('Supabase Auth no devolvió una sesión.');
+    return this.loadProfile(data.session.access_token);
+  }
+
+  private async loadProfile(accessToken: string): Promise<Session> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id,persona_id,rol,username,activo')
+      .single<ProfileRow>();
+    if (error || !data || !data.activo) {
+      await supabase.auth.signOut();
+      throw error ?? new Error('El perfil está inactivo o no está configurado.');
+    }
+    const session: Session = {
+      token: accessToken,
+      userId: data.id,
+      personaId: data.persona_id,
+      username: data.username,
+      roles: [data.rol],
+      preferredRole: data.rol,
       issuedAt: new Date().toISOString(),
     };
-  }
-
-  private storeSession(session: Session): void {
     this.sessionState.set(session);
-    if (this.browser) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-    }
-  }
-
-  private readStoredSession(): Session | null {
-    if (!this.browser) {
-      return null;
-    }
-
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as Session;
-      return {
-        ...parsed,
-        roles: parsed.roles.map(normalizeRole),
-        preferredRole: normalizeRole(parsed.preferredRole),
-      };
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
+    return session;
   }
 }

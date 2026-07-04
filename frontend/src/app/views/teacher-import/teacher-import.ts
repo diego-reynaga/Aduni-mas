@@ -8,6 +8,7 @@ import {
   RegistroNotasTrimestrePreviewResponse,
   ResultadoImportacionTrimestre,
   TrimestreImportacion,
+  EntityId,
 } from '../../core/models';
 import { NotasService } from '../../core/notas.service';
 import { PortalService } from '../../core/portal.service';
@@ -34,7 +35,7 @@ export class TeacherImport {
   readonly form = this.fb.group({
     fileName: [''],
     trimestre: this.fb.control<TrimestreImportacion>('I_TRIMESTRE', { nonNullable: true, validators: [Validators.required] }),
-    assignmentId: this.fb.control<number | null>(null, { validators: [Validators.required] }),
+    assignmentId: this.fb.control<EntityId | null>(null, { validators: [Validators.required] }),
   });
 
   readonly selectedFile = signal<File | null>(null);
@@ -43,7 +44,7 @@ export class TeacherImport {
   readonly history = signal<ImportacionNotasHistorial[]>([]);
   readonly courses = signal<CourseAssignment[]>([]);
   readonly selectedTrimestre = signal<TrimestreImportacion>('I_TRIMESTRE');
-  readonly selectedAssignmentId = signal<number | null>(null);
+  readonly selectedAssignmentId = signal<EntityId | null>(null);
   readonly expandedRows = signal<Set<number>>(new Set());
   readonly loadingContext = signal(false);
   readonly loadingPreview = signal(false);
@@ -99,7 +100,7 @@ export class TeacherImport {
 
   onAssignmentChanged(): void {
     const rawValue = this.form.controls.assignmentId.value;
-    this.selectedAssignmentId.set(rawValue === null ? null : Number(rawValue));
+    this.selectedAssignmentId.set(rawValue);
     this.clearPreview();
   }
 

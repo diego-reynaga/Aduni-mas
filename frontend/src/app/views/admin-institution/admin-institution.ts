@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, ViewChild
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { dateRangeValidator } from '../../core/validators';
 import { CommonModule } from '@angular/common';
-import { AuditEntry, InstitutionConfig } from '../../core/models';
+import { AuditEntry, EntityId, InstitutionConfig } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
 import { fadeIn } from '../../core/animations';
@@ -60,7 +60,7 @@ export class AdminInstitution {
   }, { validators: dateRangeValidator });
 
   // --- PERIODOS ACADEMICOS ---
-  readonly selectedGestionId = signal<number | null>(null);
+  readonly selectedGestionId = signal<EntityId | null>(null);
   readonly periodos = signal<Academico.PeriodoAcademicoResponse[]>([]);
   readonly isAddingPeriodo = signal(false);
   readonly editingPeriodo = signal<Academico.PeriodoAcademicoResponse | null>(null);
@@ -215,7 +215,7 @@ export class AdminInstitution {
   // --- LOGIC: PERIODOS ACADEMICOS ---
   onGestionSelectedForPeriodos(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    const gId = select.value ? Number(select.value) : null;
+    const gId = select.value || null;
     this.selectedGestionId.set(gId);
     if (gId) {
       this.loadPeriodos(gId);
@@ -224,7 +224,7 @@ export class AdminInstitution {
     }
   }
 
-  private loadPeriodos(gestionId: number): void {
+  private loadPeriodos(gestionId: EntityId): void {
     this.portal.getPeriodos(gestionId).subscribe({
       next: (res) => this.periodos.set(res),
       error: () => this.error.set('Error al cargar periodos')
@@ -294,7 +294,7 @@ export class AdminInstitution {
     this.executeSavePeriodo(data.edit, data.req, data.gId);
   }
 
-  private executeSavePeriodo(edit: any, req: Academico.PeriodoAcademicoRequest, gId: number): void {
+  private executeSavePeriodo(edit: any, req: Academico.PeriodoAcademicoRequest, gId: EntityId): void {
     const obs = edit ? this.portal.updatePeriodo(edit.id, req) : this.portal.createPeriodo(req);
 
     obs.subscribe({

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn } from '../../core/animations';
+import { EntityId } from '../../core/models';
 
 type Tab = 'directorio' | 'matriculas';
 
@@ -44,8 +45,8 @@ export class AdminStudents {
   readonly wizardStep = signal(1); // 1: Alumno, 2: Aula, 3: Confirmación
   readonly matriculas = signal<any[]>([]);
   readonly formMatricula = new FormGroup({
-    estudianteId: new FormControl<number | null>(null, Validators.required),
-    gradoId: new FormControl<number | null>(null, Validators.required),
+    estudianteId: new FormControl<EntityId | null>(null, Validators.required),
+    gradoId: new FormControl<EntityId | null>(null, Validators.required),
   });
 
   // Jerarquía Académica para el Wizard
@@ -180,7 +181,7 @@ export class AdminStudents {
     });
   }
 
-  cambiarEstadoMatricula(id: number, nuevoEstado: string) {
+  cambiarEstadoMatricula(id: EntityId, nuevoEstado: string) {
     if (!confirm(`¿Está seguro de cambiar el estado a ${nuevoEstado}?`)) return;
     this.loading.set(true);
     this.portal.cambiarEstadoMatricula(id, nuevoEstado).subscribe({

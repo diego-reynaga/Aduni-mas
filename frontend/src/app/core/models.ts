@@ -1,4 +1,5 @@
 export type RoleName = 'ADMINISTRADOR' | 'DOCENTE' | 'ESTUDIANTE' | 'PADRE_FAMILIA';
+export type EntityId = string;
 
 export interface LoginRequest {
   username: string;
@@ -13,6 +14,8 @@ export interface LoginResponse {
 
 export interface Session {
   token: string;
+  userId: EntityId;
+  personaId: EntityId;
   username: string;
   roles: RoleName[];
   preferredRole: RoleName;
@@ -27,7 +30,7 @@ export interface Metric {
 }
 
 export interface UserRow {
-  id: number;
+  id: EntityId;
   codigo: string;
   persona: string;
   documento: string;
@@ -57,7 +60,7 @@ export interface AcademicLevel {
 }
 
 export interface CourseAssignment {
-  assignmentId: number;
+  assignmentId: EntityId;
   codigo: string;
   curso: string;
   grado: string;
@@ -133,7 +136,7 @@ export interface TeacherDashboardPayload {
 }
 
 export interface TeacherGradesPayload {
-  assignmentId: number | null;
+  assignmentId: EntityId | null;
   selectedCourse: CourseAssignment | null;
   rows: GradeEntry[];
 }
@@ -242,7 +245,7 @@ export interface EstudianteTrimestrePreview {
   filaExcel: number;
   numeroOrden: number | null;
   nombreExcel: string;
-  idEstudiante: number | null;
+  idEstudiante: EntityId | null;
   codigoEstudiante: string | null;
   estadoMapeo: 'ENCONTRADO' | 'NO_ENCONTRADO';
   competencias: CompetenciaTrimestre[];
@@ -263,7 +266,7 @@ export interface EstudianteNotaPreview {
   filaExcel: number;
   numeroOrden: number | null;
   nombreExcel: string;
-  idEstudiante: number | null;
+  idEstudiante: EntityId | null;
   codigoEstudiante: string | null;
   estadoMapeo: 'ENCONTRADO' | 'NO_ENCONTRADO';
   iTrimestre: number | null;
@@ -285,7 +288,7 @@ export interface RegistroNotasPreviewResponse {
 
 export interface ResultadoImportacionNotas {
   message: string;
-  idImportacion: number;
+  idImportacion: EntityId;
   totalFilas: number;
   totalCorrectas: number;
   totalConError: number;
@@ -295,7 +298,7 @@ export interface ResultadoImportacionNotas {
 
 export interface ResultadoImportacionTrimestre {
   message: string;
-  idImportacion: number;
+  idImportacion: EntityId;
   trimestre: TrimestreImportacion;
   totalFilas: number;
   totalCorrectas: number;
@@ -307,7 +310,7 @@ export interface ResultadoImportacionTrimestre {
 }
 
 export interface ImportacionNotasHistorial {
-  idImportacion: number;
+  idImportacion: EntityId;
   nombreArchivo: string;
   trimestre: string;
   anio: number | null;
@@ -325,7 +328,7 @@ export interface ImportacionNotasHistorial {
 }
 
 export interface ImportacionNotasDetalle {
-  idImportacion: number;
+  idImportacion: EntityId;
   nombreArchivo: string;
   trimestre: string;
   metadata: RegistroNotasMetadata;
@@ -394,22 +397,25 @@ export function primaryRole(roles: RoleName[]): RoleName {
 }
 
 export interface UsuarioResponse {
-  id: number;
+  id: EntityId;
   username: string;
   activo: boolean;
-  personaId: number;
+  personaId: EntityId;
   roles: string[];
+  nombreCompleto?: string;
+  documentoIdentidad?: string;
+  correo?: string;
 }
 
 export interface UsuarioRequest {
   username: string;
   password?: string;
-  personaId: number;
+  personaId: EntityId;
   roles: string[];
 }
 
 export interface RolResponse {
-  id: number;
+  id: EntityId;
   nombre: string;
   creadoEn: string;
   actualizadoEn?: string;
@@ -420,7 +426,7 @@ export interface RolRequest {
 }
 
 export interface PersonaDropdown {
-  id: number;
+  id: EntityId;
   nombreCompleto: string;
   documentoIdentidad: string;
 }
@@ -442,7 +448,7 @@ export interface PersonaRequest {
 }
 
 export interface PersonaResponse {
-  id: number;
+  id: EntityId;
   nombres: string;
   apellidos: string;
   documentoIdentidad: string;
@@ -458,14 +464,15 @@ export interface PersonaResponse {
   ocupacion?: string;
   creadoEn: string;
   actualizadoEn?: string;
+  nombreCompleto?: string;
 }
 
 export interface AuditoriaResponse {
-  id: number;
+  id: EntityId;
   creadoEn: string;
   accion: string;
   entidad: string;
-  entidadId: number | null;
+  entidadId: EntityId | null;
   usuarioResponsable: string;
   detalle: string;
 }
@@ -473,15 +480,15 @@ export interface AuditoriaResponse {
 
 
 export interface EstudianteApoderadoRequest {
-  padreFamiliaId: number;
+  padreFamiliaId: EntityId;
   parentesco: string;
   principal: boolean;
 }
 
 export interface EstudianteApoderadoResponse {
-  id: number;
-  estudianteId: number;
-  padreFamiliaId: number;
+  id: EntityId;
+  estudianteId: EntityId;
+  padreFamiliaId: EntityId;
   padreNombreCompleto: string;
   padreDocumento: string;
   padreTelefono: string;
@@ -491,6 +498,6 @@ export interface EstudianteApoderadoResponse {
 }
 
 export interface ClonarEstructuraRequest {
-  gestionOrigenId: number;
-  gestionDestinoId: number;
+  gestionOrigenId: EntityId;
+  gestionDestinoId: EntityId;
 }

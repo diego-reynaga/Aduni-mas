@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal, computed, effect } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { EstudianteApoderadoResponse, PersonaResponse, PersonaRequest } from '../../core/models';
+import { EntityId, EstudianteApoderadoResponse, PersonaResponse, PersonaRequest } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn, staggerRows, slideAlert } from '../../core/animations';
 
@@ -22,7 +22,7 @@ export class AdminFamilyLinks {
   readonly padres = signal<PersonaResponse[]>([]);
   readonly vinculos = signal<EstudianteApoderadoResponse[]>([]);
   readonly selectedStudent = signal<PersonaResponse | null>(null);
-  readonly editingId = signal<number | null>(null);
+  readonly editingId = signal<EntityId | null>(null);
 
   // --- UI State ---
   readonly loading = signal(true);
@@ -95,7 +95,7 @@ export class AdminFamilyLinks {
 
   // --- Forms ---
   readonly form = new FormGroup({
-    padreFamiliaId: new FormControl<number | null>(null, Validators.required),
+    padreFamiliaId: new FormControl<EntityId | null>(null, Validators.required),
     parentesco: new FormControl('MADRE', { nonNullable: true, validators: [Validators.required] }),
     principal: new FormControl(false, { nonNullable: true }),
   });
@@ -155,7 +155,7 @@ export class AdminFamilyLinks {
     if (student) this.loadVinculos(student.id);
   }
 
-  selectStudentById(id: number) {
+  selectStudentById(id: EntityId) {
     const student = this.estudiantes().find(e => e.id === id);
     if (student) this.selectStudent(student);
   }
@@ -203,7 +203,7 @@ export class AdminFamilyLinks {
     this.parentSearch.set('');
   }
 
-  private loadVinculos(studentId: number) {
+  private loadVinculos(studentId: EntityId) {
     this.loadingVinculos.set(true);
     this.portal.getApoderados(studentId).subscribe({
       next: rows => {

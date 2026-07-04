@@ -1,96 +1,127 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { API_URL } from './api.constants';
+import { Injectable } from '@angular/core';
+import { from, map, Observable } from 'rxjs';
 import {
+  EntityId,
   ErrorImportacionNotas,
-  ExcelImportResult,
   ImportacionNotasDetalle,
   ImportacionNotasHistorial,
-  RegistroNotasPreviewResponse,
   RegistroNotasTrimestrePreviewResponse,
-  ResultadoImportacionNotas,
   ResultadoImportacionTrimestre,
   TrimestreImportacion,
 } from './models';
+import { supabase } from './supabase.client';
+
+function throwIfError<T>(result: { data: T; error: { message: string } | null }): T {
+  if (result.error) throw new Error(result.error.message);
+  return result.data;
+}
 
 @Injectable({ providedIn: 'root' })
 export class NotasService {
-  private readonly http = inject(HttpClient);
-
-  listar(): Observable<string[]> {
-    return this.http.get<string[]>(`${API_URL}/notas`);
-  }
-
-  importarExcel(assignmentId: number, file: File): Observable<ExcelImportResult> {
-    const formData = new FormData();
-    formData.append('assignmentId', String(assignmentId));
-    formData.append('file', file);
-
-    return this.http.post<ExcelImportResult>(`${API_URL}/portal/teacher/import-excel`, formData);
-  }
-
-  previewRegistroNotas(file: File): Observable<RegistroNotasPreviewResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.http.post<RegistroNotasPreviewResponse>(`${API_URL}/notas/importar-excel/preview`, formData);
-  }
-
-  confirmarRegistroNotas(file: File): Observable<ResultadoImportacionNotas> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return this.http.post<ResultadoImportacionNotas>(`${API_URL}/notas/importar-excel/confirmar`, formData);
-  }
-
   previewRegistroNotasTrimestre(
     file: File,
     trimestre: TrimestreImportacion,
-    assignmentId?: number | null,
-    cursoId?: number | null,
+    assignmentId?: EntityId | null,
   ): Observable<RegistroNotasTrimestrePreviewResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('trimestre', trimestre);
-    if (assignmentId !== undefined && assignmentId !== null) {
-      formData.append('assignmentId', String(assignmentId));
-    }
-    if (cursoId !== undefined && cursoId !== null) {
-      formData.append('cursoId', String(cursoId));
-    }
-
-    return this.http.post<RegistroNotasTrimestrePreviewResponse>(`${API_URL}/notas/importar-trimestre/preview`, formData);
+    return from(this.invokeImport(file, trimestre, assignmentId, 'preview')) as Observable<RegistroNotasTrimestrePreviewResponse>;
   }
 
   confirmarRegistroNotasTrimestre(
     file: File,
     trimestre: TrimestreImportacion,
-    assignmentId?: number | null,
-    cursoId?: number | null,
+    assignmentId?: EntityId | null,
   ): Observable<ResultadoImportacionTrimestre> {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('trimestre', trimestre);
-    if (assignmentId !== undefined && assignmentId !== null) {
-      formData.append('assignmentId', String(assignmentId));
-    }
-    if (cursoId !== undefined && cursoId !== null) {
-      formData.append('cursoId', String(cursoId));
-    }
-
-    return this.http.post<ResultadoImportacionTrimestre>(`${API_URL}/notas/importar-trimestre/confirmar`, formData);
+    return from(this.invokeImport(file, trimestre, assignmentId, 'confirmar')) as Observable<ResultadoImportacionTrimestre>;
   }
 
   listarImportacionesNotas(): Observable<ImportacionNotasHistorial[]> {
-    return this.http.get<ImportacionNotasHistorial[]>(`${API_URL}/notas/importaciones`);
+    return from(
+      supabase.from('importaciones_notas')
+        .select('*,profiles!importaciones_notas_usuario_id_fkey(username)')
+        .order('created_at', { ascending: false }),
+    ).pipe(map((result) => (throwIfError(result as never) as any[]).map((row) => this.toHistory(row))));
   }
 
-  obtenerImportacionNotas(id: number): Observable<ImportacionNotasDetalle> {
-    return this.http.get<ImportacionNotasDetalle>(`${API_URL}/notas/importaciones/${id}`);
+  obtenerImportacionNotas(id: EntityId): Observable<ImportacionNotasDetalle> {
+    return from(
+      supabase.from('importaciones_notas')
+        .select('*,profiles!importaciones_notas_usuario_id_fkey(username)')
+        .eq('id', id)
+        .single(),
+    ).pipe(map((result) => {
+      const row = throwIfError(result as never) as any;
+      return {
+        idImportacion: row.id,
+        nombreArchivo: row.nombre_archivo,
+        trimestre: row.trimestre,
+        metadata: {
+          anio: row.anio,
+          nivel: row.nivel ?? '',
+          institucion: row.institucion ?? '',
+          lugar: row.lugar ?? '',
+          areaCurricular: row.area_curricular ?? '',
+          docente: row.docente_excel ?? '',
+          grado: row.grado ?? '',
+          seccion: row.seccion ?? '',
+        },
+        usuarioResponsable: row.profiles?.username ?? 'sistema',
+        fechaImportacion: new Date(row.created_at).toLocaleString('es-PE'),
+        estado: row.estado,
+        totalFilas: row.total_registros,
+        totalCorrectas: row.registros_validos,
+        totalConError: row.registros_observados,
+        observacion: row.detalle ?? '',
+      };
+    }));
   }
 
-  listarErroresImportacionNotas(id: number): Observable<ErrorImportacionNotas[]> {
-    return this.http.get<ErrorImportacionNotas[]>(`${API_URL}/notas/importaciones/${id}/errores`);
+  listarErroresImportacionNotas(id: EntityId): Observable<ErrorImportacionNotas[]> {
+    return from(
+      supabase.from('errores_importacion_notas').select('*').eq('importacion_id', id).order('fila_excel'),
+    ).pipe(map((result) => (throwIfError(result as never) as any[]).map((row) => ({
+      filaExcel: row.fila_excel,
+      estudianteTexto: row.estudiante_texto,
+      campo: row.campo ?? '',
+      descripcionError: row.descripcion,
+      critico: row.critico,
+    }))));
+  }
+
+  private async invokeImport(
+    file: File,
+    trimestre: TrimestreImportacion,
+    assignmentId: EntityId | null | undefined,
+    modo: 'preview' | 'confirmar',
+  ): Promise<unknown> {
+    if (!assignmentId) throw new Error('Seleccione una asignación docente.');
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('trimestre', trimestre);
+    formData.append('assignmentId', assignmentId);
+    formData.append('modo', modo);
+    const { data, error } = await supabase.functions.invoke('importar-notas-trimestre', { body: formData });
+    if (error) throw error;
+    if (data?.message && !data?.metadata && !data?.idImportacion) throw new Error(data.message);
+    return data;
+  }
+
+  private toHistory(row: any): ImportacionNotasHistorial {
+    return {
+      idImportacion: row.id,
+      nombreArchivo: row.nombre_archivo,
+      trimestre: row.trimestre,
+      anio: row.anio,
+      areaCurricular: row.area_curricular ?? '',
+      grado: row.grado ?? '',
+      seccion: row.seccion ?? '',
+      docente: row.docente_excel ?? '',
+      usuarioResponsable: row.profiles?.username ?? 'sistema',
+      fechaImportacion: new Date(row.created_at).toLocaleString('es-PE'),
+      estado: row.estado,
+      totalFilas: row.total_registros,
+      totalCorrectas: row.registros_validos,
+      totalConError: row.registros_observados,
+      observacion: row.detalle ?? '',
+    };
   }
 }
