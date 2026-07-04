@@ -1,190 +1,367 @@
-<div class="module-container" [@fadeIn]>
-  <div class="module-header">
-    <h1 class="module-title">Control de Personal y Familia</h1>
-    <p class="module-subtitle">Gestiona el ciclo de vida de los empleados, docentes y entorno familiar.</p>
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Mantenimiento de Personal</p>
+      <h2>
+        @if (activeTab() === 'general') { Personas Registradas }
+        @else if (activeTab() === 'docentes') { Cuerpo Docente }
+        @else if (activeTab() === 'administrativos') { Personal Administrativo }
+        @else { Padres y Apoderados }
+      </h2>
+      <p>
+        Gestiona el ciclo de vida de los empleados, docentes y entorno familiar.
+      </p>
+    </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn" [class.active]="activeTab() === 'general'" (click)="setTab('general')">General (Todas las Personas)</button>
-    <button class="tab-btn" [class.active]="activeTab() === 'docentes'" (click)="setTab('docentes')">Cuerpo Docente</button>
-    <button class="tab-btn" [class.active]="activeTab() === 'administrativos'" (click)="setTab('administrativos')">Personal Administrativo</button>
-    <button class="tab-btn" [class.active]="activeTab() === 'familias'" (click)="setTab('familias')">Padres y Apoderados</button>
+  <div class="toast-container">
+    @for (toast of toasts(); track toast.id) {
+      <div class="toast toast-{{ toast.type }}" [@slideAlert]>
+        {{ toast.msg }}
+      </div>
+    }
   </div>
 
-  @if (error()) { <div class="alert alert-error">{{ error() }}</div> }
-  @if (successMsg()) { <div class="alert alert-success">{{ successMsg() }}</div> }
+  <div class="tab-bar">
+    <button class="tab-btn" [class.is-active]="activeTab() === 'general'" (click)="setTab('general')">General</button>
+    <button class="tab-btn" [class.is-active]="activeTab() === 'docentes'" (click)="setTab('docentes')">Docentes</button>
+    <button class="tab-btn" [class.is-active]="activeTab() === 'administrativos'" (click)="setTab('administrativos')">Administrativos</button>
+    <button class="tab-btn" [class.is-active]="activeTab() === 'familias'" (click)="setTab('familias')">Apoderados</button>
+  </div>
 
-  @if (loading()) {
-    <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Cargando datos...</p>
-  } @else {
-    <!-- GRID DE DATOS (Mostrado cuando no estamos en modo edición) -->
-    @if (!isAdding()) {
-      <div class="card fade-in">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
-          <h2 class="card-title">Listado Registrado</h2>
-          <div style="flex-grow: 1; max-width: 400px;">
-            <input type="text" class="search-input" placeholder="Buscar por DNI, Nombres o Apellidos..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;">
-          </div>
-          <button class="btn-primary" (click)="openAdd(activeTab() === 'general' ? 'PERSONA' : activeTab() === 'docentes' ? 'DOCENTE' : activeTab() === 'familias' ? 'PADRE_FAMILIA' : 'ADMINISTRATIVO')">
-            + Añadir {{ activeTab() === 'general' ? 'Persona' : activeTab() === 'docentes' ? 'Docente' : activeTab() === 'familias' ? 'Apoderado' : 'Administrativo' }}
-          </button>
+  <div [@tabTransition]>
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon is-teacher">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
         </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Docentes</span>
+          <span class="kpi-value"><strong [@counterAnimate]="totalDocentes()">{{ totalDocentes() }}</strong></span>
+        </div>
+      </div>
 
-        @if (activeTab() === 'administrativos') {
-          <div class="kanban-board" style="display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 1rem;">
-            @for (cargoMap of administrativosPorCargo(); track cargoMap[0]) {
-              <div class="kanban-column" style="min-width: 300px; background: #f8fafc; border-radius: 8px; padding: 1rem;">
-                <h3 style="font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 1rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem;">
-                  {{ cargoMap[0] }} <span class="badge">{{ cargoMap[1].length }}</span>
-                </h3>
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                  @for (p of cargoMap[1]; track p.id) {
-                    <div class="kanban-card" style="background: white; border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <span style="font-weight: 600; font-size: 0.9rem;">{{ p.nombres }} {{ p.apellidos }}</span>
-                        <button class="btn-icon" style="color: var(--primary-color); font-size: 0.8rem;" (click)="openEdit(p)">Editar</button>
-                      </div>
-                      <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                        <p>DNI: {{ p.documentoIdentidad }}</p>
-                        <p>Código: {{ p.codigo }}</p>
-                        <p>Email: {{ p.correo || 'N/A' }}</p>
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            } @empty {
-              <div style="width: 100%; text-align: center; color: var(--text-secondary); padding: 2rem;">No hay administrativos registrados.</div>
-            }
-          </div>
-        } @else {
-          <div class="table-container">
-            <table class="data-table">
+      <div class="kpi-card">
+        <div class="kpi-icon is-admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Administrativos</span>
+          <span class="kpi-value"><strong [@counterAnimate]="totalAdministrativos()">{{ totalAdministrativos() }}</strong></span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon is-good">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Apoderados</span>
+          <span class="kpi-value"><strong [@counterAnimate]="totalFamilias()">{{ totalFamilias() }}</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modern Toolbar -->
+    <div class="modern-toolbar" [@slideInRight]>
+      <div class="toolbar-search">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text"
+               placeholder="Buscar registro..."
+               [ngModel]="searchQuery()"
+               (ngModelChange)="searchQuery.set($event)">
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="toolbar-actions">
+        <button class="btn-primary pill-btn" (click)="openAdd()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="margin-right: 6px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Añadir {{ activeTab() === 'general' ? 'Persona' : activeTab() === 'docentes' ? 'Docente' : activeTab() === 'familias' ? 'Apoderado' : 'Administrativo' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="table-container-full">
+      @if (loading()) {
+        <section class="surface">
+          <div class="surface-header"><div><h3>Cargando registros...</h3></div></div>
+          <div class="quiet-table-wrap">
+            <table class="quiet-table">
               <thead>
                 <tr>
-                  <th>Documento</th>
-                  <th>Nombre Completo</th>
-                  <th>Tipo</th>
-                  <th>Datos Específicos</th>
+                  @for (col of columns(); track col.key) { <th>{{ col.label }}</th> }
                   <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                @for (p of filteredPersonas(); track p.id) {
-                  <tr>
-                    <td>{{ p.documentoIdentidad }}</td>
-                    <td style="font-weight: 500;">{{ p.apellidos }}, {{ p.nombres }}</td>
-                    <td><span class="badge">{{ p.tipoPersona }}</span></td>
-                    <td style="font-size: 0.85rem; color: var(--text-secondary);">
-                      @if (p.tipoPersona === 'DOCENTE') {
-                        Cod: {{ p.codigo }} | Esp: {{ p.especialidad }}
-                      } @else if (p.tipoPersona === 'ADMINISTRATIVO') {
-                        Cod: {{ p.codigo }} | Cargo: {{ p.cargo }}
-                      } @else if (p.tipoPersona === 'PADRE_FAMILIA') {
-                        Ocupación: {{ p.ocupacion }}
-                      }
-                    </td>
-                    <td>
-                      <button class="btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;" (click)="openEdit(p)">Editar</button>
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No se encontraron resultados.</td></tr>
+                @for (_ of [1,2,3,4]; track _) {
+                  <tr><td [attr.colspan]="columns().length + 1"><div class="skeleton-row"><div class="skeleton-line w-20"></div><div class="skeleton-line w-40"></div><div class="skeleton-line w-36"></div><div class="skeleton-line w-24"></div></div></td></tr>
                 }
               </tbody>
             </table>
           </div>
-        }
-      </div>
-    } @else {
-      <!-- FORMULARIO DE ALTA Y EDICIÓN -->
-      <div class="card fade-in form-card">
-        <h2 class="card-title">{{ editingPersona() ? 'Editar Registro' : 'Añadir Nuevo Registro' }}</h2>
-        <form [formGroup]="formPersona" (ngSubmit)="savePersona()" class="grid-form">
-          <!-- DATOS BASE -->
-          <h3 class="col-span-full section-subtitle">Datos Base (Identidad)</h3>
-          <label class="field">
-            <span>Tipo de Registro</span>
-            <select formControlName="tipoPersona">
-              <option value="PERSONA">Persona Base</option>
-              <option value="DOCENTE">Docente</option>
-              <option value="ADMINISTRATIVO">Administrativo</option>
-              <option value="PADRE_FAMILIA">Padre / Familiar</option>
-              <option value="ESTUDIANTE">Estudiante</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>DNI / Documento <span style="color:var(--danger-color)">*</span></span>
-            <input type="text" formControlName="documentoIdentidad" placeholder="Ej. 12345678">
-          </label>
-
-          <label class="field">
-            <span>Nombres <span style="color:var(--danger-color)">*</span></span>
-            <input type="text" formControlName="nombres">
-          </label>
-
-          <label class="field">
-            <span>Apellidos <span style="color:var(--danger-color)">*</span></span>
-            <input type="text" formControlName="apellidos">
-          </label>
-
-          <label class="field">
-            <span>Fecha de Nacimiento</span>
-            <input type="date" formControlName="fechaNacimiento">
-          </label>
-
-          <label class="field">
-            <span>Teléfono</span>
-            <input type="tel" formControlName="telefono">
-          </label>
-
-          <label class="field col-span-full">
-            <span>Correo Electrónico</span>
-            <input type="email" formControlName="correo" placeholder="ejemplo@aduni.edu.pe">
-          </label>
-
-          <!-- CAMPOS ESPECIFICOS DINÁMICOS -->
-          @if (formPersona.value.tipoPersona === 'DOCENTE' || formPersona.value.tipoPersona === 'ADMINISTRATIVO' || formPersona.value.tipoPersona === 'ESTUDIANTE') {
-            <h3 class="col-span-full section-subtitle" style="margin-top: 1rem;">Datos Específicos</h3>
-            <label class="field">
-              <span>Código Interno (ID) <span style="color:var(--danger-color)">*</span></span>
-              <input type="text" formControlName="codigo" placeholder="Ej. DOC-001">
-            </label>
-          }
-
-          @if (formPersona.value.tipoPersona === 'DOCENTE') {
-            <label class="field">
-              <span>Especialidad</span>
-              <input type="text" formControlName="especialidad">
-            </label>
-            <label class="field">
-              <span>Área Académica</span>
-              <input type="text" formControlName="areaAcademica">
-            </label>
-          }
-
-          @if (formPersona.value.tipoPersona === 'ADMINISTRATIVO') {
-            <label class="field">
-              <span>Cargo</span>
-              <input type="text" formControlName="cargo" placeholder="Ej. Secretaría">
-            </label>
-          }
-
-          @if (formPersona.value.tipoPersona === 'PADRE_FAMILIA') {
-            <h3 class="col-span-full section-subtitle" style="margin-top: 1rem;">Datos de Apoderado</h3>
-            <label class="field">
-              <span>Ocupación</span>
-              <input type="text" formControlName="ocupacion">
-            </label>
-          }
-
-          <div class="col-span-full flex gap-2" style="margin-top: 1rem;">
-            <button type="submit" class="btn-primary">Guardar Registro</button>
-            <button type="button" class="btn-secondary" (click)="cancelAdd()">Cancelar</button>
+        </section>
+      } @else {
+        <section class="surface">
+          <div class="surface-header">
+            <div>
+              <h3>Directorio Registrado ({{ filteredPersonas().length }} resultados)</h3>
+              <p>Lista detallada del personal registrado.</p>
+            </div>
           </div>
-        </form>
+
+          <div class="quiet-table-wrap">
+            <table class="quiet-table">
+              <thead>
+                <tr>
+                  @for (col of columns(); track col.key) {
+                    <th>{{ col.label }}</th>
+                  }
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody [@staggerRows]="filteredPersonas().length">
+                @for (p of filteredPersonas(); track p.id) {
+                  <tr>
+                    @if (activeTab() === 'docentes') {
+                      <td><strong>{{ p.documentoIdentidad }}</strong></td>
+                      <td>
+                        <div class="user-profile-cell">
+                          <div class="user-avatar">{{ p.nombres.substring(0, 1) }}{{ p.apellidos.substring(0, 1) }}</div>
+                          <div>
+                            <strong style="color: var(--ink); font-size: 14px; line-height: 1.2; display: block;">{{ p.apellidos }}, {{ p.nombres }}</strong>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{{ p.codigo || '—' }}</td>
+                      <td>{{ p.especialidad || '—' }}</td>
+                      <td>{{ p.areaAcademica || '—' }}</td>
+                      <td>{{ p.correo || '—' }}</td>
+                      <td>{{ p.telefono || '—' }}</td>
+                    } @else if (activeTab() === 'administrativos') {
+                      <td><strong>{{ p.documentoIdentidad }}</strong></td>
+                      <td>
+                        <div class="user-profile-cell">
+                          <div class="user-avatar">{{ p.nombres.substring(0, 1) }}{{ p.apellidos.substring(0, 1) }}</div>
+                          <div>
+                            <strong style="color: var(--ink); font-size: 14px; line-height: 1.2; display: block;">{{ p.apellidos }}, {{ p.nombres }}</strong>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{{ p.codigo || '—' }}</td>
+                      <td><span class="status-pill-premium is-active">{{ p.cargo || '—' }}</span></td>
+                      <td>{{ p.correo || '—' }}</td>
+                      <td>{{ p.telefono || '—' }}</td>
+                    } @else if (activeTab() === 'familias') {
+                      <td><strong>{{ p.documentoIdentidad }}</strong></td>
+                      <td>
+                        <div class="user-profile-cell">
+                          <div class="user-avatar">{{ p.nombres.substring(0, 1) }}{{ p.apellidos.substring(0, 1) }}</div>
+                          <div>
+                            <strong style="color: var(--ink); font-size: 14px; line-height: 1.2; display: block;">{{ p.apellidos }}, {{ p.nombres }}</strong>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{{ p.ocupacion || '—' }}</td>
+                      <td>{{ p.correo || '—' }}</td>
+                      <td>{{ p.telefono || '—' }}</td>
+                    } @else {
+                      <td><strong>{{ p.documentoIdentidad }}</strong></td>
+                      <td>
+                        <div class="user-profile-cell">
+                          <div class="user-avatar">{{ p.nombres.substring(0, 1) }}{{ p.apellidos.substring(0, 1) }}</div>
+                          <div>
+                            <strong style="color: var(--ink); font-size: 14px; line-height: 1.2; display: block;">{{ p.apellidos }}, {{ p.nombres }}</strong>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="status-pill-premium">{{ p.tipoPersona }}</span></td>
+                      <td>{{ p.correo || '—' }}</td>
+                      <td>{{ p.telefono || '—' }}</td>
+                      <td>{{ p.fechaNacimiento ? (p.fechaNacimiento | date:'dd/MM/yyyy') : '—' }}</td>
+                    }
+                    <td>
+                      <div class="action-row-btns">
+                        <button class="action-icon-btn edit" title="Editar" (click)="openEdit(p)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td [attr.colspan]="columns().length + 1">
+                      <div class="empty-state-enhanced">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--muted)" stroke-width="1" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <p>No se encontraron registros</p>
+                        <span>Intenta ajustar los filtros o agrega uno nuevo.</span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- MODAL PREMIUM -->
+@if (showModal()) {
+  <div class="modal-overlay">
+    <div class="modal-card" [@scaleInModal]>
+      <div class="modal-header">
+        <h3>{{ modalTitle() }}</h3>
+        <button class="close-btn" (click)="closeModal()">&times;</button>
       </div>
-    }
-  }
-</div>
+      <form [formGroup]="formPersona" (ngSubmit)="savePersona()">
+        <div class="modal-body premium-form-group" style="max-height: 65vh; overflow-y: auto;">
+          
+          @if (activeTab() === 'general') {
+            <div class="premium-field">
+              <span>Tipo de Registro <span style="color:var(--danger)">*</span></span>
+              <select class="premium-select" formControlName="tipoPersona">
+                <option value="PERSONA">Persona Base</option>
+                <option value="DOCENTE">Docente</option>
+                <option value="ADMINISTRATIVO">Administrativo</option>
+                <option value="PADRE_FAMILIA">Padre / Familiar</option>
+                <option value="ESTUDIANTE">Estudiante</option>
+              </select>
+            </div>
+          }
+
+          <div class="inline-sub-form" style="margin-top: 0; padding: 12px 16px;">
+            <div class="premium-field">
+              <span>DNI / Documento *</span>
+              <input type="text" class="premium-input" formControlName="documentoIdentidad" placeholder="Ej. 12345678">
+            </div>
+            <div class="premium-field">
+              <span>Fecha de Nacimiento</span>
+              <input type="date" class="premium-input" formControlName="fechaNacimiento">
+            </div>
+          </div>
+
+          <div class="premium-field">
+            <span>Nombres *</span>
+            <input type="text" class="premium-input" formControlName="nombres">
+          </div>
+
+          <div class="premium-field">
+            <span>Apellidos *</span>
+            <input type="text" class="premium-input" formControlName="apellidos">
+          </div>
+
+          <div class="inline-sub-form" style="margin-top: 0; padding: 12px 16px;">
+            <div class="premium-field">
+              <span>Teléfono</span>
+              <input type="tel" class="premium-input" formControlName="telefono">
+            </div>
+            <div class="premium-field">
+              <span>Correo Electrónico</span>
+              <input type="email" class="premium-input" formControlName="correo" placeholder="ejemplo@aduni.edu.pe">
+            </div>
+          </div>
+
+          <div class="premium-field">
+            <span>Dirección</span>
+            <input type="text" class="premium-input" formControlName="direccion" placeholder="Ej. Av. Principal 123">
+          </div>
+
+          @if (activeTab() !== 'general') {
+            <h4 style="margin: 10px 0 0; color: var(--steel); font-size: 13px; font-weight: 750;">Datos Específicos</h4>
+
+            @if (activeTab() === 'docentes' || activeTab() === 'administrativos') {
+              <div class="premium-field">
+                <span>Código Interno *</span>
+                <input type="text" class="premium-input" formControlName="codigo" placeholder="Ej. DOC-001">
+              </div>
+            }
+
+            @if (activeTab() === 'docentes') {
+              <div class="premium-field">
+                <span>Especialidad</span>
+                <input type="text" class="premium-input" formControlName="especialidad">
+              </div>
+              <div class="premium-field">
+                <span>Área Académica</span>
+                <input type="text" class="premium-input" formControlName="areaAcademica">
+              </div>
+            }
+
+            @if (activeTab() === 'administrativos') {
+              <div class="premium-field">
+                <span>Cargo *</span>
+                <input type="text" class="premium-input" formControlName="cargo" placeholder="Ej. Secretaría">
+              </div>
+            }
+
+            @if (activeTab() === 'familias') {
+              <div class="premium-field">
+                <span>Ocupación</span>
+                <input type="text" class="premium-input" formControlName="ocupacion">
+              </div>
+            }
+          }
+          @if (activeTab() === 'general' && formPersona.value.tipoPersona === 'ESTUDIANTE') {
+            <div class="premium-field">
+              <span>Código Interno *</span>
+              <input type="text" class="premium-input" formControlName="codigo" placeholder="Ej. EST-001">
+            </div>
+          }
+          @if (activeTab() === 'general' && formPersona.value.tipoPersona === 'DOCENTE') {
+            <h4 style="margin: 10px 0 0; color: var(--steel); font-size: 13px; font-weight: 750;">Datos Específicos</h4>
+            <div class="premium-field">
+              <span>Código Interno *</span>
+              <input type="text" class="premium-input" formControlName="codigo" placeholder="Ej. DOC-001">
+            </div>
+            <div class="premium-field">
+              <span>Especialidad</span>
+              <input type="text" class="premium-input" formControlName="especialidad">
+            </div>
+            <div class="premium-field">
+              <span>Área Académica</span>
+              <input type="text" class="premium-input" formControlName="areaAcademica">
+            </div>
+          }
+          @if (activeTab() === 'general' && formPersona.value.tipoPersona === 'ADMINISTRATIVO') {
+            <h4 style="margin: 10px 0 0; color: var(--steel); font-size: 13px; font-weight: 750;">Datos Específicos</h4>
+            <div class="premium-field">
+              <span>Código Interno *</span>
+              <input type="text" class="premium-input" formControlName="codigo" placeholder="Ej. ADM-001">
+            </div>
+            <div class="premium-field">
+              <span>Cargo *</span>
+              <input type="text" class="premium-input" formControlName="cargo" placeholder="Ej. Secretaría">
+            </div>
+          }
+          @if (activeTab() === 'general' && formPersona.value.tipoPersona === 'PADRE_FAMILIA') {
+            <h4 style="margin: 10px 0 0; color: var(--steel); font-size: 13px; font-weight: 750;">Datos del Apoderado</h4>
+            <div class="premium-field">
+              <span>Ocupación</span>
+              <input type="text" class="premium-input" formControlName="ocupacion">
+            </div>
+          }
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()" style="border: none; background: transparent; font-weight: 600;">Cancelar</button>
+          <button type="submit" class="btn-primary" style="padding: 10px 20px; border-radius: 6px;" [disabled]="formPersona.invalid">Guardar Registro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
 import { PersonaResponse, PersonaRequest } from '../../core/models';
-import { fadeIn } from '../../core/animations';
+import { fadeIn, staggerRows, staggerList, scaleInModal, slideAlert, tabTransition, slideInRight, counterAnimate } from '../../core/animations';
 
 type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
 
@@ -13,7 +13,7 @@ type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './admin-personal.html',
   styleUrl: './admin-personal.css',
-  animations: [fadeIn],
+  animations: [fadeIn, staggerRows, staggerList, scaleInModal, slideAlert, tabTransition, slideInRight, counterAnimate],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminPersonal {
@@ -22,11 +22,70 @@ export class AdminPersonal {
   readonly activeTab = signal<Tab>('general');
   readonly personas = signal<PersonaResponse[]>([]);
   readonly loading = signal(false);
-  readonly error = signal('');
-  readonly successMsg = signal('');
+  readonly toasts = signal<{id: number, msg: string, type: 'success' | 'error'}[]>([]);
+  private toastIdCounter = 0;
   readonly searchQuery = signal('');
-  readonly isAdding = signal(false);
+  readonly showModal = signal(false);
   readonly editingPersona = signal<PersonaResponse | null>(null);
+
+  // --- KPIs ---
+  readonly totalDocentes = computed(() => this.personas().filter(p => p.tipoPersona === 'DOCENTE').length);
+  readonly totalAdministrativos = computed(() => this.personas().filter(p => p.tipoPersona === 'ADMINISTRATIVO').length);
+  readonly totalFamilias = computed(() => this.personas().filter(p => p.tipoPersona === 'PADRE_FAMILIA').length);
+  readonly totalEstudiantes = computed(() => this.personas().filter(p => p.tipoPersona === 'ESTUDIANTE').length);
+
+  // --- Columnas dinámicas por pestaña ---
+  readonly columns = computed(() => {
+    switch (this.activeTab()) {
+      case 'docentes':
+        return [
+          { key: 'documentoIdentidad', label: 'Documento' },
+          { key: 'nombreCompleto', label: 'Nombre Completo' },
+          { key: 'codigo', label: 'Código' },
+          { key: 'especialidad', label: 'Especialidad' },
+          { key: 'areaAcademica', label: 'Área Académica' },
+          { key: 'correo', label: 'Correo' },
+          { key: 'telefono', label: 'Teléfono' },
+        ];
+      case 'administrativos':
+        return [
+          { key: 'documentoIdentidad', label: 'Documento' },
+          { key: 'nombreCompleto', label: 'Nombre Completo' },
+          { key: 'codigo', label: 'Código' },
+          { key: 'cargo', label: 'Cargo' },
+          { key: 'correo', label: 'Correo' },
+          { key: 'telefono', label: 'Teléfono' },
+        ];
+      case 'familias':
+        return [
+          { key: 'documentoIdentidad', label: 'Documento' },
+          { key: 'nombreCompleto', label: 'Nombre Completo' },
+          { key: 'ocupacion', label: 'Ocupación' },
+          { key: 'correo', label: 'Correo' },
+          { key: 'telefono', label: 'Teléfono' },
+        ];
+      default:
+        return [
+          { key: 'documentoIdentidad', label: 'Documento' },
+          { key: 'nombreCompleto', label: 'Nombre Completo' },
+          { key: 'tipoPersona', label: 'Tipo' },
+          { key: 'correo', label: 'Correo' },
+          { key: 'telefono', label: 'Teléfono' },
+          { key: 'fechaNacimiento', label: 'F. Nacimiento' },
+        ];
+    }
+  });
+
+  readonly modalTitle = computed(() => {
+    const prefix = this.editingPersona() ? 'Editar' : 'Nuevo';
+    const labels: Record<Tab, string> = {
+      general: 'Persona',
+      docentes: 'Docente',
+      administrativos: 'Administrativo',
+      familias: 'Apoderado',
+    };
+    return `${prefix} ${labels[this.activeTab()]}`;
+  });
 
   readonly filteredPersonas = computed(() => {
     const q = this.searchQuery().toLowerCase();
@@ -37,20 +96,40 @@ export class AdminPersonal {
                        (tab === 'administrativos' && p.tipoPersona === 'ADMINISTRATIVO') ||
                        (tab === 'familias' && p.tipoPersona === 'PADRE_FAMILIA');
       if (!matchTab) return false;
-
       if (!q) return true;
-      const matchSearch = p.nombres.toLowerCase().includes(q) ||
-             p.apellidos.toLowerCase().includes(q) ||
-             p.documentoIdentidad.toLowerCase().includes(q);
-      return matchSearch;
+      const baseSearch = p.nombres.toLowerCase().includes(q) ||
+                         p.apellidos.toLowerCase().includes(q) ||
+                         p.documentoIdentidad.toLowerCase().includes(q) ||
+                         (p.correo || '').toLowerCase().includes(q) ||
+                         (p.telefono || '').toLowerCase().includes(q);
+      const specificSearch = tab === 'docentes'
+        ? (p.codigo || '').toLowerCase().includes(q) ||
+          (p.especialidad || '').toLowerCase().includes(q) ||
+          (p.areaAcademica || '').toLowerCase().includes(q)
+        : tab === 'administrativos'
+        ? (p.codigo || '').toLowerCase().includes(q) ||
+          (p.cargo || '').toLowerCase().includes(q)
+        : tab === 'familias'
+        ? (p.ocupacion || '').toLowerCase().includes(q)
+        : false;
+      return baseSearch || specificSearch;
     });
   });
 
-  // --- AGRUPACIÓN ADMINISTRATIVOS ---
   readonly administrativosPorCargo = computed(() => {
-    const admins = this.filteredPersonas().filter((p: PersonaResponse) => p.tipoPersona === 'ADMINISTRATIVO');
+    const admins = this.personas().filter(p => p.tipoPersona === 'ADMINISTRATIVO');
+    const q = this.searchQuery().toLowerCase();
+    const filtered = q ? admins.filter(a =>
+      a.nombres.toLowerCase().includes(q) ||
+      a.apellidos.toLowerCase().includes(q) ||
+      a.documentoIdentidad.toLowerCase().includes(q) ||
+      (a.codigo || '').toLowerCase().includes(q) ||
+      (a.cargo || '').toLowerCase().includes(q) ||
+      (a.correo || '').toLowerCase().includes(q) ||
+      (a.telefono || '').toLowerCase().includes(q)
+    ) : admins;
     const map = new Map<string, PersonaResponse[]>();
-    for (const a of admins) {
+    for (const a of filtered) {
       const cargo = a.cargo || 'Sin Cargo';
       if (!map.has(cargo)) map.set(cargo, []);
       map.get(cargo)!.push(a);
@@ -59,7 +138,7 @@ export class AdminPersonal {
   });
 
   readonly formPersona = new FormGroup({
-    tipoPersona: new FormControl('PERSONA', { nonNullable: true, validators: [Validators.required] }),
+    tipoPersona: new FormControl('PERSONA', { nonNullable: true }),
     nombres: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     apellidos: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     documentoIdentidad: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -81,9 +160,15 @@ export class AdminPersonal {
   setTab(tab: Tab) {
     this.activeTab.set(tab);
     this.searchQuery.set('');
-    this.cancelAdd();
-    this.error.set('');
-    this.successMsg.set('');
+    this.closeModal();
+  }
+
+  showToast(msg: string, type: 'success' | 'error') {
+    const id = this.toastIdCounter++;
+    this.toasts.update(t => [...t, { id, msg, type }]);
+    setTimeout(() => {
+      this.toasts.update(t => t.filter(toast => toast.id !== id));
+    }, 3000);
   }
 
   loadPersonas() {
@@ -94,20 +179,26 @@ export class AdminPersonal {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('Error al cargar la lista de personas.');
+        this.showToast('Error al cargar la lista de personas.', 'error');
         this.loading.set(false);
       }
     });
   }
 
-  openAdd(tipo: string) {
-    this.isAdding.set(true);
+  openAdd() {
+    const tipoMap: Record<Tab, string> = {
+      general: 'PERSONA',
+      docentes: 'DOCENTE',
+      administrativos: 'ADMINISTRATIVO',
+      familias: 'PADRE_FAMILIA',
+    };
     this.editingPersona.set(null);
-    this.formPersona.reset({ tipoPersona: tipo });
+    this.formPersona.reset({ tipoPersona: tipoMap[this.activeTab()] });
+    this.updateValidators();
+    this.showModal.set(true);
   }
 
   openEdit(p: PersonaResponse) {
-    this.isAdding.set(true);
     this.editingPersona.set(p);
     this.formPersona.reset({
       tipoPersona: p.tipoPersona,
@@ -124,11 +215,29 @@ export class AdminPersonal {
       areaAcademica: p.areaAcademica || '',
       ocupacion: p.ocupacion || ''
     });
+    this.updateValidators();
+    this.showModal.set(true);
   }
 
-  cancelAdd() {
-    this.isAdding.set(false);
+  closeModal() {
+    this.showModal.set(false);
     this.editingPersona.set(null);
+  }
+
+  private updateValidators() {
+    const tab = this.activeTab();
+    const codigoCtrl = this.formPersona.get('codigo');
+    const cargoCtrl = this.formPersona.get('cargo');
+    codigoCtrl?.clearValidators();
+    cargoCtrl?.clearValidators();
+    if (tab === 'docentes' || tab === 'administrativos') {
+      codigoCtrl?.setValidators([Validators.required]);
+    }
+    if (tab === 'administrativos') {
+      cargoCtrl?.setValidators([Validators.required]);
+    }
+    codigoCtrl?.updateValueAndValidity();
+    cargoCtrl?.updateValueAndValidity();
   }
 
   savePersona() {
@@ -136,8 +245,6 @@ export class AdminPersonal {
       this.formPersona.markAllAsTouched();
       return;
     }
-    this.error.set('');
-    this.successMsg.set('');
     const val = this.formPersona.value;
     const req: PersonaRequest = {
       tipoPersona: val.tipoPersona!,
@@ -161,11 +268,11 @@ export class AdminPersonal {
     obs.subscribe({
       next: () => {
         this.loadPersonas();
-        this.cancelAdd();
-        this.successMsg.set('Registro guardado exitosamente.');
+        this.closeModal();
+        this.showToast('Registro guardado exitosamente.', 'success');
       },
       error: (err) => {
-        this.error.set(err?.error?.message || 'Error al guardar el registro.');
+        this.showToast(err?.error?.message || 'Error al guardar el registro.', 'error');
       }
     });
   }

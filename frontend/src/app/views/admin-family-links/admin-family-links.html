@@ -1,32 +1,380 @@
 <section class="page-stack" [@fadeIn]>
-  <div class="page-heading"><div><p class="section-kicker">Familias</p><h2>Vinculación padre–estudiante</h2><p>Este vínculo permite que cada padre o apoderado consulte únicamente las notas de sus hijos.</p></div></div>
-  @if (error()) { <p class="form-error-note">{{ error() }}</p> }
-  @if (success()) { <p class="read-only-note">{{ success() }}</p> }
-
-  <section class="surface">
-    <div class="surface-header"><div><p class="section-kicker">Paso 1</p><h3>Seleccione al estudiante</h3></div></div>
-    <div class="surface-body">
-      <label class="field student-selector"><span>Estudiante</span><select (change)="selectStudent($event)"><option value="">Seleccione</option>@for (row of estudiantes(); track row.id) { <option [value]="row.id" [selected]="row.id === selectedStudentId()">{{ row.codigo }} · {{ row.apellidos }}, {{ row.nombres }}</option> }</select></label>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Familias</p>
+      <h2>Vinculación padre–estudiante</h2>
+      <p>Cada padre o apoderado podrá consultar únicamente las notas de sus hijos vinculados.</p>
     </div>
-  </section>
+  </div>
 
-  <section class="surface">
-    <div class="surface-header"><div><p class="section-kicker">Paso 2</p><h3>Asigne un padre o apoderado</h3><p>Primero registre al apoderado desde “Personal y Familia” si todavía no aparece.</p></div></div>
-    <div class="surface-body">
-      <form class="link-form" [formGroup]="form" (ngSubmit)="save()">
-        <label class="field"><span>Padre / apoderado</span><select formControlName="padreFamiliaId"><option [ngValue]="null">Seleccione</option>@for (row of padres(); track row.id) { <option [ngValue]="row.id">{{ row.documentoIdentidad }} · {{ row.nombres }} {{ row.apellidos }}</option> }</select></label>
-        <label class="field"><span>Parentesco</span><select formControlName="parentesco"><option value="MADRE">Madre</option><option value="PADRE">Padre</option><option value="TUTOR">Tutor/a</option><option value="OTRO">Otro</option></select></label>
-        <label class="check-line"><input type="checkbox" formControlName="principal"> Apoderado principal</label>
-        <div class="action-row"><button class="btn-primary" type="submit" [disabled]="!selectedStudentId() || form.invalid">{{ editingId() ? 'Actualizar vínculo' : 'Vincular apoderado' }}</button><button class="btn-secondary" type="button" (click)="cancelEdit()">Limpiar</button></div>
-      </form>
+  <!-- Toasts -->
+  <div class="toast-container">
+    @for (toast of toasts(); track toast.id) {
+      <div class="toast toast-{{ toast.type }}" [@slideAlert]>
+        {{ toast.msg }}
+      </div>
+    }
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon is-student">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Estudiantes</span>
+        <span class="kpi-value">{{ totalEstudiantes() }}</span>
+      </div>
     </div>
-  </section>
+    <div class="kpi-card">
+      <div class="kpi-icon is-good">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Apoderados</span>
+        <span class="kpi-value">{{ totalPadres() }}</span>
+      </div>
+    </div>
+    @if (selectedStudentInfo()) {
+      <div class="kpi-card">
+        <div class="kpi-icon is-admin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">Vínculos</span>
+          <span class="kpi-value">{{ totalVinculos() }}</span>
+          <span class="kpi-subtext">del estudiante seleccionado</span>
+        </div>
+      </div>
+    }
+  </div>
 
-  <section class="surface">
-    <div class="surface-header"><div><p class="section-kicker">Paso 3</p><h3>Vínculos registrados</h3></div></div>
-    <div class="quiet-table-wrap"><table class="quiet-table"><thead><tr><th>Apoderado</th><th>Contacto</th><th>Parentesco</th><th>Principal</th><th>Acciones</th></tr></thead><tbody>
-      @for (row of vinculos(); track row.id) { <tr><td><strong>{{ row.padreNombreCompleto }}</strong><br>{{ row.padreDocumento }}</td><td>{{ row.padreTelefono || '-' }}<br>{{ row.padreCorreo || '-' }}</td><td>{{ row.parentesco }}</td><td>{{ row.principal ? 'Sí' : 'No' }}</td><td><button class="btn-subtle" (click)="edit(row)">Editar</button><button class="btn-subtle" (click)="remove(row)">Desvincular</button></td></tr> }
-      @empty { <tr><td colspan="5" class="empty-state">El estudiante aún no tiene apoderados vinculados.</td></tr> }
-    </tbody></table></div>
-  </section>
+  @if (loading()) {
+    <div class="surface" style="padding: 3rem; text-align: center; color: var(--muted);">
+      Cargando directorio...
+    </div>
+  } @else {
+    <!-- STEP 1: Seleccionar estudiante -->
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <p class="section-kicker">Paso 1</p>
+          <h3>Seleccione al estudiante</h3>
+        </div>
+      </div>
+      <div class="surface-body" style="padding: 24px;">
+        <div class="typeahead-field">
+          <span>Estudiante</span>
+          <div class="typeahead-wrapper">
+            <input
+              type="text"
+              class="typeahead-input"
+              placeholder="Buscar por nombre, apellido, código o DNI..."
+              [ngModel]="studentSearch()"
+              (ngModelChange)="studentSearch.set($event); showStudentDropdown.set(true); studentHighlightIndex.set(0)"
+              (focus)="showStudentDropdown.set(true)"
+              (blur)="delayHideStudentDropdown()"
+              (keydown)="studentKeydown($event)"
+            >
+            @if (selectedStudent()) {
+              <button type="button" class="typeahead-clear" (click)="selectStudent(null)">×</button>
+            }
+            @if (showStudentDropdown() && filteredEstudiantes().length > 0) {
+              <div class="typeahead-dropdown">
+                @for (e of filteredEstudiantes(); track e.id; let i = $index) {
+                  <div
+                    class="typeahead-option"
+                    [class.is-highlighted]="i === studentHighlightIndex()"
+                    [class.is-selected]="e.id === selectedStudent()?.id"
+                    (mousedown)="selectStudent(e)"
+                  >
+                    <div class="typeahead-option-main">
+                      <span class="typeahead-option-name">{{ e.apellidos }}, {{ e.nombres }}</span>
+                      <span class="typeahead-option-code">{{ e.codigo }}</span>
+                    </div>
+                    <span class="typeahead-option-meta">DNI: {{ e.documentoIdentidad }}</span>
+                  </div>
+                }
+              </div>
+            }
+            @if (showStudentDropdown() && filteredEstudiantes().length === 0 && studentSearch()) {
+              <div class="typeahead-dropdown">
+                <div class="typeahead-empty">Sin resultados</div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Student info card -->
+        @if (selectedStudentInfo(); as info) {
+          <div class="student-info-card">
+            <div class="student-info-avatar">{{ info.nombre.substring(0, 2).toUpperCase() }}</div>
+            <div class="student-info-data">
+              <strong>{{ info.nombre }}</strong>
+              <div class="student-info-meta">
+                <span>Código: {{ info.codigo }}</span>
+                <span>DNI: {{ info.documento }}</span>
+                <span>Vínculos: {{ info.vinculosCount }}</span>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- STEP 2: Asignar apoderado -->
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <p class="section-kicker">Paso 2</p>
+          <h3>{{ editingId() ? 'Editar vínculo' : 'Asignar apoderado' }}</h3>
+        </div>
+      </div>
+      <div class="surface-body" style="padding: 24px;">
+        <form [formGroup]="form" (ngSubmit)="save()" class="premium-form-group">
+          <div class="typeahead-field">
+            <span>Padre / apoderado</span>
+            <div class="typeahead-wrapper">
+              <input
+                type="text"
+                class="typeahead-input"
+                placeholder="Buscar por nombre, apellido, DNI, teléfono o correo..."
+                [ngModel]="parentSearch()"
+                (ngModelChange)="parentSearch.set($event); showParentDropdown.set(true); parentHighlightIndex.set(0)"
+                (focus)="showParentDropdown.set(true)"
+                (blur)="delayHideParentDropdown()"
+                (keydown)="parentKeydown($event)"
+                [disabled]="!selectedStudent()"
+              >
+              @if (form.value.padreFamiliaId) {
+                <button type="button" class="typeahead-clear" (click)="clearParent()">×</button>
+              }
+              @if (showParentDropdown() && filteredPadres().length > 0) {
+                <div class="typeahead-dropdown">
+                  @for (p of filteredPadres(); track p.id; let i = $index) {
+                    <div
+                      class="typeahead-option"
+                      [class.is-highlighted]="i === parentHighlightIndex()"
+                      [class.is-selected]="p.id === form.value.padreFamiliaId"
+                      (mousedown)="selectParent(p)"
+                    >
+                      <div class="typeahead-option-main">
+                        <span class="typeahead-option-name">{{ p.apellidos }}, {{ p.nombres }}</span>
+                        <span class="typeahead-option-meta">DNI: {{ p.documentoIdentidad }}</span>
+                      </div>
+                      <div class="typeahead-option-contact">
+                        @if (p.telefono) { <span>{{ p.telefono }}</span> }
+                        @if (p.correo) { <span>{{ p.correo }}</span> }
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+              @if (showParentDropdown() && filteredPadres().length === 0 && parentSearch() && !savingQuick()) {
+                <div class="typeahead-dropdown">
+                  <div class="typeahead-empty">
+                    No se encontró "{{ parentSearch() }}"
+                  </div>
+                </div>
+              }
+            </div>
+            @if (!form.value.padreFamiliaId && selectedStudent()) {
+              <button type="button" class="btn-secondary" style="margin-top: 8px; font-size: 13px;" (click)="toggleQuickCreate()">
+                {{ showQuickCreate() ? 'Cancelar' : '+ Crear nuevo apoderado' }}
+              </button>
+            }
+          </div>
+
+          <!-- Quick create parent -->
+          @if (showQuickCreate()) {
+            <div class="inline-quick-form">
+              <h4 style="margin: 0 0 12px 0; font-size: 14px; color: var(--ink);">Nuevo apoderado</h4>
+              <form [formGroup]="quickForm" (ngSubmit)="saveQuickParent()" class="quick-form-grid">
+                <label class="premium-field">
+                  <span>Nombres <span class="required">*</span></span>
+                  <input type="text" class="premium-input" formControlName="nombres" placeholder="Nombres">
+                </label>
+                <label class="premium-field">
+                  <span>Apellidos <span class="required">*</span></span>
+                  <input type="text" class="premium-input" formControlName="apellidos" placeholder="Apellidos">
+                </label>
+                <label class="premium-field">
+                  <span>DNI <span class="required">*</span></span>
+                  <input type="text" class="premium-input" formControlName="documentoIdentidad" placeholder="12345678">
+                </label>
+                <label class="premium-field">
+                  <span>Teléfono</span>
+                  <input type="tel" class="premium-input" formControlName="telefono" placeholder="999888777">
+                </label>
+                <label class="premium-field">
+                  <span>Correo</span>
+                  <input type="email" class="premium-input" formControlName="correo" placeholder="correo@ejemplo.com">
+                </label>
+                <label class="premium-field">
+                  <span>Ocupación</span>
+                  <input type="text" class="premium-input" formControlName="ocupacion" placeholder="Ej. Ingeniero">
+                </label>
+                <div class="quick-form-actions">
+                  <button type="submit" class="btn-primary" [disabled]="savingQuick() || quickForm.invalid">
+                    {{ savingQuick() ? 'Guardando...' : 'Guardar y vincular' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="premium-field">
+              <span>Parentesco</span>
+              <select class="premium-select" formControlName="parentesco">
+                <option value="MADRE">Madre</option>
+                <option value="PADRE">Padre</option>
+                <option value="TUTOR">Tutor/a</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <div class="premium-field" style="justify-content: flex-end;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; margin-top: 24px;">
+                <input type="checkbox" formControlName="principal" style="width: 18px; height: 18px; accent-color: var(--forest);">
+                Apoderado principal
+              </label>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 8px;">
+            <button class="btn-primary" type="submit" [disabled]="!selectedStudent() || form.invalid || saving()">
+              {{ saving() ? 'Guardando...' : editingId() ? 'Actualizar vínculo' : 'Vincular apoderado' }}
+            </button>
+            @if (editingId()) {
+              <button class="btn-secondary" type="button" (click)="cancelEdit()">Cancelar edición</button>
+            }
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- STEP 3: Vínculos registrados -->
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <p class="section-kicker">Paso 3</p>
+          <h3>Vínculos registrados</h3>
+        </div>
+        @if (vinculos().length > 0) {
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" class="search-input" placeholder="Filtrar vínculos..." [ngModel]="searchVinculos()" (ngModelChange)="searchVinculos.set($event)">
+          </div>
+        }
+      </div>
+      <div class="quiet-table-wrap">
+        @if (loadingVinculos()) {
+          <div style="padding: 2rem; text-align: center; color: var(--muted);">
+            Cargando vínculos...
+          </div>
+        } @else {
+          <table class="quiet-table">
+            <thead>
+              <tr>
+                <th>Apoderado</th>
+                <th>Contacto</th>
+                <th>Parentesco</th>
+                <th>Principal</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody [@staggerRows]="filteredVinculos().length">
+              @for (row of filteredVinculos(); track row.id) {
+                <tr>
+                  <td>
+                    <div class="user-profile-cell">
+                      <div class="user-avatar">{{ row.padreNombreCompleto.substring(0, 2).toUpperCase() }}</div>
+                      <div>
+                        <strong style="color: var(--ink); font-size: 14px; line-height: 1.2; display: block;">{{ row.padreNombreCompleto }}</strong>
+                        <span style="font-size: 12px; color: var(--muted);">DNI: {{ row.padreDocumento }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {{ row.padreTelefono || '-' }}<br>
+                    <span style="font-size: 12px; color: var(--muted);">{{ row.padreCorreo || '-' }}</span>
+                  </td>
+                  <td><span class="status-pill-premium">{{ row.parentesco }}</span></td>
+                  <td>
+                    @if (row.principal) {
+                      <span class="status-pill-premium is-active">Sí</span>
+                    } @else {
+                      <span class="status-pill-premium is-inactive">No</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="action-row-btns">
+                      <button class="action-icon-btn edit" title="Editar" (click)="edit(row)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                      </button>
+                      <button class="action-icon-btn deactivate" title="Desvincular" (click)="confirmRemove(row)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+              @empty {
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state-enhanced">
+                      <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--muted)" stroke-width="1" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                      <p>Aún no hay vínculos registrados</p>
+                      <span>Seleccione un estudiante y asigne un apoderado.</span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- CONFIRMATION MODAL -->
+  @if (confirmDelete(); as row) {
+    <div class="modal-overlay" (click)="confirmDelete.set(null)">
+      <div class="modal-card confirm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Desvincular apoderado</h3>
+          <button type="button" class="close-btn" (click)="confirmDelete.set(null)">×</button>
+        </div>
+        <div class="modal-body" style="text-align: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <p style="font-size: 16px; font-weight: 600; color: var(--ink); margin: 8px 0 4px;">
+            ¿Desvincular a <strong>{{ row.padreNombreCompleto }}</strong>?
+          </p>
+          <p style="font-size: 13px; color: var(--muted); margin: 0;">
+            Esta acción no se puede deshacer. El apoderado dejará de ver las notas del estudiante.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="confirmDelete.set(null)" [disabled]="saving()">Cancelar</button>
+          <button class="btn-danger" (click)="executeRemove()" [disabled]="saving()">
+            {{ saving() ? 'Eliminando...' : 'Sí, desvincular' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </section>
