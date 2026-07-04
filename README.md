@@ -1,8 +1,8 @@
-# Aduni+ — migración Angular + Supabase
+# Aduni+ — Angular + Supabase
 
-Esta documentación corresponde exclusivamente a la rama `supabase-migration`. En esta rama, Angular consume Supabase directamente: Supabase Auth gestiona sesiones, PostgreSQL conserva los datos, Row Level Security (RLS) aplica permisos y las Edge Functions resuelven la administración de usuarios y la importación Excel.
+Aduni+ es un sistema de gestión académica construido con Angular 21 y Supabase. Angular consume Supabase directamente: Supabase Auth gestiona sesiones, PostgreSQL conserva los datos, Row Level Security (RLS) aplica permisos y las Edge Functions resuelven la administración de usuarios y la importación Excel.
 
-Spring Boot + MySQL permanece en el repositorio únicamente como referencia y transición. El frontend de esta rama no necesita iniciar Spring Boot ni llama a `http://localhost:8080/api`.
+Spring Boot y MySQL fueron retirados del repositorio: ya no existen backend Java, `pom.xml` ni base de datos MySQL. Angular no llama a `http://localhost:8080/api` ni a ningún backend propio; toda la lógica de servidor vive en Supabase (PostgreSQL, Auth y Edge Functions). Consulte [MIGRACION_SUPABASE.md](MIGRACION_SUPABASE.md) para el detalle de qué se eliminó y por qué.
 
 ## Arquitectura
 
@@ -81,7 +81,7 @@ Edite `frontend/src/environments/environment.ts`:
 export const environment = {
   production: false,
   supabaseUrl: 'https://SU-PROJECT-REF.supabase.co',
-  supabasePublishableKey: 'sb_publishable_...',
+  supabaseAnonKey: 'sb_publishable_...',
 };
 ```
 
@@ -150,11 +150,10 @@ Todas las tablas públicas tienen RLS activo. Las funciones `current_user_role()
 
 El usuario anónimo no tiene permisos sobre datos privados. El administrador gestiona todo; docentes, estudiantes y padres reciben solo las filas correspondientes a su relación académica.
 
-## Estado de transición
+## Estado del proyecto
 
-- Angular ya no depende de controladores Spring, JWT propio ni MySQL.
-- Spring Boot y `database/` no se borraron para permitir comparación y transición de datos.
-- No existe sincronización automática MySQL → PostgreSQL; cualquier dato histórico real debe importarse en una tarea separada y validada.
+- Angular consume exclusivamente Supabase: no existen controladores propios, JWT manual, backend Java ni base de datos MySQL.
+- Spring Boot, Maven y MySQL fueron eliminados de esta rama junto con `aduni-plus-backend-springboot/`, `database/` y la documentación que exigía iniciar Spring Boot.
 - Antes de producción se deben retirar el seed demo, cambiar contraseñas, configurar el dominio real en `ALLOWED_ORIGIN` y activar la protección de contraseñas filtradas.
 
 La revisión técnica, resultados y comandos ejecutados están en [MIGRACION_SUPABASE.md](MIGRACION_SUPABASE.md).

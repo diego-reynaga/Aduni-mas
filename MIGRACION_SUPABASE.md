@@ -64,6 +64,55 @@ npx supabase functions deploy administrar-usuario
 npx supabase functions deploy importar-notas-trimestre
 ```
 
+## Spring Boot eliminado
+
+Con el build y las pruebas en verde, se retiró definitivamente el backend Spring Boot y las utilidades MySQL de desarrollo que quedaban como referencia en la rama `supabase-migration`.
+
+### Carpetas y archivos eliminados
+
+- `aduni-plus-backend-springboot/` completo: código Java, `pom.xml`, `application.yml`, tests JUnit, `target/` compilado y logs de Maven.
+- `database/`: `schema_aduniplus_limpio.sql`, `reset_database.sql`, `seed_usuarios_prueba.sql`, `backup_aduniplus.ps1` y `modelo_relacional_limpio.md` (scripts y documentación de MySQL sin uso en esta rama).
+- `implementation_plan.md`: plan de implementación redactado para el backend Spring Boot (controladores, Maven, `MultipartFile`).
+- Tareas `mysql:start`, `backend:start` y `dev:start-all` de `.vscode/tasks.json`, que dependían del servicio `MYSQL80` y de `mvn spring-boot:run`; solo se conservó `frontend:start`.
+- Mención a "Spring Boot" en el mensaje de error de `PortalService.clonarEstructura` y en el comentario de cabecera de `supabase/migrations/20260704204452_aduni_schema_rls.sql`.
+- Interceptor Angular sin uso `frontend/src/app/core/auth.interceptor.ts`, remanente del esquema JWT manual de Spring Boot: no estaba registrado en `app.config.ts` ni usaba Supabase.
+
+### Razón
+
+La migración a Supabase ya cubre autenticación, datos y Edge Functions. Mantener Spring Boot y MySQL como "referencia" ya no aportaba valor y arriesgaba confusión sobre qué backend ejecutar. La rama `supabase-migration` queda como un proyecto Angular + Supabase autocontenido, sin Java, Maven ni MySQL.
+
+### Nueva arquitectura final
+
+```text
+Angular 21 (frontend/)
+  └─ @supabase/supabase-js
+       ├─ Supabase Auth
+       ├─ PostgreSQL + RLS (supabase/migrations/)
+       └─ Edge Functions (supabase/functions/)
+            ├─ administrar-usuario
+            └─ importar-notas-trimestre
+```
+
+No queda ningún backend Java, controlador REST propio, `pom.xml` ni base de datos MySQL en la rama `supabase-migration`.
+
+### Comandos de verificación ejecutados
+
+```powershell
+git branch --show-current
+git status
+cd frontend
+npm ci
+npm run build
+npm test -- --watch=false
+npm audit
+cd ..
+rg -n "localhost:8080|Spring Boot|spring-boot|MySQL|Maven|DB_URL|JWT_SECRET|API_URL|service_role|SERVICE_ROLE" .
+git add -A
+git commit -m "chore: retirar Spring Boot y finalizar migración Supabase"
+```
+
+Las únicas coincidencias restantes de esa búsqueda están en este archivo y en README.md —explicando que Spring Boot fue eliminado— y en comentarios de código que advierten no colocar `service_role` en Angular.
+
 ## Qué falta antes de producción
 
 - Configurar `ALLOWED_ORIGIN` con el dominio HTTPS real.
@@ -73,4 +122,4 @@ npx supabase functions deploy importar-notas-trimestre
 - Ampliar la cobertura de tests automatizados de componentes y flujos E2E.
 - Atender los tres avisos de presupuesto CSS si se desea optimizar el tamaño; no bloquean el build.
 
-Spring Boot y MySQL quedan solo como referencia/transición y no deben iniciarse para usar Angular en esta rama.
+Spring Boot y MySQL fueron eliminados de la rama `supabase-migration`; ver la sección [Spring Boot eliminado](#spring-boot-eliminado) para el detalle. Angular solo depende de Supabase.

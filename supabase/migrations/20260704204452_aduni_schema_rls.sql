@@ -1,5 +1,4 @@
--- Aduni+ progressive migration: PostgreSQL schema, authorization helpers and RLS.
--- Spring Boot remains in the repository during the transition.
+-- Aduni+ schema: PostgreSQL schema, authorization helpers and RLS for the Angular + Supabase stack.
 
 create schema if not exists private;
 revoke all on schema private from public;

@@ -382,7 +382,7 @@ export class PortalService {
   createNivel(req: Academico.NivelEducativoRequest): Observable<Academico.NivelEducativoResponse> { return this.insertOne('niveles', this.levelPayload(req), this.toLevel); }
   updateNivel(id: EntityId, req: Academico.NivelEducativoRequest): Observable<Academico.NivelEducativoResponse> { return this.updateOne('niveles', id, this.levelPayload(req), this.toLevel); }
   deleteNivel(id: EntityId): Observable<void> { return this.deleteOne('niveles', id); }
-  clonarEstructura(_req: ClonarEstructuraRequest): Observable<void> { return throwError(() => new Error('La clonación masiva queda en Spring Boot durante esta fase progresiva.')); }
+  clonarEstructura(_req: ClonarEstructuraRequest): Observable<void> { return throwError(() => new Error('La clonación masiva de estructura académica todavía no está disponible.')); }
 
   getGrados(nivelId: EntityId): Observable<Academico.GradoResponse[]> {
     return this.observe(async () => (dataOf(await supabase.from('grados').select('*,niveles(nombre)').eq('nivel_id', nivelId).order('nombre') as DbResult<any[]>)).map(this.toGrade));
