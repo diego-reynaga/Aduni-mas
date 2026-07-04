@@ -16,7 +16,6 @@ type ProfileRow = {
 export class AuthService {
   private readonly router = inject(Router);
   private readonly sessionState = signal<Session | null>(null);
-  private initialized = false;
   private readonly initialization: Promise<void>;
 
   readonly session = this.sessionState.asReadonly();
@@ -30,7 +29,7 @@ export class AuthService {
         this.sessionState.set(null);
         return;
       }
-      void this.loadProfile(authSession.access_token).catch(() => this.sessionState.set(null));
+      void this.loadProfile(authSession.access_token, authSession.user.id).catch(() => this.sessionState.set(null));
     });
   }
 
@@ -66,9 +65,9 @@ export class AuthService {
     try {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
-      if (data.session) await this.loadProfile(data.session.access_token);
-    } finally {
-      this.initialized = true;
+      if (data.session) await this.loadProfile(data.session.access_token, data.session.user.id);
+    } catch {
+      this.sessionState.set(null);
     }
   }
 
@@ -76,13 +75,14 @@ export class AuthService {
     const email = request.username.trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: request.password });
     if (error || !data.session) throw error ?? new Error('Supabase Auth no devolvió una sesión.');
-    return this.loadProfile(data.session.access_token);
+    return this.loadProfile(data.session.access_token, data.user.id);
   }
 
-  private async loadProfile(accessToken: string): Promise<Session> {
+  private async loadProfile(accessToken: string, userId: string): Promise<Session> {
     const { data, error } = await supabase
       .from('profiles')
       .select('id,persona_id,rol,username,activo')
+      .eq('id', userId)
       .single<ProfileRow>();
     if (error || !data || !data.activo) {
       await supabase.auth.signOut();

@@ -1,10 +1,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN")?.trim() || "http://localhost:4200";
+
 const CORS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Vary": "Origin",
 };
 
 const ROLES = ["ADMINISTRADOR", "DOCENTE", "ESTUDIANTE", "PADRE_FAMILIA"] as const;

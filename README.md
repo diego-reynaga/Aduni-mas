@@ -1,167 +1,160 @@
-# Aduni+
+# Aduni+ — migración Angular + Supabase
 
-Sistema escolar integral para administradores, docentes, estudiantes y padres de familia. El backend usa Spring Boot 3.5, Java 21, Maven y MySQL 8; el frontend usa Angular 21 y npm.
+Esta documentación corresponde exclusivamente a la rama `supabase-migration`. En esta rama, Angular consume Supabase directamente: Supabase Auth gestiona sesiones, PostgreSQL conserva los datos, Row Level Security (RLS) aplica permisos y las Edge Functions resuelven la administración de usuarios y la importación Excel.
 
-## Rama de trabajo
+Spring Boot + MySQL permanece en el repositorio únicamente como referencia y transición. El frontend de esta rama no necesita iniciar Spring Boot ni llama a `http://localhost:8080/api`.
 
-Todo el desarrollo consolidado vive en `postProduccion`, que es la capitalización real de la rama remota equivalente a `postproduccion`:
+## Arquitectura
 
-```powershell
-git switch postProduccion
-git status --short --branch
+```text
+Angular 21
+  ├─ @supabase/supabase-js (publishable key)
+  ├─ Supabase Auth
+  ├─ Supabase Data API → PostgreSQL + RLS
+  └─ Edge Functions
+       ├─ administrar-usuario
+       └─ importar-notas-trimestre
 ```
 
-No ejecute estos cambios desde `master` ni desde otra rama.
+No se usa Supabase Storage: los archivos Excel se validan y procesan en memoria, y solo se guardan historial, errores y resultados. La clave `service_role` existe únicamente en el entorno seguro de las Edge Functions; nunca debe copiarse a Angular, Git o variables públicas.
 
 ## Requisitos
 
-- JDK 21
-- Maven 3.9 o superior
-- MySQL 8
-- Node.js 24 LTS y npm 11
+- Node.js 24 LTS y npm 11.
+- Supabase CLI reciente.
+- Un proyecto Supabase.
+- Rama Git `supabase-migration`.
 
-## Configurar MySQL
-
-Inicie MySQL y cree la base:
-
-```sql
-CREATE DATABASE IF NOT EXISTS aduniplus
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-```
-
-El backend acepta variables de entorno. En PowerShell:
+Compruebe la rama antes de trabajar:
 
 ```powershell
-$env:DB_URL = "jdbc:mysql://localhost:3306/aduniplus?useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true"
-$env:DB_USERNAME = "root"
-$env:DB_PASSWORD = "su_clave_mysql"
-$env:JWT_SECRET = "una-clave-segura-de-al-menos-32-caracteres"
-$env:SEED_ENABLED = "true"
+git switch supabase-migration
+git status --short --branch
 ```
 
-Si no define variables, `application.yml` usa `root`, contraseña `12345678`, base `aduniplus` y activa los datos de desarrollo. En un entorno real use `SEED_ENABLED=false` y cambie `JWT_SECRET`.
+## Configurar Supabase
 
-## Ejecutar backend
+1. Cree un proyecto desde el panel de Supabase.
+2. Copie **Project URL** y la **Publishable key** desde **Project Settings → API Keys**.
+3. En **Authentication → URL Configuration**, registre `http://localhost:4200` como URL local.
+4. Para producción, active la protección contra contraseñas filtradas en **Authentication → Password Security**.
+5. Configure el origen permitido de las Edge Functions:
 
 ```powershell
-cd aduni-plus-backend-springboot\aduni-plus-backend
-mvn clean test
-mvn spring-boot:run
+npx supabase secrets set ALLOWED_ORIGIN=https://su-frontend.example
 ```
 
-La API queda en `http://localhost:8080/api` y la comprobación de salud en `http://localhost:8080/api/health`.
+En desarrollo, si no se define el secreto, las funciones permiten únicamente `http://localhost:4200`. Cualquier otro origen recibe una cabecera CORS que no coincide y el navegador bloquea la respuesta.
 
-## Ejecutar frontend
+El proyecto de desarrollo revisado usa el ref `cpduuguhpxhxwoemzmgy`.
 
-En otra terminal:
+### Aplicar migraciones
 
 ```powershell
-cd frontend
-npm ci
-npm start
+npx supabase login
+npx supabase link --project-ref cpduuguhpxhxwoemzmgy
+npx supabase db push
 ```
 
-Abra `http://localhost:4200`. El frontend consume `http://localhost:8080/api`.
+Se aplican, en orden:
 
-## Usuarios de prueba
+- `20260704204452_aduni_schema_rls.sql`: esquema UUID, funciones privadas, permisos y RLS.
+- `20260704210406_optimize_rls_indexes.sql`: índices de claves foráneas y políticas consolidadas.
+- `20260704210647_demo_seed.sql`: usuarios y datos exclusivamente de desarrollo.
 
-El inicializador crea datos idempotentes con contraseñas BCrypt. Todos usan la contraseña `Aduni1234!`.
+La tercera migración crea usuarios de Auth con contraseñas conocidas. No la use en producción; elimine o sustituya esos usuarios antes de publicar el sistema.
 
-| Rol | Usuario | Contenido disponible |
-| --- | --- | --- |
-| Administrador | `admin` | CRUD completo, matrículas, asignaciones y vínculos |
-| Docente | `docente` | Cursos, registro manual e importación Excel |
-| Estudiante | `estudiante` | Notas publicadas de Lucía Quispe |
-| Estudiante | `estudiante2` | Notas publicadas de Mateo Ramos |
-| Padre / apoderado | `padre` | Notas de Lucía, su hija vinculada |
-| Padre / apoderado | `padre2` | Notas de Mateo, su hijo vinculado |
-
-También se crean la gestión 2026, tres trimestres, nivel Secundaria, grado 1ro A, Matemática, Comunicación, dos matrículas, asignaciones docentes, vínculos familiares y notas publicadas de ejemplo.
-
-## Flujo de uso por rol
-
-### Administrador
-
-1. Entre con `admin`.
-2. En **Personal y Familia**, cree docentes, administrativos y padres/apoderados.
-3. En **Matrículas y Alumnos**, cree o edite estudiantes y complete su matrícula.
-4. En **Personas y usuarios**, cree la cuenta y asigne uno o más roles.
-5. En **Gestión académica**, configure niveles, grados/secciones, materias y cursos.
-6. En **Periodos y asignaciones**, cree la gestión, los trimestres y asigne cursos a docentes.
-7. En **Vínculos familiares**, relacione cada estudiante con sus apoderados.
-8. Revise actividad e importaciones desde los paneles de supervisión.
-
-### Docente
-
-1. Entre con `docente`.
-2. Revise sus cursos en **Carga docente**.
-3. Registre notas de 0 a 20 en **Acta de notas**.
-4. Use **Importación Excel** para cargar un único trimestre por vez.
-
-### Estudiante
-
-Entre con `estudiante`. Solo verá sus propios cursos, notas y promedios publicados.
-
-### Padre o apoderado
-
-Entre con `padre`. Solo verá los estudiantes que el administrador vinculó a su cuenta y sus notas publicadas.
-
-## Importar notas Excel por trimestre
-
-El flujo acepta únicamente `.xlsx` de hasta 10 MB y nunca crea estudiantes desde el archivo:
-
-1. Seleccione el curso asignado.
-2. Seleccione `I_TRIMESTRE`, `II_TRIMESTRE` o `III_TRIMESTRE`.
-3. Suba el Excel.
-4. Pulse **Previsualizar** y revise estudiantes, notas individuales, promedios por competencia, promedio final y observaciones.
-5. Corrija los errores críticos o descargue el reporte CSV.
-6. Pulse **Confirmar importación**.
-
-El backend valida docente autenticado, asignación activa, trimestre, curso, matrícula, estudiante existente y rango 0–20. La confirmación guarda notas, promedios, historial, errores y auditoría. El administrador puede revisar el historial en **Importaciones notas**.
-
-Endpoints principales:
-
-```text
-POST /api/notas/importar-trimestre/preview
-POST /api/notas/importar-trimestre/confirmar
-GET  /api/notas/importaciones
-GET  /api/notas/importaciones/{id}
-GET  /api/notas/importaciones/{id}/errores
-```
-
-Los `POST` reciben `multipart/form-data` con `file`, `trimestre` y `assignmentId`.
-
-## Pruebas y compilación
-
-Backend:
+### Desplegar Edge Functions
 
 ```powershell
-cd aduni-plus-backend-springboot\aduni-plus-backend
-mvn clean test
-mvn spring-boot:run
+npx supabase functions deploy administrar-usuario
+npx supabase functions deploy importar-notas-trimestre
 ```
 
-Frontend:
+Ambas funciones deben conservar la verificación JWT habilitada. Supabase proporciona `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` dentro del runtime; no cree un archivo con esos secretos.
+
+## Configurar Angular
+
+Edite `frontend/src/environments/environment.ts`:
+
+```ts
+export const environment = {
+  production: false,
+  supabaseUrl: 'https://SU-PROJECT-REF.supabase.co',
+  supabasePublishableKey: 'sb_publishable_...',
+};
+```
+
+La publishable key puede vivir en el navegador porque RLS es la barrera de autorización. No agregue `service_role`, una secret key ni credenciales de base de datos.
+
+Ejecute:
 
 ```powershell
 cd frontend
 npm ci
 npm run build
 npm test -- --watch=false
+npm start
 ```
 
-Las pruebas backend usan H2 en memoria mediante el perfil `test`; no modifican MySQL. Para desactivar el seeder en una ejecución concreta:
+Abra [http://localhost:4200](http://localhost:4200).
 
-```powershell
-$env:SEED_ENABLED = "false"
-mvn spring-boot:run
-```
+## Usuarios demo
 
-## Estructura principal
+Solo para desarrollo:
 
-```text
-aduni-plus-backend-springboot/aduni-plus-backend/  Spring Boot
-frontend/                                          Angular
-database/                                          esquema y utilidades MySQL
-```
+| Rol | Correo | Contraseña | Prueba principal |
+| --- | --- | --- | --- |
+| Administrador | `admin@aduni.local` | `Dev!Aduni2026#Admin` | CRUD, usuarios, matrículas, asignaciones, vínculos, auditoría |
+| Docente | `docente@aduni.local` | `Dev!Aduni2026#Docente` | Sus cursos, notas manuales e importación Excel |
+| Estudiante | `estudiante@aduni.local` | `Dev!Aduni2026#Estudiante` | Solo sus notas publicadas y promedios |
+| Padre/apoderado | `padre@aduni.local` | `Dev!Aduni2026#Padre` | Solo las notas del hijo vinculado |
+
+Las direcciones `.local` son cuentas de prueba creadas por la migración; no dependen del envío real de correo.
+
+## Flujo por rol
+
+### Administrador
+
+Inicie sesión y use los módulos administrativos para crear personas, subtipos (docente, estudiante o padre), usuarios de Auth, gestión, nivel, grado, materia, curso, periodo, matrícula, asignación docente y vínculo familiar. `administrar-usuario` vuelve a validar JWT, perfil activo y rol `ADMINISTRADOR` antes de usar la API administrativa de Auth.
+
+### Docente
+
+El docente ve solamente asignaciones activas propias. Puede guardar notas de 0 a 20 y usar **Importación Excel**. RLS valida la asignación también en escrituras; la Edge Function repite la validación antes de usar `service_role`.
+
+### Estudiante
+
+El estudiante accede solo a su registro, matrícula, cursos y notas publicadas. No dispone de políticas de escritura.
+
+### Padre o apoderado
+
+El padre ve únicamente estudiantes con un vínculo activo en `estudiante_apoderados` y sus notas publicadas. No dispone de políticas de escritura.
+
+## Probar importación Excel
+
+Se incluye `outputs/aduni-supabase-migration/registro-notas-demo.xlsx`.
+
+1. Inicie sesión como docente.
+2. Abra **Importación Excel**.
+3. Seleccione la asignación demo y `I_TRIMESTRE`.
+4. Seleccione el archivo incluido.
+5. Pulse **Previsualizar** y confirme que aparecen dos estudiantes sin errores.
+6. Pulse **Confirmar importación**.
+7. Revise el historial y los promedios guardados.
+
+La función acepta solo `.xlsx`, máximo 10 MB, 12 hojas, 100 estudiantes, 40 columnas útiles, 5000 celdas procesadas y 50 MB descomprimidos. Lee desde la fila 17, no evalúa fórmulas, no crea estudiantes y rechaza contenedores ZIP inválidos, cifrados o sospechosos.
+
+## Seguridad RLS
+
+Todas las tablas públicas tienen RLS activo. Las funciones `current_user_role()`, `current_persona_id()`, `is_admin()`, `is_docente_asignado()`, `is_estudiante_owner()` e `is_padre_de_estudiante()` viven en el esquema privado, usan `SECURITY DEFINER`, fijan un `search_path` vacío y no son ejecutables por usuarios anónimos.
+
+El usuario anónimo no tiene permisos sobre datos privados. El administrador gestiona todo; docentes, estudiantes y padres reciben solo las filas correspondientes a su relación académica.
+
+## Estado de transición
+
+- Angular ya no depende de controladores Spring, JWT propio ni MySQL.
+- Spring Boot y `database/` no se borraron para permitir comparación y transición de datos.
+- No existe sincronización automática MySQL → PostgreSQL; cualquier dato histórico real debe importarse en una tarea separada y validada.
+- Antes de producción se deben retirar el seed demo, cambiar contraseñas, configurar el dominio real en `ALLOWED_ORIGIN` y activar la protección de contraseñas filtradas.
+
+La revisión técnica, resultados y comandos ejecutados están en [MIGRACION_SUPABASE.md](MIGRACION_SUPABASE.md).
