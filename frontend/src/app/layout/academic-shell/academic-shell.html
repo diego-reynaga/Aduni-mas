@@ -8,17 +8,38 @@
       </span>
     </a>
 
-    <nav class="role-nav" aria-label="Navegacion principal">
-      @for (item of navItems(); track item.route) {
-        <a
-          class="role-nav__item"
-          [routerLink]="item.route"
-          routerLinkActive="role-nav__item--active"
-          [routerLinkActiveOptions]="{ exact: true }"
-        >
-          <span>{{ item.eyebrow }}</span>
-          <strong>{{ item.label }}</strong>
-        </a>
+    <nav class="role-nav" aria-label="Navegacion principal" [@staggerNav]="navGroups().length">
+      @for (group of navGroups(); track group.module) {
+        <div class="nav-group">
+          <button 
+            type="button" 
+            class="nav-group__header" 
+            (click)="toggleModule(group.module)" 
+            [attr.aria-expanded]="!!expandedModules()[group.module]"
+          >
+            <strong>{{ group.module }}</strong>
+            <span class="nav-group__icon" [class.nav-group__icon--expanded]="expandedModules()[group.module]">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </span>
+          </button>
+          
+          @if (expandedModules()[group.module]) {
+            <div class="nav-group__items" [@expandCollapse]>
+              @for (item of group.items; track item.route) {
+                <a
+                  class="role-nav__item"
+                  [routerLink]="item.route"
+                  routerLinkActive="role-nav__item--active"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                >
+                  <strong>{{ item.label }}</strong>
+                </a>
+              }
+            </div>
+          }
+        </div>
       }
     </nav>
 
@@ -64,7 +85,9 @@
     </header>
 
     <main class="content-area">
-      <router-outlet></router-outlet>
+      <div class="route-wrapper" [@routeAnimations]="prepareRoute(outlet)">
+        <router-outlet #outlet="outlet" />
+      </div>
     </main>
   </section>
 </div>

@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TeacherProgress } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-admin-supervision',
   templateUrl: './admin-supervision.html',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminSupervision {

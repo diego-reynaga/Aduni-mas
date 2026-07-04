@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
 import { PersonaResponse } from '../../core/models';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-admin-assignments',
@@ -11,6 +12,7 @@ import { PersonaResponse } from '../../core/models';
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './admin-assignments.html',
   styleUrl: './admin-assignments.css',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminAssignments {

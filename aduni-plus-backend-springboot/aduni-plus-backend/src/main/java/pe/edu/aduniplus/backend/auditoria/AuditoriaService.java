@@ -10,11 +10,15 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+import pe.edu.aduniplus.backend.usuario.Usuario;
+import pe.edu.aduniplus.backend.usuario.UsuarioRepository;
+
 @Service
 @RequiredArgsConstructor
 public class AuditoriaService {
 
     private final AuditoriaRepository auditoriaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Transactional(readOnly = true)
     public List<AuditoriaResponse> listarAuditorias(
@@ -58,17 +62,20 @@ public class AuditoriaService {
 
     @Transactional
     public void registrarAuditoria(String accion, String entidad, Long entidadId, String detalle) {
-        String usuario = "SISTEMA";
+        String usuarioStr = "SISTEMA";
         var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
-            usuario = authentication.getName();
+            usuarioStr = authentication.getName();
         }
+
+        Usuario usuarioEntity = usuarioRepository.findByUsername(usuarioStr).orElse(null);
 
         Auditoria auditoria = Auditoria.builder()
                 .accion(accion)
                 .entidad(entidad)
                 .entidadId(entidadId)
-                .usuarioResponsable(usuario)
+                .usuario(usuarioEntity)
+                .usuarioResponsable(usuarioStr)
                 .detalle(detalle)
                 .build();
         auditoriaRepository.save(auditoria);

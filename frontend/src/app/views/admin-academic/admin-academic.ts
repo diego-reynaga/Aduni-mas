@@ -3,6 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { CommonModule } from '@angular/common';
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
+import { fadeIn } from '../../core/animations';
 
 type Tab = 'niveles' | 'grados' | 'materias' | 'oferta';
 
@@ -11,6 +12,7 @@ type Tab = 'niveles' | 'grados' | 'materias' | 'oferta';
   imports: [ReactiveFormsModule, FormsModule, CommonModule],
   templateUrl: './admin-academic.html',
   styleUrl: './admin-academic.css',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminAcademic {

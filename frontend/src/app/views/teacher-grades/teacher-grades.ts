@@ -5,11 +5,13 @@ import { GradeEntry } from '../../core/models';
 import { ActivatedRoute } from '@angular/router';
 import { PortalService } from '../../core/portal.service';
 import { CourseAssignment } from '../../core/models';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-teacher-grades',
   imports: [DecimalPipe, FormsModule],
   templateUrl: './teacher-grades.html',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeacherGrades {

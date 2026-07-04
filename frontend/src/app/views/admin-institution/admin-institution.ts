@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { AuditEntry, InstitutionConfig } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
+import { fadeIn } from '../../core/animations';
 
 type Tab = 'institucion' | 'gestiones' | 'periodos';
 
@@ -13,6 +14,7 @@ type Tab = 'institucion' | 'gestiones' | 'periodos';
   imports: [ReactiveFormsModule, FormsModule, CommonModule],
   templateUrl: './admin-institution.html',
   styleUrl: './admin-institution.css',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminInstitution {

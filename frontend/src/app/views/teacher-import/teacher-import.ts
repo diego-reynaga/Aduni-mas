@@ -11,11 +11,13 @@ import {
 } from '../../core/models';
 import { NotasService } from '../../core/notas.service';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-teacher-import',
   imports: [ReactiveFormsModule],
   templateUrl: './teacher-import.html',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeacherImport {

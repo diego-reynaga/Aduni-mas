@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { CourseAssignment, Metric } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-teacher-dashboard',
   imports: [RouterLink],
   templateUrl: './teacher-dashboard.html',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeacherDashboard {

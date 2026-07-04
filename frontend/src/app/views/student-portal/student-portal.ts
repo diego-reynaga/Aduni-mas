@@ -2,11 +2,13 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Metric, StudentCourseReport } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-student-portal',
   imports: [DecimalPipe],
   templateUrl: './student-portal.html',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentPortal {

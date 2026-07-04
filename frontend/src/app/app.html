@@ -1,2 +1,3 @@
-
-<router-outlet></router-outlet>
+<div class="route-wrapper" [@routeAnimations]="prepareRoute(outlet)">
+  <router-outlet #outlet="outlet" />
+</div>

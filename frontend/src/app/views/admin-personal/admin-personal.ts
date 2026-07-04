@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
 import { PersonaResponse, PersonaRequest } from '../../core/models';
+import { fadeIn } from '../../core/animations';
 
 type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
 
@@ -12,6 +13,7 @@ type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './admin-personal.html',
   styleUrl: './admin-personal.css',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminPersonal {

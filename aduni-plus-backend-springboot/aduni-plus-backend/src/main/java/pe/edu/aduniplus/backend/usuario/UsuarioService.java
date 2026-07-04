@@ -8,6 +8,7 @@ import pe.edu.aduniplus.backend.persona.Persona;
 import pe.edu.aduniplus.backend.persona.PersonaRepository;
 import pe.edu.aduniplus.backend.usuario.dto.UsuarioRequest;
 import pe.edu.aduniplus.backend.usuario.dto.UsuarioResponse;
+import pe.edu.aduniplus.backend.auditoria.AuditoriaService;
 
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ public class UsuarioService {
     private final RolRepository rolRepository;
     private final PersonaRepository personaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditoriaService auditoriaService;
 
     @Transactional(readOnly = true)
     public List<UsuarioResponse> listarUsuarios() {
@@ -61,6 +63,7 @@ public class UsuarioService {
             .build();
 
         usuario = usuarioRepository.save(usuario);
+        auditoriaService.registrarAuditoria("CREAR_USUARIO", "usuarios", usuario.getId(), "Creacion de usuario: " + request.username());
         return mapToResponse(usuario);
     }
 
@@ -81,6 +84,7 @@ public class UsuarioService {
 
         usuario.setRoles(mapearRoles(request.roles()));
         usuario = usuarioRepository.save(usuario);
+        auditoriaService.registrarAuditoria("ACTUALIZAR_USUARIO", "usuarios", usuario.getId(), "Actualizacion de usuario: " + request.username());
         return mapToResponse(usuario);
     }
 
@@ -90,6 +94,7 @@ public class UsuarioService {
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
+        auditoriaService.registrarAuditoria("DESACTIVAR_USUARIO", "usuarios", usuario.getId(), "Desactivacion de usuario: " + usuario.getUsername());
     }
 
     @Transactional
@@ -98,6 +103,7 @@ public class UsuarioService {
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         usuario.setActivo(true);
         usuarioRepository.save(usuario);
+        auditoriaService.registrarAuditoria("ACTIVAR_USUARIO", "usuarios", usuario.getId(), "Activacion de usuario: " + usuario.getUsername());
     }
 
     private Set<Rol> mapearRoles(List<String> nombresRoles) {

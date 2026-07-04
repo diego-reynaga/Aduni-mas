@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@a
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn } from '../../core/animations';
 
 type Tab = 'directorio' | 'matriculas';
 
@@ -11,6 +12,7 @@ type Tab = 'directorio' | 'matriculas';
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './admin-students.html',
   styleUrl: './admin-students.css',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminStudents {

@@ -1,4 +1,4 @@
-<section class="page-stack">
+<section class="page-stack" [@fadeIn]>
   <div class="page-heading">
     <div>
       <p class="section-kicker">Panel administrativo</p>
@@ -10,7 +10,7 @@
     <a class="btn-primary" routerLink="/admin/supervision">Revisar avance docente</a>
   </div>
 
-  <div class="metric-grid">
+  <div class="metric-grid" [@staggerList]="metrics().length">
     @for (metric of metrics(); track metric.label) {
       <article class="metric-card tone-{{ metric.tone }}">
         <p class="metric-card__label">{{ metric.label }}</p>
@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <div class="quiet-table-wrap">
+      <div class="quiet-table-wrap" [@staggerList]="progress().length">
         <table class="quiet-table">
           <thead>
             <tr>
@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      <div class="surface-body compact-list">
+      <div class="surface-body compact-list" [@staggerList]="audits().length">
         @for (entry of audits(); track entry.fecha + entry.accion) {
           <div class="list-line">
             <div>

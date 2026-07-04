@@ -2,11 +2,13 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FamilyAlert, FamilyStudent, StudentCourseReport } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-family-portal',
   imports: [DecimalPipe],
   templateUrl: './family-portal.html',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FamilyPortal {

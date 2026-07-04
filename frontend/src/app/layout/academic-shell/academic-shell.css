@@ -1,5 +1,6 @@
 .academic-app {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 288px minmax(0, 1fr);
   background: var(--app-bg);
@@ -7,7 +8,8 @@
 }
 
 .academic-sidebar {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   padding: 24px 18px;
   display: flex;
   flex-direction: column;
@@ -62,31 +64,92 @@
   gap: 8px;
 }
 
+.nav-group {
+  display: grid;
+  gap: 2px;
+}
+
+.nav-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  background: #1e3a8a; /* Azul oscuro */
+  border: none;
+  cursor: pointer;
+  color: #ffffff; /* Texto blanco para contrastar */
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: left;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 4px rgba(30, 58, 138, 0.25);
+}
+
+.nav-group__header:hover {
+  background: #1e40af; /* Azul apenas un tono más brillante en hover */
+}
+
+.nav-group__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.nav-group__icon--expanded {
+  transform: rotate(-180deg);
+}
+
+.nav-group__items {
+  display: grid;
+  gap: 4px;
+  position: relative;
+}
+
+/* Subtle line to connect submodules */
+.nav-group__items::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 14px;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
 .role-nav__item {
   display: grid;
   gap: 4px;
-  padding: 14px 15px;
-  color: rgba(0, 0, 0, 0.76);
+  padding: 10px 15px 10px 32px; /* Indented text */
+  color: rgba(0, 0, 0, 0.72);
   text-decoration: none;
-  border-left: 3px solid transparent;
-  background: rgba(255, 255, 255, 0.38);
-}
-
-.role-nav__item span {
-  font-size: 11px;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.54);
+  border-radius: 4px;
+  background: #ffffff; /* Fondo blanco normal */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .role-nav__item strong {
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.role-nav__item:hover {
+  background: #f3f4f6; /* Fondo un poco gris al hacer hover */
+  color: #161616;
 }
 
 .role-nav__item--active {
   color: #161616;
-  border-color: #161616;
-  background: rgba(255, 255, 255, 0.75);
+  background: #e5e7eb; /* Fondo gris al estar seleccionado */
+  box-shadow: inset 3px 0 0 #1e3a8a; /* Una sutil línea azul oscuro a la izquierda para destacar */
+}
+
+.role-nav__item--active strong {
+  font-weight: 700;
 }
 
 .sidebar-note {
@@ -108,12 +171,14 @@
 }
 
 .academic-main {
+  height: 100vh;
   min-width: 0;
-  display: grid;
-  grid-template-rows: auto 1fr;
+  display: flex;
+  flex-direction: column;
 }
 
 .topbar {
+  flex-shrink: 0;
   min-height: 86px;
   display: flex;
   align-items: center;
@@ -207,8 +272,15 @@
 }
 
 .content-area {
+  flex: 1;
+  overflow-y: auto;
   min-width: 0;
   padding: 28px;
+}
+
+.route-wrapper {
+  position: relative;
+  min-height: 480px;
 }
 
 @media (max-width: 980px) {

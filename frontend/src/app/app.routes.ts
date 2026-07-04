@@ -42,6 +42,19 @@ export const routes: Routes = [
       {
         path: 'admin/usuarios',
         component: AdminUsers,
+        data: { tab: 'usuarios' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/roles',
+        component: AdminUsers,
+        data: { tab: 'roles' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/auditorias',
+        component: AdminUsers,
+        data: { tab: 'auditoria' },
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {

@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { AuditEntry, Metric, TeacherProgress } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn, staggerList } from '../../core/animations';
 
 @Component({
   selector: 'app-admin-dashboard',
   imports: [RouterLink],
   templateUrl: './admin-dashboard.html',
+  animations: [fadeIn, staggerList],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminDashboard {

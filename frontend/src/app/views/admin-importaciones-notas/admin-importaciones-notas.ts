@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ErrorImportacionNotas, ImportacionNotasDetalle, ImportacionNotasHistorial } from '../../core/models';
 import { NotasService } from '../../core/notas.service';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-admin-importaciones-notas',
   templateUrl: './admin-importaciones-notas.html',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminImportacionesNotas {

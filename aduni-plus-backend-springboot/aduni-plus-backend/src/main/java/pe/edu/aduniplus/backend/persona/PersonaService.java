@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pe.edu.aduniplus.backend.persona.dto.PersonaRequest;
 import pe.edu.aduniplus.backend.persona.dto.PersonaResponse;
 import pe.edu.aduniplus.backend.usuario.UsuarioRepository;
+import pe.edu.aduniplus.backend.auditoria.AuditoriaService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +23,7 @@ public class PersonaService {
     private final PadreFamiliaRepository padreFamiliaRepository;
     private final UsuarioRepository usuarioRepository;
     private final jakarta.persistence.EntityManager entityManager;
+    private final AuditoriaService auditoriaService;
 
     @Transactional(readOnly = true)
     public List<PersonaResponse> listarPersonas() {
@@ -78,6 +80,7 @@ public class PersonaService {
             entityManager.clear();
 
             Persona updated = personaRepository.findById(id).orElseThrow();
+            auditoriaService.registrarAuditoria("CREAR_PERSONA", "personas", updated.getId(), "Creacion (Vinculacion) de persona: " + request.documentoIdentidad());
             return mapToResponse(updated);
         }
 
@@ -128,6 +131,7 @@ public class PersonaService {
 
         // Guardar a través del repositorio polimórfico
         persona = personaRepository.save(persona);
+        auditoriaService.registrarAuditoria("CREAR_PERSONA", "personas", persona.getId(), "Creacion de persona: " + request.documentoIdentidad());
         return mapToResponse(persona);
     }
 
@@ -209,6 +213,7 @@ public class PersonaService {
         }
 
         persona = personaRepository.save(persona);
+        auditoriaService.registrarAuditoria("ACTUALIZAR_PERSONA", "personas", persona.getId(), "Actualizacion de persona: " + request.documentoIdentidad());
         return mapToResponse(persona);
     }
 

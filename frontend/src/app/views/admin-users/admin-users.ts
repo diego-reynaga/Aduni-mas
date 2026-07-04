@@ -1,8 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { ROLE_LABELS, RoleName, UserRow, PersonaDropdown, RolResponse, ALL_ROLES, UsuarioRequest, AuditoriaResponse } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import {
+  fadeIn, staggerRows, slideInRight, slideAlert,
+  scaleInModal, tabTransition, counterAnimate, expandCollapse
+} from '../../core/animations';
 
 
 @Component({
@@ -10,10 +15,12 @@ import { PortalService } from '../../core/portal.service';
   imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './admin-users.html',
   styleUrl: './admin-users.css',
+  animations: [fadeIn, staggerRows, slideInRight, slideAlert, scaleInModal, tabTransition, counterAnimate, expandCollapse],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminUsers {
   private readonly portal = inject(PortalService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly users = signal<UserRow[]>([]);
   readonly personas = signal<PersonaDropdown[]>([]);
@@ -28,6 +35,11 @@ export class AdminUsers {
   // Filtros avanzados de Usuarios
   readonly filterEstado = signal<'TODOS' | 'Activo' | 'Inactivo'>('TODOS');
   readonly filterRol = signal<'TODOS' | RoleName>('TODOS');
+
+  readonly loading = signal(true);
+  readonly saving = signal(false);
+  readonly alertType = signal<'success' | 'error'>('success');
+  private readonly searchTimer = signal<ReturnType<typeof setTimeout> | null>(null);
 
   // Fuerza de contraseña
   readonly passwordStrength = signal(0); // 0=vacío, 1=débil, 2=media, 3=fuerte
@@ -79,6 +91,7 @@ export class AdminUsers {
   readonly showRoleModal = signal(false);
 
   // Formulario de Usuario
+  readonly isNewPersona = signal(false);
   readonly selectedRoles = signal<string[]>([]);
   readonly userForm = new FormGroup({
     username: new FormControl('', {
@@ -95,6 +108,11 @@ export class AdminUsers {
       nonNullable: true,
       validators: [Validators.required],
     }),
+    // New Persona fields
+    nombres: new FormControl('', { nonNullable: true }),
+    apellidos: new FormControl('', { nonNullable: true }),
+    documentoIdentidad: new FormControl('', { nonNullable: true }),
+    correoPersona: new FormControl('', { nonNullable: true }),
   });
 
   // Formulario de Rol
@@ -122,6 +140,11 @@ export class AdminUsers {
     return totals;
   });
 
+  // KPIs para Roles
+  readonly totalRoles = computed(() => this.rolesList().length);
+  readonly totalSystemRoles = computed(() => this.rolesList().filter(r => this.isSystemRole(r.nombre)).length);
+  readonly totalCustomRoles = computed(() => this.rolesList().filter(r => !this.isSystemRole(r.nombre)).length);
+
   readonly filteredUsers = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const estado = this.filterEstado();
@@ -142,11 +165,32 @@ export class AdminUsers {
   });
 
   constructor() {
+    this.route.data.subscribe(data => {
+      const tab = data['tab'] as 'usuarios' | 'roles' | 'auditoria';
+      if (tab) {
+        this.setTab(tab);
+      }
+    });
     this.loadData();
   }
 
+  private showAlertMsg(message: string, type: 'success' | 'error'): void {
+    this.alertType.set(type);
+    if (type === 'success') {
+      this.successMessage.set(message);
+    } else {
+      this.error.set(message);
+    }
+    setTimeout(() => {
+      if (type === 'success') this.successMessage.set('');
+      else this.error.set('');
+    }, 4000);
+  }
+
   loadData(): void {
+    this.loading.set(true);
     this.error.set('');
+
     this.portal.adminUsers().subscribe({
       next: (users) => this.users.set(users),
       error: () => this.error.set('No se pudo cargar el directorio de usuarios.'),
@@ -158,9 +202,17 @@ export class AdminUsers {
     });
 
     this.portal.getPersonasDropdown().subscribe({
-      next: (personas) => this.personas.set(personas),
-      error: () => this.error.set('No se pudo cargar el listado de personas disponibles.'),
+      next: (personas) => { this.personas.set(personas); this.loading.set(false); },
+      error: () => { this.error.set('No se pudo cargar el listado de personas disponibles.'); this.loading.set(false); },
     });
+  }
+
+  onSearchInput(value: string): void {
+    const timer = this.searchTimer();
+    if (timer) clearTimeout(timer);
+    this.searchTimer.set(setTimeout(() => {
+      this.searchQuery.set(value);
+    }, 300));
   }
 
   setTab(tab: 'usuarios' | 'roles' | 'auditoria'): void {
@@ -175,11 +227,11 @@ export class AdminUsers {
   loadAudits(): void {
     this.error.set('');
     this.portal.getAuditorias({
-      usuario: this.auditUserQuery(),
-      accion: this.auditActionFilter(),
-      entidad: this.auditEntityFilter(),
-      fechaInicio: this.auditDateInicio(),
-      fechaFin: this.auditDateFin()
+      usuario: this.auditUserQuery() || undefined,
+      accion: this.auditActionFilter() === 'TODAS' ? undefined : this.auditActionFilter(),
+      entidad: this.auditEntityFilter() === 'TODAS' ? undefined : this.auditEntityFilter(),
+      fechaInicio: this.auditDateInicio() || undefined,
+      fechaFin: this.auditDateFin() || undefined
     }).subscribe({
       next: (data) => this.auditoriasList.set(data),
       error: () => this.error.set('No se pudo cargar el historial de auditorías.')
@@ -224,12 +276,9 @@ export class AdminUsers {
 
   statusClass(status: string): string {
     if (status === 'Activo') {
-      return 'status-pill is-good';
+      return 'status-pill-premium is-active';
     }
-    if (status === 'Pendiente') {
-      return 'status-pill is-warning';
-    }
-    return 'status-pill is-danger';
+    return 'status-pill-premium is-inactive';
   }
 
   getRoleLabel(roleName: string): string {
@@ -243,12 +292,27 @@ export class AdminUsers {
     this.isEditingUser.set(false);
     this.editingUserId.set(null);
     this.selectedRoles.set([]);
+    this.isNewPersona.set(false);
     this.userForm.reset({
       username: '',
       password: '',
       personaId: null,
       roles: [],
+      nombres: '',
+      apellidos: '',
+      documentoIdentidad: '',
+      correoPersona: '',
     });
+    
+    this.userForm.controls.personaId.setValidators([Validators.required]);
+    this.userForm.controls.nombres.clearValidators();
+    this.userForm.controls.apellidos.clearValidators();
+    this.userForm.controls.documentoIdentidad.clearValidators();
+    this.userForm.controls.personaId.updateValueAndValidity();
+    this.userForm.controls.nombres.updateValueAndValidity();
+    this.userForm.controls.apellidos.updateValueAndValidity();
+    this.userForm.controls.documentoIdentidad.updateValueAndValidity();
+
     this.userForm.controls.password.setValidators([
       Validators.required,
       Validators.minLength(8),
@@ -257,6 +321,26 @@ export class AdminUsers {
     this.userForm.controls.password.updateValueAndValidity();
     this.passwordStrength.set(0);
     this.showUserModal.set(true);
+  }
+
+  togglePersonaMode(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.isNewPersona.set(checked);
+    if (checked) {
+      this.userForm.controls.personaId.clearValidators();
+      this.userForm.controls.nombres.setValidators([Validators.required]);
+      this.userForm.controls.apellidos.setValidators([Validators.required]);
+      this.userForm.controls.documentoIdentidad.setValidators([Validators.required]);
+    } else {
+      this.userForm.controls.personaId.setValidators([Validators.required]);
+      this.userForm.controls.nombres.clearValidators();
+      this.userForm.controls.apellidos.clearValidators();
+      this.userForm.controls.documentoIdentidad.clearValidators();
+    }
+    this.userForm.controls.personaId.updateValueAndValidity();
+    this.userForm.controls.nombres.updateValueAndValidity();
+    this.userForm.controls.apellidos.updateValueAndValidity();
+    this.userForm.controls.documentoIdentidad.updateValueAndValidity();
   }
 
   onPasswordInput(event: Event): void {
@@ -315,10 +399,37 @@ export class AdminUsers {
       return;
     }
 
+    this.saving.set(true);
     const formVal = this.userForm.getRawValue();
+
+    if (this.isNewPersona() && !this.isEditingUser()) {
+      // First create Persona
+      const personaReq = {
+        nombres: formVal.nombres,
+        apellidos: formVal.apellidos,
+        documentoIdentidad: formVal.documentoIdentidad,
+        correo: formVal.correoPersona,
+        tipoPersona: 'OTRO',
+      };
+
+      this.portal.createPersona(personaReq).subscribe({
+        next: (newPersona) => {
+          this.executeSaveUser(newPersona.id, formVal);
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.showAlertMsg(err.error?.message || 'No se pudo crear la persona. Verifique los datos.', 'error');
+        }
+      });
+    } else {
+      this.executeSaveUser(formVal.personaId!, formVal);
+    }
+  }
+
+  private executeSaveUser(personaId: number, formVal: any): void {
     const req: UsuarioRequest = {
       username: formVal.username,
-      personaId: formVal.personaId!,
+      personaId: personaId,
       roles: formVal.roles,
       password: formVal.password || undefined,
     };
@@ -329,15 +440,17 @@ export class AdminUsers {
 
     action.subscribe({
       next: () => {
-        this.successMessage.set(
-          this.isEditingUser() ? 'Cuenta de usuario actualizada exitosamente.' : 'Cuenta de usuario creada exitosamente.'
+        this.saving.set(false);
+        this.showAlertMsg(
+          this.isEditingUser() ? 'Cuenta de usuario actualizada exitosamente.' : 'Cuenta de usuario creada exitosamente.',
+          'success'
         );
         this.showUserModal.set(false);
         this.loadData();
-        setTimeout(() => this.successMessage.set(''), 4000);
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'Hubo un problema al intentar guardar la cuenta.');
+        this.saving.set(false);
+        this.showAlertMsg(err.error?.message || 'Hubo un problema al intentar guardar la cuenta.', 'error');
       },
     });
   }
@@ -351,11 +464,10 @@ export class AdminUsers {
 
     this.portal.deleteUser(id).subscribe({
       next: () => {
-        this.successMessage.set('Cuenta desactivada exitosamente.');
+        this.showAlertMsg('Cuenta desactivada exitosamente.', 'success');
         this.loadData();
-        setTimeout(() => this.successMessage.set(''), 4000);
       },
-      error: () => this.error.set('No se pudo desactivar la cuenta del usuario.'),
+      error: () => this.showAlertMsg('No se pudo desactivar la cuenta del usuario.', 'error'),
     });
   }
 
@@ -368,11 +480,10 @@ export class AdminUsers {
 
     this.portal.activateUser(id).subscribe({
       next: () => {
-        this.successMessage.set('Cuenta reactivada exitosamente.');
+        this.showAlertMsg('Cuenta reactivada exitosamente.', 'success');
         this.loadData();
-        setTimeout(() => this.successMessage.set(''), 4000);
       },
-      error: () => this.error.set('No se pudo reactivar la cuenta del usuario.'),
+      error: () => this.showAlertMsg('No se pudo reactivar la cuenta del usuario.', 'error'),
     });
   }
 
@@ -396,13 +507,12 @@ export class AdminUsers {
 
     this.portal.createRole(req).subscribe({
       next: () => {
-        this.successMessage.set('Rol registrado exitosamente.');
+        this.showAlertMsg('Rol registrado exitosamente.', 'success');
         this.showRoleModal.set(false);
         this.loadData();
-        setTimeout(() => this.successMessage.set(''), 4000);
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'No se pudo registrar el rol en la base de datos.');
+        this.showAlertMsg(err.error?.message || 'No se pudo registrar el rol en la base de datos.', 'error');
       },
     });
   }
@@ -418,13 +528,13 @@ export class AdminUsers {
 
     this.portal.deleteRole(role.id).subscribe({
       next: () => {
-        this.successMessage.set('Rol eliminado exitosamente.');
+        this.showAlertMsg('Rol eliminado exitosamente.', 'success');
         this.loadData();
-        setTimeout(() => this.successMessage.set(''), 4000);
       },
       error: (err) => {
-        this.error.set(
-          err.error?.message || 'No es posible eliminar el rol porque está asignado a cuentas activas.'
+        this.showAlertMsg(
+          err.error?.message || 'No es posible eliminar el rol porque está asignado a cuentas activas.',
+          'error'
         );
       },
     });

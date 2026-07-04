@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstudianteApoderadoResponse, PersonaResponse } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { fadeIn } from '../../core/animations';
 
 @Component({
   selector: 'app-admin-family-links',
@@ -10,6 +11,7 @@ import { PortalService } from '../../core/portal.service';
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './admin-family-links.html',
   styleUrl: './admin-family-links.css',
+  animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminFamilyLinks {
