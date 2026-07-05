@@ -39,7 +39,7 @@ export class FamilyPortal {
         this.alerts.set(payload.alerts);
         this.selectedCode.set(payload.students[0]?.codigo ?? '');
       },
-      error: () => this.error.set('No se pudo cargar el portal familiar desde el backend.'),
+      error: () => this.error.set('No se pudo cargar el portal familiar desde Supabase.'),
     });
   }
 

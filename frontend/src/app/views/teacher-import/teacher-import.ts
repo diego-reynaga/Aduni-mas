@@ -132,7 +132,7 @@ export class TeacherImport {
       },
       error: (error) => {
         this.loadingPreview.set(false);
-        this.error.set(error?.error?.message ?? 'No se pudo previsualizar el trimestre seleccionado.');
+        this.error.set(this.errorMessage(error, 'No se pudo previsualizar el trimestre seleccionado.'));
       },
     });
   }
@@ -157,7 +157,7 @@ export class TeacherImport {
       },
       error: (error) => {
         this.confirming.set(false);
-        this.error.set(error?.error?.message ?? 'No se pudo confirmar la importación del trimestre.');
+        this.error.set(this.errorMessage(error, 'No se pudo confirmar la importación del trimestre.'));
       },
     });
   }
@@ -256,5 +256,12 @@ export class TeacherImport {
     link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    const candidate = error as { message?: string; error?: string | { message?: string } };
+    if (candidate?.message) return candidate.message;
+    if (typeof candidate?.error === 'string') return candidate.error;
+    return candidate?.error?.message || fallback;
   }
 }

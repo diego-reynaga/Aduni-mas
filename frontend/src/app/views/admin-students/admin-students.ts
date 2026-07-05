@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn } from '../../core/animations';
-import { EntityId } from '../../core/models';
+import { EntityId, StudentAdminRequest, StudentAdminResponse } from '../../core/models';
 
 type Tab = 'directorio' | 'matriculas';
 
@@ -25,19 +25,23 @@ export class AdminStudents {
   readonly success = signal('');
 
   // Directorio State
-  readonly estudiantes = signal<any[]>([]);
+  readonly estudiantes = signal<StudentAdminResponse[]>([]);
   readonly searchControl = new FormControl('');
   // Modal de Alta Estudiante
   readonly showModalEstudiante = signal(false);
-  readonly editingStudent = signal<any | null>(null);
+  readonly editingStudent = signal<StudentAdminResponse | null>(null);
   readonly formEstudiante = new FormGroup({
-    nombres: new FormControl('', Validators.required),
-    apellidos: new FormControl('', Validators.required),
-    documentoIdentidad: new FormControl('', Validators.required),
-    fechaNacimiento: new FormControl(''),
-    correo: new FormControl('', Validators.email),
-    telefono: new FormControl(''),
-    direccion: new FormControl('')
+    nombres: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    apellidos: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    tipoDocumento: new FormControl('DNI', { nonNullable: true, validators: [Validators.required] }),
+    documentoIdentidad: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    codigoEstudiante: new FormControl('', { nonNullable: true }),
+    fechaNacimiento: new FormControl('', { nonNullable: true }),
+    genero: new FormControl('', { nonNullable: true }),
+    correo: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
+    telefono: new FormControl('', { nonNullable: true }),
+    direccion: new FormControl('', { nonNullable: true }),
+    activo: new FormControl(true, { nonNullable: true }),
   });
 
   // Matriculas Wizard State
@@ -78,8 +82,7 @@ export class AdminStudents {
         this.loading.set(false);
       },
       error: (err) => {
-        console.error("Error cargando estudiantes:", err);
-        this.error.set("No se pudieron cargar los estudiantes.");
+        this.error.set(this.errorMessage(err, 'No se pudieron cargar los estudiantes.'));
         this.loading.set(false);
       }
     });
@@ -87,29 +90,40 @@ export class AdminStudents {
 
   openModalEstudiante() {
     this.editingStudent.set(null);
-    this.formEstudiante.reset();
+    this.formEstudiante.reset({ tipoDocumento: 'DNI', activo: true });
+    this.error.set('');
+    this.success.set('');
     this.showModalEstudiante.set(true);
   }
 
-  editEstudiante(student: any) {
+  editEstudiante(student: StudentAdminResponse) {
     this.editingStudent.set(student);
     this.formEstudiante.reset({
       nombres: student.nombres,
       apellidos: student.apellidos,
+      tipoDocumento: student.tipoDocumento || 'DNI',
       documentoIdentidad: student.documentoIdentidad,
+      codigoEstudiante: student.codigoEstudiante,
       fechaNacimiento: student.fechaNacimiento || '',
+      genero: student.genero || '',
       correo: student.correo || '',
       telefono: student.telefono || '',
       direccion: student.direccion || '',
+      activo: student.activo,
     });
     this.showModalEstudiante.set(true);
   }
 
   saveEstudiante() {
-    if (this.formEstudiante.invalid) return;
+    if (this.formEstudiante.invalid) {
+      this.formEstudiante.markAllAsTouched();
+      return;
+    }
     this.loading.set(true);
+    this.error.set('');
+    this.success.set('');
     const edit = this.editingStudent();
-    const request = { ...this.formEstudiante.getRawValue(), activo: edit?.activo ?? true };
+    const request: StudentAdminRequest = this.formEstudiante.getRawValue();
     const action = edit ? this.portal.actualizarEstudiante(edit.id, request) : this.portal.crearEstudiante(request);
     action.subscribe({
       next: () => {
@@ -121,22 +135,32 @@ export class AdminStudents {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error || 'Error al crear estudiante');
+        this.error.set(this.errorMessage(err, 'No se pudo guardar el estudiante.'));
       }
     });
   }
 
-  desactivarEstudiante(student: any) {
+  desactivarEstudiante(student: StudentAdminResponse) {
     if (!confirm(`¿Desactivar a ${student.nombres} ${student.apellidos}?`)) return;
     this.portal.desactivarEstudiante(student.id).subscribe({
       next: () => { this.success.set('Estudiante desactivado.'); this.loadEstudiantes(); },
-      error: err => this.error.set(err?.error?.message ?? 'No se pudo desactivar al estudiante.'),
+      error: err => this.error.set(this.errorMessage(err, 'No se pudo desactivar al estudiante.')),
+    });
+  }
+
+  activarEstudiante(student: StudentAdminResponse) {
+    this.portal.activarEstudiante(student.id).subscribe({
+      next: () => { this.success.set('Estudiante activado.'); this.loadEstudiantes(); },
+      error: err => this.error.set(this.errorMessage(err, 'No se pudo activar al estudiante.')),
     });
   }
 
   // --- MATRICULAS WIZARD ---
   loadMatriculas() {
-    this.portal.listarMatriculas().subscribe(res => this.matriculas.set(res));
+    this.portal.listarMatriculas().subscribe({
+      next: res => this.matriculas.set(res),
+      error: err => this.error.set(this.errorMessage(err, 'No se pudieron cargar las matrículas.')),
+    });
   }
 
   startWizard() {
@@ -176,7 +200,7 @@ export class AdminStudents {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error || 'Error al matricular');
+        this.error.set(this.errorMessage(err, 'No se pudo completar la matrícula.'));
       }
     });
   }
@@ -190,10 +214,17 @@ export class AdminStudents {
         this.loadMatriculas();
         this.success.set(`Estado actualizado a ${nuevoEstado}`);
       },
-      error: () => {
+      error: (err) => {
         this.loading.set(false);
-        this.error.set('Error al actualizar el estado de la matrícula');
+        this.error.set(this.errorMessage(err, 'No se pudo actualizar el estado de la matrícula.'));
       }
     });
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    const candidate = error as { message?: string; error?: string | { message?: string } };
+    if (candidate?.message) return candidate.message;
+    if (typeof candidate?.error === 'string') return candidate.error;
+    return candidate?.error?.message || fallback;
   }
 }

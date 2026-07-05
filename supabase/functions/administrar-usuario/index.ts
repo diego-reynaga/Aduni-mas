@@ -70,18 +70,23 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "crear") {
-      const email = text(payload.email).toLowerCase();
-      const password = text(payload.password);
       const personaId = text(payload.personaId);
-      const username = text(payload.username) || email;
       const rol = text(payload.rol) as AppRole;
-      if (!isEmail(email)) throw new Error("Debe indicar un correo válido para Supabase Auth.");
-      if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
       if (!personaId) throw new Error("Debe seleccionar una persona.");
       if (!ROLES.includes(rol)) throw new Error("El rol no es válido.");
 
-      const { data: person, error: personError } = await admin.from("personas").select("id,nombres,apellidos").eq("id", personaId).single();
+      const { data: person, error: personError } = await admin
+        .from("personas")
+        .select("id,nombres,apellidos,correo,numero_documento,activo")
+        .eq("id", personaId)
+        .single();
       if (personError || !person) throw new Error("La persona seleccionada no existe.");
+      if (!person.activo) throw new Error("La persona está inactiva y no puede recibir una cuenta.");
+      const email = text(person.correo).toLowerCase();
+      const password = text(person.numero_documento);
+      const username = email;
+      if (!isEmail(email)) throw new Error("La persona debe tener un correo válido registrado.");
+      if (password.length < 8) throw new Error("El DNI o documento debe tener al menos 8 caracteres para usarse como contraseña inicial.");
       const { data: duplicate } = await admin.from("profiles").select("id").eq("persona_id", personaId).maybeSingle();
       if (duplicate) throw new Error("La persona ya tiene un usuario asociado.");
 
@@ -92,7 +97,12 @@ Deno.serve(async (req: Request) => {
         app_metadata: { rol, persona_id: personaId },
         user_metadata: { nombre: `${person.nombres} ${person.apellidos}`.trim() },
       });
-      if (createError || !created.user) throw createError ?? new Error("Supabase Auth no creó el usuario.");
+      if (createError || !created.user) {
+        if (createError?.message.toLowerCase().includes("already")) {
+          throw new Error("Ya existe un usuario de Supabase Auth con el correo de esta persona.");
+        }
+        throw createError ?? new Error("Supabase Auth no creó el usuario.");
+      }
       createdUserId = created.user.id;
 
       const { data: profile, error: profileError } = await admin.from("profiles").insert({

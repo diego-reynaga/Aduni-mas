@@ -46,18 +46,15 @@
 
           <div class="surface-body form-grid">
             <label class="field col-span-full">
-              <span>Logo de la Institución (se guarda automáticamente)</span>
-              <div class="file-upload-wrapper">
-                <div style="flex: 1;">
-                  <strong>Click o arrastrar para subir logo</strong>
-                  <span style="display: block; font-size: 0.8rem; color: var(--text-secondary);">Formatos permitidos: JPG, PNG, SVG</span>
-                </div>
-                <input type="file" accept="image/*" (change)="onLogoSelected($event)" [disabled]="uploadingLogo()">
-                @if (uploadingLogo()) { <span style="color: var(--primary-color); font-weight: 600;">Subiendo...</span> }
-              </div>
-              @if (config().logoUrl) {
+              <span>URL HTTPS del logotipo</span>
+              <input type="url" formControlName="logoUrl" placeholder="https://institucion.example/logo.png">
+              <small>El proyecto no requiere Supabase Storage; indique una imagen alojada en un dominio institucional.</small>
+              @if (formConfig.controls.logoUrl.touched && formConfig.controls.logoUrl.invalid) {
+                <span class="field-error">Ingrese una URL que comience con http:// o https://.</span>
+              }
+              @if (formConfig.controls.logoUrl.value) {
                 <div style="margin-top: 1rem;">
-                  <img [src]="config().logoUrl" alt="Logo de Institución" class="logo-preview">
+                  <img [src]="formConfig.controls.logoUrl.value" alt="Logo de Institución" class="logo-preview">
                 </div>
               }
             </label>

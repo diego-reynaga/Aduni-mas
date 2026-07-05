@@ -7,7 +7,6 @@ import {
   AdminDashboardPayload,
   AdminInstitutionPayload,
   AuditoriaResponse,
-  ClonarEstructuraRequest,
   CourseAssignment,
   EntityId,
   EstudianteApoderadoRequest,
@@ -22,6 +21,8 @@ import {
   PersonaResponse,
   RolRequest,
   RolResponse,
+  StudentAdminRequest,
+  StudentAdminResponse,
   StudentCourseReport,
   StudentPortalPayload,
   TeacherDashboardPayload,
@@ -136,10 +137,6 @@ export class PortalService {
       }).eq('codigo', 'PRINCIPAL').select().single();
       return { config: this.toInstitution(dataOf(result as DbResult<any>)), audits: [] };
     });
-  }
-
-  uploadLogo(_file: File): Observable<{ logoUrl: string }> {
-    return throwError(() => new Error('Storage está deshabilitado en esta fase; use una URL HTTPS para el logotipo.'));
   }
 
   getGestiones(): Observable<Academico.GestionAcademicaResponse[]> {
@@ -320,13 +317,11 @@ export class PortalService {
   createUser(req: UsuarioRequest): Observable<UsuarioResponse> {
     return this.observe(async () => {
       const person = dataOf(await supabase.from('personas').select('correo,numero_documento').eq('id', req.personaId).single() as DbResult<any>);
-      const email = (req.username.includes('@') ? req.username : person.correo || `${req.username}@aduni.local`).trim().toLowerCase();
-      const password = req.password || person.numero_documento;
+      const email = String(person.correo ?? '').trim().toLowerCase();
+      const password = String(person.numero_documento ?? '').trim();
       if (!email) throw new Error('La persona debe tener un correo registrado.');
       if (!password) throw new Error('La persona debe tener un número de documento para la contraseña inicial.');
-      const { data, error } = await supabase.functions.invoke('administrar-usuario', { body: { action: 'crear', email, username: email, password, personaId: req.personaId, rol: req.roles[0] } });
-      if (error) throw error;
-      if (data?.message && !data?.id) throw new Error(data.message);
+      const data = await this.invokeEdge<any>('administrar-usuario', { action: 'crear', personaId: req.personaId, rol: req.roles[0] });
       return { id: data.id, personaId: data.persona_id, username: data.email ?? data.username, activo: data.activo, roles: [data.rol] } as UsuarioResponse;
     });
   }
@@ -396,7 +391,6 @@ export class PortalService {
   createNivel(req: Academico.NivelEducativoRequest): Observable<Academico.NivelEducativoResponse> { return this.insertOne('niveles', this.levelPayload(req), this.toLevel); }
   updateNivel(id: EntityId, req: Academico.NivelEducativoRequest): Observable<Academico.NivelEducativoResponse> { return this.updateOne('niveles', id, this.levelPayload(req), this.toLevel); }
   deleteNivel(id: EntityId): Observable<void> { return this.deleteOne('niveles', id); }
-  clonarEstructura(_req: ClonarEstructuraRequest): Observable<void> { return throwError(() => new Error('La clonación masiva de estructura académica todavía no está disponible.')); }
 
   getGrados(nivelId: EntityId): Observable<Academico.GradoResponse[]> {
     return this.observe(async () => (dataOf(await supabase.from('grados').select('*,niveles(nombre)').eq('nivel_id', nivelId).order('nombre') as DbResult<any[]>)).map(this.toGrade));
@@ -405,37 +399,60 @@ export class PortalService {
   updateGrado(id: EntityId, req: Academico.GradoRequest): Observable<Academico.GradoResponse> { return this.updateOne('grados', id, this.gradePayload(req), this.toGrade); }
   deleteGrado(id: EntityId): Observable<void> { return this.deleteOne('grados', id); }
 
-  buscarEstudiantes(search = ''): Observable<any[]> {
+  buscarEstudiantes(search = ''): Observable<StudentAdminResponse[]> {
     return this.observe(async () => {
       const rows = dataOf(await supabase.from('estudiantes').select('id,codigo,activo,persona_id,personas!inner(*)').order('created_at', { ascending: false }) as DbResult<any[]>);
       const term = search.trim().toLowerCase();
-      return rows.map((row) => { const p = embedded<any>(row.personas)!; return { id: row.id, personaId: row.persona_id, codigoEstudiante: row.codigo, activo: row.activo, nombres: p.nombres, apellidos: p.apellidos, documentoIdentidad: p.numero_documento, fechaNacimiento: p.fecha_nacimiento, correo: p.correo, telefono: p.telefono, direccion: p.direccion }; })
-        .filter((row) => !term || `${row.nombres} ${row.apellidos} ${row.documentoIdentidad} ${row.codigoEstudiante}`.toLowerCase().includes(term));
+      return rows.map((row) => {
+        const p = embedded<any>(row.personas)!;
+        return {
+          id: row.id,
+          personaId: row.persona_id,
+          codigoEstudiante: row.codigo,
+          activo: row.activo,
+          nombres: p.nombres,
+          apellidos: p.apellidos,
+          tipoDocumento: p.tipo_documento,
+          documentoIdentidad: p.numero_documento,
+          fechaNacimiento: p.fecha_nacimiento,
+          genero: p.genero,
+          correo: p.correo,
+          telefono: p.telefono,
+          direccion: p.direccion,
+        } as StudentAdminResponse;
+      }).filter((row) => !term || `${row.nombres} ${row.apellidos} ${row.documentoIdentidad} ${row.codigoEstudiante} ${row.correo ?? ''}`.toLowerCase().includes(term));
     });
   }
 
-  crearEstudiante(req: any): Observable<any> {
+  crearEstudiante(req: StudentAdminRequest): Observable<StudentAdminResponse> {
     return this.observe(async () => {
-      const person = dataOf(await supabase.from('personas').insert({ nombres: req.nombres, apellidos: req.apellidos, numero_documento: req.documentoIdentidad, fecha_nacimiento: req.fechaNacimiento || null, correo: req.correo || null, telefono: req.telefono || null, direccion: req.direccion || null }).select().single() as DbResult<any>);
-      const student = dataOf(await supabase.from('estudiantes').insert({ persona_id: person.id, codigo: `EST-${req.documentoIdentidad}`.slice(0, 30), activo: req.activo ?? true }).select().single() as DbResult<any>);
-      return { ...req, id: student.id };
+      const data = await this.invokeEdge<{ student: StudentAdminResponse }>('administrar-estudiante', {
+        action: 'crear',
+        person: req,
+        student: { codigoEstudiante: req.codigoEstudiante, activo: req.activo ?? true },
+      });
+      return data.student;
     });
   }
 
-  actualizarEstudiante(id: EntityId, req: any): Observable<any> {
+  actualizarEstudiante(id: EntityId, req: StudentAdminRequest): Observable<StudentAdminResponse> {
     return this.observe(async () => {
-      const student = dataOf(await supabase.from('estudiantes').select('persona_id').eq('id', id).single() as DbResult<any>);
-      dataOf(await supabase.from('personas').update({ nombres: req.nombres, apellidos: req.apellidos, numero_documento: req.documentoIdentidad, fecha_nacimiento: req.fechaNacimiento || null, correo: req.correo || null, telefono: req.telefono || null, direccion: req.direccion || null }).eq('id', student.persona_id) as DbResult);
-      dataOf(await supabase.from('estudiantes').update({ activo: req.activo ?? true }).eq('id', id) as DbResult);
-      return { ...req, id };
+      const data = await this.invokeEdge<{ student: StudentAdminResponse }>('administrar-estudiante', {
+        action: 'actualizar',
+        studentId: id,
+        person: req,
+        student: { codigoEstudiante: req.codigoEstudiante, activo: req.activo ?? true },
+      });
+      return data.student;
     });
   }
-  desactivarEstudiante(id: EntityId): Observable<void> { return this.observe(async () => { dataOf(await supabase.from('estudiantes').update({ activo: false }).eq('id', id) as DbResult); }); }
+  desactivarEstudiante(id: EntityId): Observable<void> { return this.studentStatus(id, 'desactivar'); }
+  activarEstudiante(id: EntityId): Observable<void> { return this.studentStatus(id, 'activar'); }
 
   listarMatriculas(): Observable<any[]> {
     return this.observe(async () => {
-      const rows = dataOf(await supabase.from('matriculas').select('*,estudiantes(codigo,personas(nombres,apellidos)),grados(nombre,paralelo),gestiones(nombre)').order('created_at', { ascending: false }) as DbResult<any[]>);
-      return rows.map((row) => { const student = embedded<any>(row.estudiantes); const person = embedded<any>(student?.personas); const grade = embedded<any>(row.grados); return { id: row.id, codigoMatricula: row.codigo, estudianteId: row.estudiante_id, estudianteNombre: `${person?.apellidos ?? ''}, ${person?.nombres ?? ''}`, grado: `${grade?.nombre ?? ''} ${grade?.paralelo ?? ''}`, fechaMatricula: row.fecha_matricula, estado: row.estado }; });
+      const rows = dataOf(await supabase.from('matriculas').select('*,estudiantes(codigo,personas(nombres,apellidos)),grados(nombre,paralelo,niveles(nombre)),gestiones(nombre)').order('created_at', { ascending: false }) as DbResult<any[]>);
+      return rows.map((row) => { const student = embedded<any>(row.estudiantes); const person = embedded<any>(student?.personas); const grade = embedded<any>(row.grados); const level = embedded<any>(grade?.niveles); return { id: row.id, codigoMatricula: row.codigo, estudianteId: row.estudiante_id, estudianteCodigo: student?.codigo ?? '', estudianteNombre: `${person?.apellidos ?? ''}, ${person?.nombres ?? ''}`, gradoNombre: grade?.nombre ?? '', paralelo: grade?.paralelo ?? '', nivelNombre: level?.nombre ?? '', fechaMatricula: row.fecha_matricula, estado: row.estado }; });
     });
   }
 
@@ -477,7 +494,28 @@ export class PortalService {
   private deleteOne(table: string, id: EntityId): Observable<void> { return this.observe(async () => { dataOf(await supabase.from(table).delete().eq('id', id) as DbResult); }); }
 
   private userFunction(body: Record<string, unknown>): Observable<any> {
-    return this.observe(async () => { const { data, error } = await supabase.functions.invoke('administrar-usuario', { body }); if (error) throw error; if (data?.message && !data?.id) throw new Error(data.message); return { id: data.id, personaId: data.persona_id, username: data.email ?? data.username, activo: data.activo, roles: [data.rol] }; });
+    return this.observe(async () => { const data = await this.invokeEdge<any>('administrar-usuario', body); return { id: data.id, personaId: data.persona_id, username: data.email ?? data.username, activo: data.activo, roles: [data.rol] }; });
+  }
+
+  private studentStatus(id: EntityId, action: 'activar' | 'desactivar'): Observable<void> {
+    return this.observe(async () => { await this.invokeEdge('administrar-estudiante', { action, studentId: id }); });
+  }
+
+  private async invokeEdge<T>(name: string, body: Record<string, unknown>): Promise<T> {
+    const { data, error } = await supabase.functions.invoke(name, { body });
+    if (error) {
+      const context = (error as { context?: Response }).context;
+      if (context) {
+        let payload: { message?: string } | null = null;
+        try {
+          payload = await context.clone().json() as { message?: string };
+        } catch { /* The gateway may return an empty or non-JSON error body. */ }
+        if (payload?.message) throw new Error(payload.message);
+      }
+      throw new Error(error.message || 'La operación remota no pudo completarse.');
+    }
+    if (data?.message && !data?.id && !data?.student && !data?.persona_id) throw new Error(data.message);
+    return data as T;
   }
 
   private async fetchPerson(id: EntityId): Promise<PersonaResponse> { const row = dataOf(await supabase.from('personas').select('*,docentes(*),estudiantes(*),padres_familia(*),administrativos(*)').eq('id', id).single() as DbResult<any>); return this.toPerson(row); }

@@ -105,7 +105,7 @@ export class AdminAssignments {
       : this.portal.createGestion(this.gestionForm.getRawValue());
     action.subscribe({
       next: () => { this.success.set(id ? 'Gestión actualizada.' : 'Gestión creada.'); this.cancelGestion(); this.loadGestiones(); },
-      error: err => this.error.set(err?.error?.message ?? 'No se pudo guardar la gestión.'),
+      error: err => this.error.set(err?.message || err?.error?.message || 'No se pudo guardar la gestión.'),
     });
   }
 
@@ -193,6 +193,6 @@ export class AdminAssignments {
   }
 
   private showError(err: any): void {
-    this.error.set(err?.error?.message ?? (typeof err?.error === 'string' ? err.error : 'La operación no pudo completarse.'));
+    this.error.set(err?.message || err?.error?.message || (typeof err?.error === 'string' ? err.error : 'La operación no pudo completarse.'));
   }
 }

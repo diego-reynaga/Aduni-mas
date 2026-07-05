@@ -20,11 +20,16 @@ const MAX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
 const FIRST_STUDENT_ROW = 16;
 
 const COMPETENCES = [
-  { number: 1, nameCol: 5, noteCols: [12, 13, 14], logroCol: 18 },
-  { number: 2, nameCol: 12, noteCols: [19, 20, 21], logroCol: 25 },
-  { number: 3, nameCol: 19, noteCols: [] as number[], logroCol: null as number | null },
-  { number: 4, nameCol: 26, noteCols: [] as number[], logroCol: null as number | null },
+  { number: 1, nameCol: 5, noteCols: [5, 6, 7, 8, 9, 10], averageCol: 11 },
+  { number: 2, nameCol: 12, noteCols: [12, 13, 14, 15, 16, 17], averageCol: 18 },
+  { number: 3, nameCol: 19, noteCols: [19, 20, 21, 22, 23, 24], averageCol: 25 },
+  { number: 4, nameCol: 26, noteCols: [26, 27, 28, 29, 30, 31], averageCol: 32 },
 ] as const;
+
+const USEFUL_COLUMNS = new Set([
+  0, 1,
+  ...COMPETENCES.flatMap((item) => [...item.noteCols, item.averageCol]),
+]);
 
 type AppRole = "ADMINISTRADOR" | "DOCENTE" | "ESTUDIANTE" | "PADRE_FAMILIA";
 type Trimester = "I_TRIMESTRE" | "II_TRIMESTRE" | "III_TRIMESTRE";
@@ -269,9 +274,8 @@ Deno.serve(async (req: Request) => {
     if (!startSheet) throw new Error("El archivo no contiene la hoja INICIO.");
     if (!trimesterSheet) throw new Error(`El archivo no contiene la hoja ${trimestre.replaceAll("_", " ")}.`);
 
-    const range = XLSX.utils.decode_range(trimesterSheet["!ref"] ?? "A1:A1");
-    if (range.e.c + 1 > MAX_USEFUL_COLUMNS) {
-      throw new Error(`La hoja contiene más de ${MAX_USEFUL_COLUMNS} columnas útiles.`);
+    if (USEFUL_COLUMNS.size > MAX_USEFUL_COLUMNS) {
+      throw new Error(`La plantilla requiere más de ${MAX_USEFUL_COLUMNS} columnas útiles.`);
     }
     const readCell = readCellFactory(workbook);
     const metadata = {
@@ -356,12 +360,12 @@ Deno.serve(async (req: Request) => {
           notes.push({ columnaExcel: excelColumn(column), nombreNota: noteName, valor: value });
         }
         let competenceAverage = average(validValues);
-        if (competenceAverage === null && definition.logroCol !== null) {
-          const rawLogro = readCell(trimesterSheet, row, definition.logroCol);
-          if (rawLogro !== null && clean(rawLogro) !== "") {
-            const parsedLogro = Number(clean(rawLogro).replace(",", "."));
-            if (Number.isFinite(parsedLogro) && parsedLogro >= 0 && parsedLogro <= 20) {
-              competenceAverage = round2(parsedLogro);
+        if (competenceAverage === null) {
+          const rawAverage = readCell(trimesterSheet, row, definition.averageCol);
+          if (rawAverage !== null && clean(rawAverage) !== "") {
+            const parsedAverage = Number(clean(rawAverage).replace(",", "."));
+            if (Number.isFinite(parsedAverage) && parsedAverage >= 0 && parsedAverage <= 20) {
+              competenceAverage = round2(parsedAverage);
             }
           }
         }

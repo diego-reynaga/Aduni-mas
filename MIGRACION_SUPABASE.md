@@ -1,6 +1,6 @@
 # Cierre de migración Supabase
 
-Fecha de revisión: 4 de julio de 2026. Rama revisada: `supabase-migration`.
+Fecha de revisión: 5 de julio de 2026. Rama revisada: `supabase-migration`.
 
 ## Qué se migró
 
@@ -10,39 +10,45 @@ Fecha de revisión: 4 de julio de 2026. Rama revisada: `supabase-migration`.
 - Datos académicos a PostgreSQL con 22 tablas públicas y RLS activo.
 - Permisos por rol: `ADMINISTRADOR`, `DOCENTE`, `ESTUDIANTE` y `PADRE_FAMILIA`.
 - Administración segura de usuarios a `administrar-usuario`.
+- Alta, edición y cambio de estado transaccional de estudiantes a `administrar-estudiante`.
 - Importación Excel a `importar-notas-trimestre`.
 - Datos y cuatro cuentas demo de desarrollo.
 
 ## Migraciones verificadas
 
-1. `supabase/migrations/20260704204452_aduni_schema_rls.sql`
-2. `supabase/migrations/20260704210406_optimize_rls_indexes.sql`
-3. `supabase/migrations/20260704210647_demo_seed.sql`
+1. `supabase/migrations/20260704210327_aduni_schema_rls.sql`
+2. `supabase/migrations/20260704210503_optimize_rls_indexes.sql`
+3. `supabase/migrations/20260704210835_demo_seed.sql`
+4. `supabase/migrations/20260705033556_administrar_estudiante.sql`
+5. `supabase/migrations/20260705035114_harden_notas_rls.sql`
 
-Las tres se aplicaron al proyecto `cpduuguhpxhxwoemzmgy`. Se comprobaron las tablas, claves UUID, funciones privadas, índices, grants y políticas. Las 22 tablas públicas reportan `rls_enabled=true`.
+Las cinco se aplicaron al proyecto `cpduuguhpxhxwoemzmgy`. Se comprobaron las tablas, claves UUID, funciones privadas, índices, grants y políticas. Las 22 tablas públicas reportan `rls_enabled=true`.
 
 ## Pruebas realizadas
 
 - Los cuatro usuarios demo obtuvieron sesión válida.
 - Anónimo: consulta privada bloqueada con HTTP 401.
-- Administrador: 4 perfiles, 2 estudiantes, 1 asignación y acceso global.
-- Docente: 1 perfil propio, 2 estudiantes de su curso, 1 asignación y escritura de una nota propia.
+- Administrador: acceso global y 6 personas visibles en la comprobación final.
+- Docente: 1 asignación activa; se verificó que RLS rechazara una nota para un estudiante no matriculado en esa asignación.
 - Estudiante: 1 perfil, 1 estudiante y solo 5 notas publicadas propias.
 - Padre: 1 perfil, 1 estudiante vinculado y solo 5 notas publicadas de ese estudiante.
-- Un administrador creó un usuario temporal mediante `administrar-usuario`, se verificó su login y se retiró el dato temporal.
-- Importación: preview y confirmación con plantilla `NOTAS.xlsx` (`C:\Users\Diego\Documents\SoftEscolar\NOTAS.xlsx`); columnas PRACTICA/EXAMEN/CUADERNO por competencia en hojas `I TRIMESTRE`, `II TRIMESTRE`, `III TRIMESTRE`.
-- CORS: las funciones publican únicamente `http://localhost:4200` por defecto; ya no usan `*`.
+- Un administrador creó, editó, desactivó y reactivó un estudiante temporal mediante `administrar-estudiante`; se comprobó el error de DNI duplicado. Después creó su cuenta con `administrar-usuario`, inició sesión usando correo + DNI y se retiraron todos los datos temporales.
+- Importación: preview y confirmación real con `NOTAS.xlsx` (`C:\Users\Diego\Documents\SoftEscolar\NOTAS.xlsx`). Se detectaron 23 alumnos, se mapearon dos alumnos temporales, se guardaron 12 notas individuales, 4 promedios por competencia y 2 promedios finales; se reportaron 21 alumnos no encontrados sin crearlos. Los datos temporales se retiraron tras la prueba.
+- CORS: las tres funciones publican únicamente `http://localhost:4200` por defecto; ya no usan `*` y conservan `verify_jwt=true`.
 - Build Angular y pruebas unitarias ejecutados correctamente.
 
 ## Errores corregidos
 
 - Login administrativo fallaba potencialmente porque `AuthService` usaba `.single()` sin filtrar el perfil; ahora filtra por el UUID de Auth.
 - Se retiró la constante heredada `http://localhost:8080/api`.
-- Se adaptó `importar-notas-trimestre` a la plantilla real `NOTAS.xlsx` (notas en columnas M-O y T-V por competencia, logros en S y Z).
+- Se adaptó `importar-notas-trimestre` a la plantilla real `NOTAS.xlsx`: cuatro bloques `F:K/L`, `M:R/S`, `T:Y/Z`, `AA:AF/AG` y promedio final `AL`. Las columnas adicionales de formato de la hoja ya no causan un rechazo falso por el límite de 40 columnas útiles.
+- Se eliminó el doble insert persona/estudiante desde Angular. `administrar-estudiante` llama a una función SQL atómica, valida duplicados y registra auditoría.
+- Se endureció RLS de `notas`: las políticas de escritura se sustituyeron por una comprobación de asignación activa + matrícula activa coincidente. La migración de cierre elimina además cualquier política heredada con los nombres del esquema inicial, porque PostgreSQL combina políticas permisivas con `OR`.
 - Creación de usuarios: contraseña inicial = DNI de la persona; correo = correo de la persona.
-- Se eliminó CORS abierto en las dos Edge Functions.
+- Se eliminó CORS abierto en las tres Edge Functions.
+- Se retiró el botón de clonación académica que apuntaba a una operación aún no implementada y se corrigieron mensajes heredados que mencionaban un backend propio.
 - Se corrigió la configuración de animaciones del test Angular.
-- Se actualizaron los paquetes Angular 21 a versiones parcheadas; quedaron 0 vulnerabilidades altas o críticas. `npm audit` conserva 4 avisos bajos en herramientas de compilación que requieren un salto mayor de Angular.
+- Se actualizaron los paquetes Angular 21 a versiones parcheadas; quedaron 0 vulnerabilidades altas o críticas. `npm audit fix` redujo el reporte a 3 avisos bajos en herramientas de compilación; el arreglo restante propone una regresión incompatible y no se aplicó con `--force`.
 - Se eliminó el archivo de inspección temporal del Excel.
 
 ## Comandos de verificación
@@ -63,6 +69,7 @@ Comandos reproducibles de Supabase:
 npx supabase link --project-ref cpduuguhpxhxwoemzmgy
 npx supabase db push
 npx supabase functions deploy administrar-usuario
+npx supabase functions deploy administrar-estudiante
 npx supabase functions deploy importar-notas-trimestre
 ```
 
@@ -76,7 +83,7 @@ Con el build y las pruebas en verde, se retiró definitivamente el backend Sprin
 - `database/`: `schema_aduniplus_limpio.sql`, `reset_database.sql`, `seed_usuarios_prueba.sql`, `backup_aduniplus.ps1` y `modelo_relacional_limpio.md` (scripts y documentación de MySQL sin uso en esta rama).
 - `implementation_plan.md`: plan de implementación redactado para el backend Spring Boot (controladores, Maven, `MultipartFile`).
 - Tareas `mysql:start`, `backend:start` y `dev:start-all` de `.vscode/tasks.json`, que dependían del servicio `MYSQL80` y de `mvn spring-boot:run`; solo se conservó `frontend:start`.
-- Mención a "Spring Boot" en el mensaje de error de `PortalService.clonarEstructura` y en el comentario de cabecera de `supabase/migrations/20260704204452_aduni_schema_rls.sql`.
+- Mención a "Spring Boot" en el mensaje de error de `PortalService.clonarEstructura` y en el comentario de cabecera de la migración base.
 - Interceptor Angular sin uso `frontend/src/app/core/auth.interceptor.ts`, remanente del esquema JWT manual de Spring Boot: no estaba registrado en `app.config.ts` ni usaba Supabase.
 
 ### Razón
@@ -91,6 +98,7 @@ Angular 21 (frontend/)
        ├─ Supabase Auth
        ├─ PostgreSQL + RLS (supabase/migrations/)
        └─ Edge Functions (supabase/functions/)
+            ├─ administrar-estudiante
             ├─ administrar-usuario
             └─ importar-notas-trimestre
 ```

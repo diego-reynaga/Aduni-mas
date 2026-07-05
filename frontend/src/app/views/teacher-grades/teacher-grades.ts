@@ -65,7 +65,7 @@ export class TeacherGrades {
       },
       error: (error) => {
         this.saving.set(false);
-        this.error.set(error?.error?.message ?? 'No se pudo guardar el acta en el backend.');
+        this.error.set(this.errorMessage(error, 'No se pudo guardar el acta en Supabase.'));
       },
     });
   }
@@ -84,11 +84,18 @@ export class TeacherGrades {
       },
       error: (error) => {
         this.loading.set(false);
-        this.error.set(error?.error?.message ?? 'No se pudo cargar el acta de notas.');
+        this.error.set(this.errorMessage(error, 'No se pudo cargar el acta de notas.'));
         this.assignmentId.set(null);
         this.selectedCourse.set(null);
         this.rows.set([]);
       },
     });
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    const candidate = error as { message?: string; error?: string | { message?: string } };
+    if (candidate?.message) return candidate.message;
+    if (typeof candidate?.error === 'string') return candidate.error;
+    return candidate?.error?.message || fallback;
   }
 }

@@ -497,7 +497,7 @@
           <!-- Username -->
           <div class="premium-field">
             <span>Correo de acceso</span>
-            <input type="text" class="premium-input" formControlName="username" placeholder="Se completa al seleccionar la persona">
+            <input type="email" class="premium-input" formControlName="username" placeholder="Se completa al seleccionar la persona" [readonly]="!isEditingUser()">
             @if (userForm.controls.username.touched && userForm.controls.username.invalid) {
               <span class="field-error">Indique un correo válido o seleccione una persona con correo.</span>
             }
@@ -515,47 +515,17 @@
 
           <!-- Persona -->
           <div class="premium-field">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <span>Vincular a Persona</span>
-              <label class="premium-chip" style="padding: 4px 12px; font-size: 11px;">
-                <input type="checkbox" [checked]="isNewPersona()" (change)="togglePersonaMode($event)">
-                <span style="color: var(--forest); font-weight: 800;">+ Crear Nueva Persona</span>
-              </label>
-            </div>
-            
-            @if (!isNewPersona()) {
-              <select class="premium-select" formControlName="personaId" (change)="onPersonaSelected($event)">
-                <option [ngValue]="null" disabled selected>Seleccione una persona existente...</option>
-                @for (p of personas(); track p.id) {
-                  <option [value]="p.id">{{ p.nombreCompleto }} (DNI: {{ p.documentoIdentidad }})</option>
-                }
-              </select>
-              @if (userForm.controls.personaId.touched && userForm.controls.personaId.invalid) {
-                <span class="field-error">Debe seleccionar una persona física para la cuenta.</span>
+            <span>Vincular a persona</span>
+            <select class="premium-select" formControlName="personaId" (change)="onPersonaSelected($event)" [disabled]="isEditingUser()">
+              <option [ngValue]="null" disabled>Seleccione una persona existente...</option>
+              @for (p of personas(); track p.id) {
+                <option [value]="p.id">{{ p.nombreCompleto }} — {{ p.documentoIdentidad }} — {{ p.correo || 'sin correo' }}</option>
               }
-            } @else {
-              <div [@expandCollapse] class="inline-sub-form">
-                <div class="premium-field">
-                  <span style="font-size: 11px;">Nombres *</span>
-                  <input type="text" class="premium-input" style="min-height: 38px; font-size: 13px;" formControlName="nombres" placeholder="Ej: Juan">
-                  @if (userForm.controls.nombres.touched && userForm.controls.nombres.invalid) { <span class="field-error">Requerido</span> }
-                </div>
-                <div class="premium-field">
-                  <span style="font-size: 11px;">Apellidos *</span>
-                  <input type="text" class="premium-input" style="min-height: 38px; font-size: 13px;" formControlName="apellidos" placeholder="Ej: Pérez">
-                  @if (userForm.controls.apellidos.touched && userForm.controls.apellidos.invalid) { <span class="field-error">Requerido</span> }
-                </div>
-                <div class="premium-field">
-                  <span style="font-size: 11px;">DNI *</span>
-                  <input type="text" class="premium-input" style="min-height: 38px; font-size: 13px;" formControlName="documentoIdentidad" placeholder="Ej: 72839182">
-                  @if (userForm.controls.documentoIdentidad.touched && userForm.controls.documentoIdentidad.invalid) { <span class="field-error">Requerido</span> }
-                </div>
-                <div class="premium-field">
-                  <span style="font-size: 11px;">Correo Personal o Secundario (Opcional)</span>
-                  <input type="email" class="premium-input" style="min-height: 38px; font-size: 13px;" formControlName="correoPersona" placeholder="Ej: juan@mail.com">
-                </div>
-              </div>
+            </select>
+            @if (userForm.controls.personaId.touched && userForm.controls.personaId.invalid) {
+              <span class="field-error">Debe seleccionar una persona.</span>
             }
+            <span class="quiet-note">Las personas se registran primero en Personal o Gestión de alumnos. Para crear la cuenta deben tener correo y DNI.</span>
           </div>
 
           <!-- Roles -->
@@ -564,7 +534,7 @@
             <div class="premium-checkbox-grid">
               @for (r of allRoles; track r) {
                 <label class="premium-chip" [class.is-active]="isRoleSelected(r)">
-                  <input type="checkbox"
+                  <input type="radio" name="user-role"
                          [checked]="isRoleSelected(r)"
                          (change)="onRoleToggle(r, $event)">
                   <div class="custom-check"></div>
@@ -580,7 +550,7 @@
 
         <div class="modal-footer">
           <button type="button" class="btn-secondary" (click)="showUserModal.set(false)">Cancelar</button>
-          <button type="submit" class="btn-primary" [disabled]="userForm.invalid">Guardar Cambios</button>
+          <button type="submit" class="btn-primary" [disabled]="userForm.invalid || saving()">{{ saving() ? 'Guardando…' : 'Guardar cambios' }}</button>
         </div>
       </form>
     </div>

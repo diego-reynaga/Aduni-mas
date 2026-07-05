@@ -27,7 +27,7 @@ export class AdminDashboard {
         this.audits.set(payload.audits);
       },
       error: () => {
-        this.error.set('No se pudo cargar el panel administrativo desde el backend.');
+        this.error.set('No se pudo cargar el panel administrativo desde Supabase.');
       },
     });
   }

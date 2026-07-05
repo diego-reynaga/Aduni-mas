@@ -65,7 +65,7 @@
 
       <label class="file-picker file-picker--wide">
         <input type="file" accept=".xlsx" (change)="onFileSelected($event)">
-        <span class="file-picker__title">{{ form.value.fileName || 'Seleccionar REGISTRO DE NOTAS_1RO-ALFA.xlsx' }}</span>
+        <span class="file-picker__title">{{ form.value.fileName || 'Seleccionar NOTAS.xlsx' }}</span>
         <span class="file-picker__detail">
           {{ form.value.fileName ? 'Listo para previsualizar el trimestre' : 'Haz clic para elegir el archivo Excel' }}
         </span>
@@ -323,7 +323,7 @@
       <div>
         <p class="section-kicker">Trazabilidad</p>
         <h3>Importaciones recientes</h3>
-        <p>Historial registrado en backend para este usuario.</p>
+        <p>Historial registrado en Supabase para este usuario.</p>
       </div>
     </div>
     <div class="history-list">

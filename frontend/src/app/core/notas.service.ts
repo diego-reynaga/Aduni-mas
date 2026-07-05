@@ -100,7 +100,15 @@ export class NotasService {
     formData.append('assignmentId', assignmentId);
     formData.append('modo', modo);
     const { data, error } = await supabase.functions.invoke('importar-notas-trimestre', { body: formData });
-    if (error) throw error;
+    if (error) {
+      const context = (error as { context?: Response }).context;
+      if (context) {
+        let payload: { message?: string } | null = null;
+        try { payload = await context.clone().json() as { message?: string }; } catch { /* Non-JSON gateway error. */ }
+        if (payload?.message) throw new Error(payload.message);
+      }
+      throw new Error(error.message || 'No se pudo ejecutar la importación.');
+    }
     if (data?.message && !data?.metadata && !data?.idImportacion) throw new Error(data.message);
     return data;
   }

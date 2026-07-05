@@ -40,10 +40,7 @@
       <div class="card panel-card fade-in">
         <div class="panel-header">
           <h2>Niveles Educativos</h2>
-          <div class="header-actions-group">
-            <button class="btn-secondary" (click)="openClonarModal()">Clonar Estructura</button>
-            <button class="btn-primary" (click)="openAddNivel()">+ Nuevo Nivel</button>
-          </div>
+          <button class="btn-primary" (click)="openAddNivel()">+ Nuevo Nivel</button>
         </div>
         <div class="table-container">
           <table class="data-table">
@@ -289,42 +286,6 @@
   </main>
 
   <!-- ==================== MODALES ==================== -->
-
-  <!-- Modal Clonar -->
-  @if (isCloning()) {
-    <div class="modal-overlay">
-      <div class="modal-container">
-        <h2 class="modal-title">Clonar Estructura Académica</h2>
-        <p class="text-sm text-muted mb-4">
-          Esta acción copiará todos los niveles, grados y cursos de una gestión origen hacia una gestión destino.          Solo se copian los elementos activos.
-        </p>
-        <form [formGroup]="clonarForm" (ngSubmit)="saveClonar()" class="modal-form">
-          <div class="form-group">
-            <label>Gestión Académica Origen</label>
-            <select class="form-input" formControlName="gestionOrigenId">
-              <option [ngValue]="null" disabled selected>-- Seleccione Origen --</option>
-              @for (g of gestiones(); track g.id) {
-                <option [ngValue]="g.id">{{ g.nombre }} ({{ g.anio }})</option>
-              }
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Gestión Académica Destino</label>
-            <select class="form-input" formControlName="gestionDestinoId">
-              <option [ngValue]="null" disabled selected>-- Seleccione Destino --</option>
-              @for (g of gestiones(); track g.id) {
-                <option [ngValue]="g.id">{{ g.nombre }} ({{ g.anio }})</option>
-              }
-            </select>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-secondary" (click)="closeClonarModal()">Cancelar</button>
-            <button type="submit" class="btn-primary" [disabled]="clonarForm.invalid">Clonar Estructura</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  }
 
   <!-- Modal Nivel -->
   @if (isAddingNivel() || isEditingNivel()) {

@@ -150,6 +150,14 @@
   align-items: center;
 }
 
+.surface-body {
+  overflow-x: auto;
+}
+
+.form-grid-wide {
+  grid-column: 1 / -1;
+}
+
 /* Forms & Inputs */
 input, select {
   background: rgba(255, 255, 255, 0.9) !important;
@@ -243,4 +251,12 @@ input:focus, select:focus {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+}
+
+@media (max-width: 760px) {
+  .page-stack { padding: 0; gap: 1rem; }
+  .page-heading, .surface-header { padding: 1.25rem; align-items: flex-start; }
+  .surface-header, .data-chip-row { flex-direction: column; }
+  .data-chip-row, .data-chip-row input { width: 100% !important; }
+  .modal-card { max-height: 92vh; overflow-y: auto; margin: 1rem; }
 }

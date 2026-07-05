@@ -91,7 +91,6 @@ export class AdminUsers {
   readonly showRoleModal = signal(false);
 
   // Formulario de Usuario
-  readonly isNewPersona = signal(false);
   readonly selectedRoles = signal<string[]>([]);
   readonly userForm = new FormGroup({
     username: new FormControl('', {
@@ -108,11 +107,6 @@ export class AdminUsers {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    // New Persona fields
-    nombres: new FormControl('', { nonNullable: true }),
-    apellidos: new FormControl('', { nonNullable: true }),
-    documentoIdentidad: new FormControl('', { nonNullable: true }),
-    correoPersona: new FormControl('', { nonNullable: true }),
   });
 
   // Formulario de Rol
@@ -292,50 +286,16 @@ export class AdminUsers {
     this.isEditingUser.set(false);
     this.editingUserId.set(null);
     this.selectedRoles.set([]);
-    this.isNewPersona.set(false);
     this.userForm.reset({
       username: '',
       password: '',
       personaId: null,
       roles: [],
-      nombres: '',
-      apellidos: '',
-      documentoIdentidad: '',
-      correoPersona: '',
     });
-    
-    this.userForm.controls.personaId.setValidators([Validators.required]);
-    this.userForm.controls.nombres.clearValidators();
-    this.userForm.controls.apellidos.clearValidators();
-    this.userForm.controls.documentoIdentidad.clearValidators();
-    this.userForm.controls.personaId.updateValueAndValidity();
-    this.userForm.controls.nombres.updateValueAndValidity();
-    this.userForm.controls.apellidos.updateValueAndValidity();
-    this.userForm.controls.documentoIdentidad.updateValueAndValidity();
     this.userForm.controls.password.clearValidators();
     this.userForm.controls.password.updateValueAndValidity();
     this.passwordStrength.set(0);
     this.showUserModal.set(true);
-  }
-
-  togglePersonaMode(event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    this.isNewPersona.set(checked);
-    if (checked) {
-      this.userForm.controls.personaId.clearValidators();
-      this.userForm.controls.nombres.setValidators([Validators.required]);
-      this.userForm.controls.apellidos.setValidators([Validators.required]);
-      this.userForm.controls.documentoIdentidad.setValidators([Validators.required]);
-    } else {
-      this.userForm.controls.personaId.setValidators([Validators.required]);
-      this.userForm.controls.nombres.clearValidators();
-      this.userForm.controls.apellidos.clearValidators();
-      this.userForm.controls.documentoIdentidad.clearValidators();
-    }
-    this.userForm.controls.personaId.updateValueAndValidity();
-    this.userForm.controls.nombres.updateValueAndValidity();
-    this.userForm.controls.apellidos.updateValueAndValidity();
-    this.userForm.controls.documentoIdentidad.updateValueAndValidity();
   }
 
   onPasswordInput(event: Event): void {
@@ -378,12 +338,12 @@ export class AdminUsers {
     return this.selectedRoles().includes(role);
   }
 
-  onRoleToggle(role: string, event: Event): void {
+  onRoleToggle(role: RoleName, event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     if (checked) {
-      this.selectedRoles.update((prev) => [...prev, role]);
+      this.selectedRoles.set([role]);
     } else {
-      this.selectedRoles.update((prev) => prev.filter((r) => r !== role));
+      this.selectedRoles.set([]);
     }
     this.userForm.controls.roles.setValue(this.selectedRoles());
   }
@@ -397,35 +357,14 @@ export class AdminUsers {
     this.saving.set(true);
     const formVal = this.userForm.getRawValue();
 
-    if (this.isNewPersona() && !this.isEditingUser()) {
-      // First create Persona
-      const personaReq = {
-        nombres: formVal.nombres,
-        apellidos: formVal.apellidos,
-        documentoIdentidad: formVal.documentoIdentidad,
-        correo: formVal.correoPersona,
-        tipoPersona: 'OTRO',
-      };
-
-      this.portal.createPersona(personaReq).subscribe({
-        next: (newPersona) => {
-          this.executeSaveUser(newPersona.id, formVal);
-        },
-        error: (err) => {
-          this.saving.set(false);
-          this.showAlertMsg(err.error?.message || 'No se pudo crear la persona. Verifique los datos.', 'error');
-        }
-      });
-    } else {
-      this.executeSaveUser(formVal.personaId!, formVal);
-    }
+    this.executeSaveUser(formVal.personaId!, formVal);
   }
 
   onPersonaSelected(event: Event): void {
     const personaId = (event.target as HTMLSelectElement).value;
     const persona = this.personas().find((item) => item.id === personaId);
     if (!persona) return;
-    this.userForm.controls.username.setValue(persona.correo || `${persona.documentoIdentidad}@aduni.local`);
+    this.userForm.controls.username.setValue(persona.correo || '');
   }
 
   private executeSaveUser(personaId: EntityId, formVal: any): void {
@@ -454,9 +393,16 @@ export class AdminUsers {
       },
       error: (err) => {
         this.saving.set(false);
-        this.showAlertMsg(err.error?.message || 'Hubo un problema al intentar guardar la cuenta.', 'error');
+        this.showAlertMsg(this.errorMessage(err, 'Hubo un problema al intentar guardar la cuenta.'), 'error');
       },
     });
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    const candidate = error as { message?: string; error?: string | { message?: string } };
+    if (candidate?.message) return candidate.message;
+    if (typeof candidate?.error === 'string') return candidate.error;
+    return candidate?.error?.message || fallback;
   }
 
   deactivateUser(userRow: UserRow): void {

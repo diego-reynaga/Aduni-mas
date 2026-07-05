@@ -251,7 +251,7 @@ export class AdminFamilyLinks {
         this.savingQuick.set(false);
       },
       error: (err) => {
-        this.showToast(err?.error?.message || 'Error al crear apoderado.', 'error');
+        this.showToast(err?.message || err?.error?.message || 'Error al crear apoderado.', 'error');
         this.savingQuick.set(false);
       },
     });
@@ -275,7 +275,7 @@ export class AdminFamilyLinks {
         this.saving.set(false);
       },
       error: err => {
-        this.showToast(err?.error?.message ?? 'Error al guardar.', 'error');
+        this.showToast(err?.message || err?.error?.message || 'Error al guardar.', 'error');
         this.saving.set(false);
       },
     });
@@ -306,7 +306,7 @@ export class AdminFamilyLinks {
         this.saving.set(false);
       },
       error: err => {
-        this.showToast(err?.error?.message ?? 'Error al eliminar.', 'error');
+        this.showToast(err?.message || err?.error?.message || 'Error al eliminar.', 'error');
         this.saving.set(false);
       },
     });

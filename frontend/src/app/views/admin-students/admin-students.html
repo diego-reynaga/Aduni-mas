@@ -36,6 +36,7 @@
               <th>Código</th>
               <th>Documento</th>
               <th>Apellidos y Nombres</th>
+              <th>Correo</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -46,11 +47,19 @@
                 <td><strong>{{ est.codigoEstudiante }}</strong></td>
                 <td>{{ est.documentoIdentidad }}</td>
                 <td>{{ est.apellidos }}, {{ est.nombres }}</td>
+                <td>{{ est.correo || '—' }}</td>
                 <td><span class="badge" [class.badge-success]="est.activo" [class.badge-neutral]="!est.activo">{{ est.activo ? 'ACTIVO' : 'INACTIVO' }}</span></td>
-                <td><button class="btn-subtle" (click)="editEstudiante(est)">Editar</button> <button class="btn-subtle" (click)="desactivarEstudiante(est)" [disabled]="!est.activo">Desactivar</button></td>
+                <td>
+                  <button class="btn-subtle" (click)="editEstudiante(est)" [disabled]="loading()">Editar</button>
+                  @if (est.activo) {
+                    <button class="btn-subtle" (click)="desactivarEstudiante(est)" [disabled]="loading()">Desactivar</button>
+                  } @else {
+                    <button class="btn-subtle" (click)="activarEstudiante(est)" [disabled]="loading()">Activar</button>
+                  }
+                </td>
               </tr>
             } @empty {
-              <tr><td colspan="5" class="text-center">No hay alumnos registrados.</td></tr>
+              <tr><td colspan="6" class="text-center">No hay alumnos registrados.</td></tr>
             }
           </tbody>
         </table>
@@ -129,17 +138,24 @@
         </div>
         <div class="modal-body">
           <form [formGroup]="formEstudiante" class="form-grid">
-            <label class="field"><span>Documento DNI *</span><input formControlName="documentoIdentidad"></label>
             <label class="field"><span>Nombres *</span><input formControlName="nombres"></label>
             <label class="field"><span>Apellidos *</span><input formControlName="apellidos"></label>
+            <label class="field"><span>Tipo de documento *</span><select formControlName="tipoDocumento"><option value="DNI">DNI</option><option value="CE">CE</option><option value="PASAPORTE">Pasaporte</option></select></label>
+            <label class="field"><span>Número de documento *</span><input formControlName="documentoIdentidad" maxlength="30"></label>
+            <label class="field"><span>Código del estudiante</span><input formControlName="codigoEstudiante" maxlength="30" placeholder="Se genera desde el documento"></label>
             <label class="field"><span>Nacimiento</span><input type="date" formControlName="fechaNacimiento"></label>
+            <label class="field"><span>Género</span><select formControlName="genero"><option value="">Sin especificar</option><option value="MASCULINO">Masculino</option><option value="FEMENINO">Femenino</option><option value="OTRO">Otro</option></select></label>
             <label class="field"><span>Correo</span><input type="email" formControlName="correo"></label>
             <label class="field"><span>Teléfono</span><input formControlName="telefono"></label>
+            <label class="field form-grid-wide"><span>Dirección</span><input formControlName="direccion"></label>
+            @if (editingStudent()) {
+              <label class="field"><span>Estado</span><select formControlName="activo"><option [ngValue]="true">Activo</option><option [ngValue]="false">Inactivo</option></select></label>
+            }
           </form>
         </div>
         <div class="modal-footer">
           <button class="btn-secondary" (click)="showModalEstudiante.set(false)">Cancelar</button>
-          <button class="btn-primary" (click)="saveEstudiante()" [disabled]="formEstudiante.invalid || loading()">{{ editingStudent() ? 'Actualizar' : 'Guardar' }}</button>
+          <button class="btn-primary" (click)="saveEstudiante()" [disabled]="formEstudiante.invalid || loading()">{{ loading() ? 'Guardando…' : (editingStudent() ? 'Actualizar' : 'Guardar') }}</button>
         </div>
       </div>
     </div>

@@ -474,6 +474,27 @@ export interface PersonaResponse {
   nombreCompleto?: string;
 }
 
+export interface StudentAdminRequest {
+  nombres: string;
+  apellidos: string;
+  tipoDocumento: string;
+  documentoIdentidad: string;
+  fechaNacimiento?: string;
+  genero?: string;
+  correo?: string;
+  telefono?: string;
+  direccion?: string;
+  codigoEstudiante?: string;
+  activo?: boolean;
+}
+
+export interface StudentAdminResponse extends StudentAdminRequest {
+  id: EntityId;
+  personaId: EntityId;
+  codigoEstudiante: string;
+  activo: boolean;
+}
+
 export interface AuditoriaResponse {
   id: EntityId;
   creadoEn: string;

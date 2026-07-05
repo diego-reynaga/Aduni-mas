@@ -29,13 +29,7 @@ export class AdminAcademic {
   readonly isEditingNivel = signal(false);
   readonly editingNivelId = signal<EntityId | null>(null);
 
-  // --- CLONAR ESTRUCTURA ---
   readonly gestiones = signal<Academico.GestionAcademicaResponse[]>([]);
-  readonly isCloning = signal(false);
-  readonly clonarForm = new FormGroup({
-    gestionOrigenId: new FormControl<EntityId | null>(null, { validators: [Validators.required] }),
-    gestionDestinoId: new FormControl<EntityId | null>(null, { validators: [Validators.required] }),
-  });
 
   readonly nivelForm = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -150,7 +144,7 @@ export class AdminAcademic {
           this.closeNivelModal();
           this.loadNiveles();
         },
-        error: (err) => this.error.set(err.error?.message || 'Error al crear nivel.')
+        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al crear nivel.')
       });
     } else if (this.isEditingNivel()) {
       const id = this.editingNivelId();
@@ -161,7 +155,7 @@ export class AdminAcademic {
           this.closeNivelModal();
           this.loadNiveles();
         },
-        error: (err) => this.error.set(err.error?.message || 'Error al actualizar nivel.')
+        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al actualizar nivel.')
       });
     }
   }
@@ -174,37 +168,6 @@ export class AdminAcademic {
         this.loadNiveles();
       },
       error: () => this.error.set('Error al desactivar nivel.')
-    });
-  }
-
-  // --- LÓGICA CLONAR ---
-  openClonarModal() {
-    this.clonarForm.reset();
-    this.isCloning.set(true);
-  }
-
-  closeClonarModal() {
-    this.isCloning.set(false);
-  }
-
-  saveClonar() {
-    if (this.clonarForm.invalid) return;
-    const req = {
-      gestionOrigenId: this.clonarForm.value.gestionOrigenId!,
-      gestionDestinoId: this.clonarForm.value.gestionDestinoId!
-    };
-    if (req.gestionOrigenId === req.gestionDestinoId) {
-      this.error.set('La gestión origen y destino no pueden ser la misma.');
-      return;
-    }
-
-    this.portal.clonarEstructura(req).subscribe({
-      next: () => {
-        this.successMessage.set('Estructura clonada exitosamente.');
-        this.closeClonarModal();
-        this.loadNiveles(); // recargar
-      },
-      error: (err) => this.error.set(err.error?.message || 'Error al clonar estructura.')
     });
   }
 
@@ -262,7 +225,7 @@ export class AdminAcademic {
           this.closeGradoModal();
           this.loadGradosForNivel(req.nivelEducativoId!);
         },
-        error: (err) => this.error.set(err.error?.message || 'Error al crear grado.')
+        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al crear grado.')
       });
     } else if (this.isEditingGrado()) {
       const id = this.editingGradoId();
@@ -273,7 +236,7 @@ export class AdminAcademic {
           this.closeGradoModal();
           this.loadGradosForNivel(req.nivelEducativoId!);
         },
-        error: (err) => this.error.set(err.error?.message || 'Error al actualizar grado.')
+        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al actualizar grado.')
       });
     }
   }
@@ -331,7 +294,7 @@ export class AdminAcademic {
           this.closeMateriaModal();
           this.loadMaterias();
         },
-        error: (err) => this.error.set(err.error?.message || 'Error al crear materia.')
+        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al crear materia.')
       });
     } else if (this.isEditingMateria()) {
       const id = this.editingMateriaId();
@@ -342,7 +305,7 @@ export class AdminAcademic {
           this.closeMateriaModal();
           this.loadMaterias();
         },
-        error: (err) => this.error.set(err.error?.message || 'Error al actualizar materia.')
+        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al actualizar materia.')
       });
     }
   }
@@ -407,7 +370,7 @@ export class AdminAcademic {
         this.successMessage.set('Materias asignadas al grado exitosamente.');
         this.loadCursos();
       },
-      error: (err) => this.error.set(err.error?.message || 'Error al asignar materias. Transacción revertida.')
+      error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al asignar materias. Transacción revertida.')
     });
   }
 

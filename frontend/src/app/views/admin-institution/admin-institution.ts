@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed, ViewChild, ElementRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { dateRangeValidator } from '../../core/validators';
 import { CommonModule } from '@angular/common';
@@ -33,9 +33,6 @@ export class AdminInstitution {
   readonly audits = signal<AuditEntry[]>([]);
   readonly savingConfig = signal(false);
 
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  readonly uploadingLogo = signal(false);
-
   readonly formConfig = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)] }),
     ruc: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(20)] }),
@@ -43,7 +40,7 @@ export class AdminInstitution {
     direccion: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(200)] }),
     correoInstitucional: new FormControl('', { nonNullable: true, validators: [Validators.email, Validators.maxLength(150)] }),
     sitioWeb: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(150), Validators.pattern(/^https?:\/\/.+/i)] }),
-    logoUrl: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(250)] }),
+    logoUrl: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(500), Validators.pattern(/^https?:\/\/.+/i)] }),
   });
 
   // --- GESTIONES ACADEMICAS ---
@@ -125,28 +122,9 @@ export class AdminInstitution {
       },
       error: (err) => {
         this.savingConfig.set(false);
-        this.error.set(err?.error?.message ?? 'Error al guardar la configuracion.');
+        this.error.set(err?.message || err?.error?.message || 'Error al guardar la configuración.');
       },
     });
-  }
-
-  onLogoSelected(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      this.uploadingLogo.set(true);
-      this.portal.uploadLogo(file).subscribe({
-        next: (res) => {
-          this.uploadingLogo.set(false);
-          this.formConfig.patchValue({ logoUrl: res.logoUrl });
-          this.formConfig.markAsDirty();
-          this.saveConfig();
-        },
-        error: (err) => {
-          this.uploadingLogo.set(false);
-          this.error.set(err?.error?.message ?? 'Error al subir el logo.');
-        }
-      });
-    }
   }
 
   resetConfig(): void {
@@ -208,7 +186,7 @@ export class AdminInstitution {
         this.cancelAddGestion();
         this.successMessage.set(edit ? 'Gestión actualizada.' : 'Gestión creada.');
       },
-      error: (err) => this.error.set(err?.error?.message ?? 'Error al guardar gestión')
+      error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al guardar gestión.')
     });
   }
 
@@ -303,7 +281,7 @@ export class AdminInstitution {
         this.cancelAddPeriodo();
         this.successMessage.set(edit ? 'Periodo actualizado.' : 'Periodo creado.');
       },
-      error: (err) => this.error.set(err?.error?.message ?? 'Error al guardar periodo')
+      error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al guardar periodo.')
     });
   }
 }

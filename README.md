@@ -1,6 +1,6 @@
 # Aduni+ — Angular + Supabase
 
-Aduni+ es un sistema de gestión académica construido con Angular 21 y Supabase. Angular consume Supabase directamente: Supabase Auth gestiona sesiones, PostgreSQL conserva los datos, Row Level Security (RLS) aplica permisos y las Edge Functions resuelven la administración de usuarios y la importación Excel.
+Aduni+ es un sistema de gestión académica construido con Angular 21 y Supabase. Angular consume Supabase directamente: Supabase Auth gestiona sesiones, PostgreSQL conserva los datos, Row Level Security (RLS) aplica permisos y las Edge Functions resuelven las operaciones administrativas transaccionales y la importación Excel.
 
 Spring Boot y MySQL fueron retirados del repositorio: ya no existen backend Java, `pom.xml` ni base de datos MySQL. Angular no llama a `http://localhost:8080/api` ni a ningún backend propio; toda la lógica de servidor vive en Supabase (PostgreSQL, Auth y Edge Functions). Consulte [MIGRACION_SUPABASE.md](MIGRACION_SUPABASE.md) para el detalle de qué se eliminó y por qué.
 
@@ -12,6 +12,7 @@ Angular 21
   ├─ Supabase Auth
   ├─ Supabase Data API → PostgreSQL + RLS
   └─ Edge Functions
+       ├─ administrar-estudiante
        ├─ administrar-usuario
        └─ importar-notas-trimestre
 ```
@@ -58,9 +59,11 @@ npx supabase db push
 
 Se aplican, en orden:
 
-- `20260704204452_aduni_schema_rls.sql`: esquema UUID, funciones privadas, permisos y RLS.
-- `20260704210406_optimize_rls_indexes.sql`: índices de claves foráneas y políticas consolidadas.
-- `20260704210647_demo_seed.sql`: usuarios y datos exclusivamente de desarrollo.
+- `20260704210327_aduni_schema_rls.sql`: esquema UUID, funciones privadas, permisos y RLS.
+- `20260704210503_optimize_rls_indexes.sql`: índices de claves foráneas y políticas consolidadas.
+- `20260704210835_demo_seed.sql`: usuarios y datos exclusivamente de desarrollo.
+- `20260705033556_administrar_estudiante.sql`: operación atómica de persona + estudiante y RLS de notas ligado a matrícula activa.
+- `20260705035114_harden_notas_rls.sql`: retira las políticas antiguas permisivas de escritura de notas.
 
 La tercera migración crea usuarios de Auth con contraseñas conocidas. No la use en producción; elimine o sustituya esos usuarios antes de publicar el sistema.
 
@@ -68,10 +71,11 @@ La tercera migración crea usuarios de Auth con contraseñas conocidas. No la us
 
 ```powershell
 npx supabase functions deploy administrar-usuario
+npx supabase functions deploy administrar-estudiante
 npx supabase functions deploy importar-notas-trimestre
 ```
 
-Ambas funciones deben conservar la verificación JWT habilitada. Supabase proporciona `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` dentro del runtime; no cree un archivo con esos secretos.
+Las tres funciones deben conservar `verify_jwt=true`. Supabase proporciona `SUPABASE_URL`, `SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` dentro del runtime; no cree un archivo con esos secretos.
 
 ## Configurar Angular
 
@@ -116,7 +120,7 @@ Las direcciones `.local` son cuentas de prueba creadas por la migración; no dep
 
 ### Administrador
 
-Inicie sesión y use los módulos administrativos para crear personas, subtipos (docente, estudiante o padre), usuarios de Auth, gestión, nivel, grado, materia, curso, periodo, matrícula, asignación docente y vínculo familiar. Al crear un usuario nuevo, las credenciales iniciales son el correo de la persona y su DNI como contraseña.
+Inicie sesión y use los módulos administrativos para crear personas, subtipos (docente, estudiante o padre), usuarios de Auth, gestión, nivel, grado, materia, curso, periodo, matrícula, asignación docente y vínculo familiar. El alta de un alumno se ejecuta mediante `administrar-estudiante`: persona, estudiante y auditoría se confirman dentro de una sola transacción, por lo que no puede quedar una persona huérfana. Al crear un usuario nuevo, las credenciales iniciales son el correo de la persona y su DNI como contraseña.
 
 ### Docente
 
@@ -136,7 +140,7 @@ Plantilla universal de notas:
 
 `C:\Users\Diego\Documents\SoftEscolar\NOTAS.xlsx`
 
-Hojas relevantes: `INICIO`, `I TRIMESTRE`, `II TRIMESTRE`, `III TRIMESTRE`. La función lee metadatos desde `INICIO` y las notas desde la hoja del trimestre seleccionado (fila 17 en adelante, columnas PRACTICA/EXAMEN/CUADERNO por competencia).
+Hojas relevantes: `INICIO`, `I TRIMESTRE`, `II TRIMESTRE`, `III TRIMESTRE`. La función lee metadatos desde `INICIO` y estudiantes desde la fila 17 de la hoja seleccionada. La plantilla oficial distribuye las cuatro competencias en `F:K` (promedio `L`), `M:R` (`S`), `T:Y` (`Z`) y `AA:AF` (`AG`); el promedio final está en `AL`.
 
 También se incluye un archivo demo en `outputs/aduni-supabase-migration/registro-notas-demo.xlsx`.
 
@@ -160,11 +164,15 @@ Al crear una cuenta desde **Administración → Usuarios**:
 
 La Edge Function `administrar-usuario` valida JWT, perfil activo y rol `ADMINISTRADOR` antes de usar la API administrativa de Auth.
 
+## Registrar estudiantes
+
+En **Administración → Gestión de alumnos → Nuevo alumno**, complete los datos personales y académicos. DNI, correo (si se proporciona) y código de estudiante son únicos. La Edge Function `administrar-estudiante` valida el JWT y el perfil administrador, guarda `personas` + `estudiantes` de forma atómica y devuelve la fila actualizada. Los errores por duplicado se muestran con el campo concreto; las acciones editar, activar y desactivar usan el mismo canal protegido.
+
 ## Seguridad RLS
 
 Todas las tablas públicas tienen RLS activo. Las funciones `current_user_role()`, `current_persona_id()`, `is_admin()`, `is_docente_asignado()`, `is_estudiante_owner()` e `is_padre_de_estudiante()` viven en el esquema privado, usan `SECURITY DEFINER`, fijan un `search_path` vacío y no son ejecutables por usuarios anónimos.
 
-El usuario anónimo no tiene permisos sobre datos privados. El administrador gestiona todo; docentes, estudiantes y padres reciben solo las filas correspondientes a su relación académica.
+El usuario anónimo no tiene permisos sobre datos privados. El administrador gestiona todo; docentes, estudiantes y padres reciben solo las filas correspondientes a su relación académica. Un docente solo puede escribir notas cuando la asignación está activa y el estudiante tiene matrícula activa en el mismo grado y gestión.
 
 ## Estado del proyecto
 

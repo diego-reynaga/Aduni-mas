@@ -24,7 +24,7 @@ export class TeacherDashboard {
         this.metrics.set(payload.metrics);
         this.courses.set(payload.courses);
       },
-      error: () => this.error.set('No se pudo cargar la informacion docente desde el backend.'),
+      error: () => this.error.set('No se pudo cargar la información docente desde Supabase.'),
     });
   }
 }
