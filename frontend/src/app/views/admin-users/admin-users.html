@@ -496,32 +496,22 @@
         <div class="modal-body premium-form-group">
           <!-- Username -->
           <div class="premium-field">
-            <span>Nombre de usuario</span>
-            <input type="text" class="premium-input" formControlName="username" placeholder="Ej: j.perez">
+            <span>Correo de acceso</span>
+            <input type="text" class="premium-input" formControlName="username" placeholder="Se completa al seleccionar la persona">
             @if (userForm.controls.username.touched && userForm.controls.username.invalid) {
-              <span class="field-error">Mínimo 3 caracteres requeridos.</span>
+              <span class="field-error">Indique un correo válido o seleccione una persona con correo.</span>
             }
           </div>
 
-          <!-- Password -->
+          @if (isEditingUser()) {
           <div class="premium-field">
-            <span>Contraseña {{ isEditingUser() ? '(Dejar en blanco para no cambiar)' : '' }}</span>
-            <input type="password" class="premium-input" formControlName="password" placeholder="Mín. 8 car., mayúscula, número y símbolo..."
+            <span>Contraseña (dejar en blanco para no cambiar)</span>
+            <input type="password" class="premium-input" formControlName="password" placeholder="Nueva contraseña"
                    (input)="onPasswordInput($event)">
-            @if (!isEditingUser() && passwordStrength() > 0) {
-              <div class="password-strength-wrap" style="margin-top: 4px;">
-                <div class="strength-bar">
-                  <div class="strength-fill" [class]="passwordStrengthClass()"></div>
-                </div>
-                <span class="strength-text" [class]="passwordStrengthClass()">
-                  Fuerza: {{ passwordStrengthLabel() }}
-                </span>
-              </div>
-            }
-            @if (userForm.controls.password.touched && userForm.controls.password.invalid) {
-              <span class="field-error">Mín. 8 caracteres, 1 mayúscula, 1 número y 1 símbolo (@$!%*?&amp;).</span>
-            }
           </div>
+          } @else {
+          <p class="quiet-note">La contraseña inicial será el DNI de la persona seleccionada.</p>
+          }
 
           <!-- Persona -->
           <div class="premium-field">
@@ -534,7 +524,7 @@
             </div>
             
             @if (!isNewPersona()) {
-              <select class="premium-select" formControlName="personaId">
+              <select class="premium-select" formControlName="personaId" (change)="onPersonaSelected($event)">
                 <option [ngValue]="null" disabled selected>Seleccione una persona existente...</option>
                 @for (p of personas(); track p.id) {
                   <option [value]="p.id">{{ p.nombreCompleto }} (DNI: {{ p.documentoIdentidad }})</option>

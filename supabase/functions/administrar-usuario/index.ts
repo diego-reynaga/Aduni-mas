@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
       const username = text(payload.username) || email;
       const rol = text(payload.rol) as AppRole;
       if (!isEmail(email)) throw new Error("Debe indicar un correo válido para Supabase Auth.");
-      if (password.length < 12) throw new Error("La contraseña debe tener al menos 12 caracteres.");
+      if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
       if (!personaId) throw new Error("Debe seleccionar una persona.");
       if (!ROLES.includes(rol)) throw new Error("El rol no es válido.");
 
@@ -143,7 +143,7 @@ Deno.serve(async (req: Request) => {
     const username = text(payload.username) || existing.username;
     const rol = (text(payload.rol) || existing.rol) as AppRole;
     if (email && !isEmail(email)) throw new Error("El correo no es válido.");
-    if (password && password.length < 12) throw new Error("La contraseña debe tener al menos 12 caracteres.");
+    if (password && password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres.");
     if (!ROLES.includes(rol)) throw new Error("El rol no es válido.");
     if (userId === caller.id && rol !== "ADMINISTRADOR") throw new Error("No puede retirar su propio rol administrativo.");
 

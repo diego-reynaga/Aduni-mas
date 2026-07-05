@@ -17,13 +17,13 @@ const MAX_STUDENTS = 100;
 const MAX_USEFUL_COLUMNS = 40;
 const MAX_PROCESSED_CELLS = 5000;
 const MAX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
-const FIRST_STUDENT_ROW = 16; // Excel row 17, zero-based in code.
+const FIRST_STUDENT_ROW = 16;
 
 const COMPETENCES = [
-  { number: 1, start: 5, end: 10 },
-  { number: 2, start: 12, end: 17 },
-  { number: 3, start: 19, end: 24 },
-  { number: 4, start: 26, end: 31 },
+  { number: 1, nameCol: 5, noteCols: [12, 13, 14], logroCol: 18 },
+  { number: 2, nameCol: 12, noteCols: [19, 20, 21], logroCol: 25 },
+  { number: 3, nameCol: 19, noteCols: [] as number[], logroCol: null as number | null },
+  { number: 4, nameCol: 26, noteCols: [] as number[], logroCol: null as number | null },
 ] as const;
 
 type AppRole = "ADMINISTRADOR" | "DOCENTE" | "ESTUDIANTE" | "PADRE_FAMILIA";
@@ -335,10 +335,10 @@ Deno.serve(async (req: Request) => {
 
       const competencies: ParsedCompetence[] = [];
       for (const definition of COMPETENCES) {
-        const name = clean(readCell(trimesterSheet, 6, definition.start)) || `Competencia ${definition.number}`;
+        const name = clean(readCell(trimesterSheet, 6, definition.nameCol)) || `Competencia ${definition.number}`;
         const notes: ParsedNote[] = [];
         const validValues: number[] = [];
-        for (let column = definition.start; column <= definition.end; column++) {
+        for (const column of definition.noteCols) {
           const noteName = clean(readCell(trimesterSheet, 8, column)) || `Nota ${excelColumn(column)}`;
           const raw = readCell(trimesterSheet, row, column);
           let value: number | null = null;
@@ -355,7 +355,17 @@ Deno.serve(async (req: Request) => {
           }
           notes.push({ columnaExcel: excelColumn(column), nombreNota: noteName, valor: value });
         }
-        const competenceAverage = average(validValues);
+        let competenceAverage = average(validValues);
+        if (competenceAverage === null && definition.logroCol !== null) {
+          const rawLogro = readCell(trimesterSheet, row, definition.logroCol);
+          if (rawLogro !== null && clean(rawLogro) !== "") {
+            const parsedLogro = Number(clean(rawLogro).replace(",", "."));
+            if (Number.isFinite(parsedLogro) && parsedLogro >= 0 && parsedLogro <= 20) {
+              competenceAverage = round2(parsedLogro);
+            }
+          }
+        }
+        if (notes.length === 0 && competenceAverage === null) continue;
         competencies.push({
           numero: definition.number,
           nombre: name,

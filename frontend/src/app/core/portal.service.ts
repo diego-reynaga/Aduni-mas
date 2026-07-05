@@ -318,8 +318,17 @@ export class PortalService {
   }
 
   createUser(req: UsuarioRequest): Observable<UsuarioResponse> {
-    const email = req.username.includes('@') ? req.username : `${req.username}@aduni.local`;
-    return this.userFunction({ action: 'crear', email, username: email, password: req.password, personaId: req.personaId, rol: req.roles[0] });
+    return this.observe(async () => {
+      const person = dataOf(await supabase.from('personas').select('correo,numero_documento').eq('id', req.personaId).single() as DbResult<any>);
+      const email = (req.username.includes('@') ? req.username : person.correo || `${req.username}@aduni.local`).trim().toLowerCase();
+      const password = req.password || person.numero_documento;
+      if (!email) throw new Error('La persona debe tener un correo registrado.');
+      if (!password) throw new Error('La persona debe tener un número de documento para la contraseña inicial.');
+      const { data, error } = await supabase.functions.invoke('administrar-usuario', { body: { action: 'crear', email, username: email, password, personaId: req.personaId, rol: req.roles[0] } });
+      if (error) throw error;
+      if (data?.message && !data?.id) throw new Error(data.message);
+      return { id: data.id, personaId: data.persona_id, username: data.email ?? data.username, activo: data.activo, roles: [data.rol] } as UsuarioResponse;
+    });
   }
 
   updateUser(id: EntityId, req: UsuarioRequest): Observable<UsuarioResponse> {
@@ -338,7 +347,12 @@ export class PortalService {
   deleteRole(_id: EntityId): Observable<void> { return throwError(() => new Error('Los roles son fijos y no pueden eliminarse.')); }
 
   getPersonasDropdown(): Observable<PersonaDropdown[]> {
-    return this.getPersonas().pipe(map((rows) => rows.map((row) => ({ id: row.id, nombreCompleto: `${row.apellidos}, ${row.nombres}`, documentoIdentidad: row.documentoIdentidad }))));
+    return this.getPersonas().pipe(map((rows) => rows.filter((row) => row.activo).map((row) => ({
+      id: row.id,
+      nombreCompleto: `${row.apellidos}, ${row.nombres}`,
+      documentoIdentidad: row.documentoIdentidad,
+      correo: row.correo,
+    }))));
   }
 
   getPersonas(): Observable<PersonaResponse[]> {
@@ -429,6 +443,8 @@ export class PortalService {
     return this.observe(async () => {
       const grade = dataOf(await supabase.from('grados').select('niveles!inner(gestion_id)').eq('id', req.gradoId).single() as DbResult<any>);
       const level = embedded<any>(grade.niveles)!;
+      const duplicate = dataOf(await supabase.from('matriculas').select('id').eq('estudiante_id', req.estudianteId).eq('gestion_id', level.gestion_id).neq('estado', 'ANULADA').maybeSingle() as DbResult<any>);
+      if (duplicate) throw new Error('El estudiante ya tiene una matrícula en esta gestión.');
       return dataOf(await supabase.from('matriculas').insert({ codigo: `MAT-${Date.now()}`.slice(0, 30), estudiante_id: req.estudianteId, grado_id: req.gradoId, gestion_id: level.gestion_id, estado: 'ACTIVA' }).select().single() as DbResult<any>);
     });
   }
@@ -472,8 +488,50 @@ export class PortalService {
     if (req.tipoPersona === 'PADRE_FAMILIA') dataOf(await supabase.from('padres_familia').upsert({ persona_id: personId, ocupacion: req.ocupacion || null, activo: true }, { onConflict: 'persona_id' }) as DbResult);
     if (req.tipoPersona === 'ADMINISTRATIVO') dataOf(await supabase.from('administrativos').upsert({ persona_id: personId, codigo: code, cargo: req.cargo || 'Administrativo', activo: true }, { onConflict: 'persona_id' }) as DbResult);
   }
-  private personPayload(req: PersonaRequest): any { return { nombres: req.nombres.trim(), apellidos: req.apellidos.trim(), numero_documento: req.documentoIdentidad.trim(), fecha_nacimiento: req.fechaNacimiento || null, direccion: req.direccion || null, telefono: req.telefono || null, correo: req.correo || null }; }
-  private toPerson(row: any): PersonaResponse { const teacher = embedded<any>(row.docentes); const student = embedded<any>(row.estudiantes); const parent = embedded<any>(row.padres_familia); const admin = embedded<any>(row.administrativos); const subtype = teacher ?? student ?? parent ?? admin; const type = teacher ? 'DOCENTE' : student ? 'ESTUDIANTE' : parent ? 'PADRE_FAMILIA' : admin ? 'ADMINISTRATIVO' : 'PERSONA'; return { id: row.id, nombres: row.nombres, apellidos: row.apellidos, documentoIdentidad: row.numero_documento, fechaNacimiento: row.fecha_nacimiento, direccion: row.direccion, telefono: row.telefono, correo: row.correo, tipoPersona: type, codigo: subtype?.codigo, cargo: admin?.cargo, especialidad: teacher?.especialidad, areaAcademica: teacher?.area_academica, ocupacion: parent?.ocupacion, creadoEn: row.created_at, actualizadoEn: row.updated_at, nombreCompleto: `${row.apellidos}, ${row.nombres}` } as PersonaResponse; }
+  private personPayload(req: PersonaRequest): any {
+    return {
+      nombres: req.nombres.trim(),
+      apellidos: req.apellidos.trim(),
+      tipo_documento: req.tipoDocumento || 'DNI',
+      numero_documento: req.documentoIdentidad.trim(),
+      fecha_nacimiento: req.fechaNacimiento || null,
+      genero: req.genero || null,
+      direccion: req.direccion || null,
+      telefono: req.telefono || null,
+      correo: req.correo || null,
+      activo: req.activo ?? true,
+    };
+  }
+  private toPerson(row: any): PersonaResponse {
+    const teacher = embedded<any>(row.docentes);
+    const student = embedded<any>(row.estudiantes);
+    const parent = embedded<any>(row.padres_familia);
+    const admin = embedded<any>(row.administrativos);
+    const subtype = teacher ?? student ?? parent ?? admin;
+    const type = teacher ? 'DOCENTE' : student ? 'ESTUDIANTE' : parent ? 'PADRE_FAMILIA' : admin ? 'ADMINISTRATIVO' : 'PERSONA';
+    return {
+      id: row.id,
+      nombres: row.nombres,
+      apellidos: row.apellidos,
+      documentoIdentidad: row.numero_documento,
+      tipoDocumento: row.tipo_documento,
+      fechaNacimiento: row.fecha_nacimiento,
+      genero: row.genero,
+      direccion: row.direccion,
+      telefono: row.telefono,
+      correo: row.correo,
+      activo: row.activo,
+      tipoPersona: type,
+      codigo: subtype?.codigo,
+      cargo: admin?.cargo,
+      especialidad: teacher?.especialidad,
+      areaAcademica: teacher?.area_academica,
+      ocupacion: parent?.ocupacion,
+      creadoEn: row.created_at,
+      actualizadoEn: row.updated_at,
+      nombreCompleto: `${row.apellidos}, ${row.nombres}`,
+    } as PersonaResponse;
+  }
 
   private async fetchAudits(filters: any): Promise<AuditoriaResponse[]> { let query: any = supabase.from('auditoria').select('*').order('created_at', { ascending: false }); if (filters.usuario) query = query.ilike('usuario_responsable', `%${filters.usuario}%`); if (filters.accion) query = query.eq('accion', filters.accion); if (filters.entidad) query = query.eq('entidad', filters.entidad); if (filters.fechaInicio) query = query.gte('created_at', filters.fechaInicio); if (filters.fechaFin) query = query.lte('created_at', `${filters.fechaFin}T23:59:59`); const rows = dataOf(await query as DbResult<any[]>); return rows.map((row: any) => ({ id: row.id, creadoEn: dateText(row.created_at), accion: row.accion, entidad: row.entidad, entidadId: row.entidad_id, usuarioResponsable: row.usuario_responsable, detalle: typeof row.detalle === 'string' ? row.detalle : JSON.stringify(row.detalle) })); }
   private async fetchSupervision(): Promise<TeacherProgress[]> { const rows = dataOf(await supabase.from('asignaciones_docente').select('estado,docentes(codigo,area_academica,personas(nombres,apellidos)),cursos(materias(nombre),grados(nombre,paralelo)),periodos(nombre)').order('created_at', { ascending: false }) as DbResult<any[]>); return rows.map((row) => { const teacher = embedded<any>(row.docentes); const person = embedded<any>(teacher?.personas); const course = embedded<any>(row.cursos); const subject = embedded<any>(course?.materias); const grade = embedded<any>(course?.grados); const period = embedded<any>(row.periodos); return { docente: `${person?.apellidos ?? ''}, ${person?.nombres ?? ''}`, codigo: teacher?.codigo ?? '', area: teacher?.area_academica ?? '', curso: subject?.nombre ?? '', grado: `${grade?.nombre ?? ''} ${grade?.paralelo ?? ''}`, periodo: period?.nombre ?? '', avance: 0, estado: row.estado === 'CERRADA' ? 'Completo' : 'En proceso' } as TeacherProgress; }); }

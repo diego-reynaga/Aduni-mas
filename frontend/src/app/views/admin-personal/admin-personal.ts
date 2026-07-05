@@ -141,11 +141,14 @@ export class AdminPersonal {
     tipoPersona: new FormControl('PERSONA', { nonNullable: true }),
     nombres: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     apellidos: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    tipoDocumento: new FormControl('DNI', { nonNullable: true }),
     documentoIdentidad: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     fechaNacimiento: new FormControl(''),
+    genero: new FormControl(''),
     direccion: new FormControl(''),
     telefono: new FormControl(''),
     correo: new FormControl('', [Validators.email]),
+    activo: new FormControl(true, { nonNullable: true }),
     codigo: new FormControl(''),
     cargo: new FormControl(''),
     especialidad: new FormControl(''),
@@ -204,11 +207,14 @@ export class AdminPersonal {
       tipoPersona: p.tipoPersona,
       nombres: p.nombres,
       apellidos: p.apellidos,
+      tipoDocumento: p.tipoDocumento || 'DNI',
       documentoIdentidad: p.documentoIdentidad,
       fechaNacimiento: p.fechaNacimiento || '',
+      genero: p.genero || '',
       direccion: p.direccion || '',
       telefono: p.telefono || '',
       correo: p.correo || '',
+      activo: p.activo,
       codigo: p.codigo || '',
       cargo: p.cargo || '',
       especialidad: p.especialidad || '',
@@ -250,11 +256,14 @@ export class AdminPersonal {
       tipoPersona: val.tipoPersona!,
       nombres: val.nombres!,
       apellidos: val.apellidos!,
+      tipoDocumento: val.tipoDocumento || 'DNI',
       documentoIdentidad: val.documentoIdentidad!,
       fechaNacimiento: val.fechaNacimiento || undefined,
+      genero: val.genero || undefined,
       direccion: val.direccion || undefined,
       telefono: val.telefono || undefined,
       correo: val.correo || undefined,
+      activo: val.activo ?? true,
       codigo: val.codigo || undefined,
       cargo: val.cargo || undefined,
       especialidad: val.especialidad || undefined,
@@ -272,8 +281,46 @@ export class AdminPersonal {
         this.showToast('Registro guardado exitosamente.', 'success');
       },
       error: (err) => {
-        this.showToast(err?.error?.message || 'Error al guardar el registro.', 'error');
+        this.showToast(err?.message || err?.error?.message || 'Error al guardar el registro.', 'error');
       }
+    });
+  }
+
+  desactivarPersona(p: PersonaResponse): void {
+    if (!confirm(`¿Desactivar a ${p.nombres} ${p.apellidos}?`)) return;
+    this.portal.deletePersona(p.id).subscribe({
+      next: () => {
+        this.loadPersonas();
+        this.showToast('Persona desactivada.', 'success');
+      },
+      error: () => this.showToast('No se pudo desactivar la persona.', 'error'),
+    });
+  }
+
+  activarPersona(p: PersonaResponse): void {
+    this.portal.updatePersona(p.id, {
+      tipoPersona: p.tipoPersona,
+      nombres: p.nombres,
+      apellidos: p.apellidos,
+      tipoDocumento: p.tipoDocumento,
+      documentoIdentidad: p.documentoIdentidad,
+      fechaNacimiento: p.fechaNacimiento,
+      genero: p.genero,
+      direccion: p.direccion,
+      telefono: p.telefono,
+      correo: p.correo,
+      activo: true,
+      codigo: p.codigo,
+      cargo: p.cargo,
+      especialidad: p.especialidad,
+      areaAcademica: p.areaAcademica,
+      ocupacion: p.ocupacion,
+    }).subscribe({
+      next: () => {
+        this.loadPersonas();
+        this.showToast('Persona activada.', 'success');
+      },
+      error: () => this.showToast('No se pudo activar la persona.', 'error'),
     });
   }
 }

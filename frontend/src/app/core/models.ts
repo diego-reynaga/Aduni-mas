@@ -429,16 +429,20 @@ export interface PersonaDropdown {
   id: EntityId;
   nombreCompleto: string;
   documentoIdentidad: string;
+  correo?: string;
 }
 
 export interface PersonaRequest {
   nombres: string;
   apellidos: string;
   documentoIdentidad: string;
+  tipoDocumento?: string;
   fechaNacimiento?: string;
+  genero?: string;
   direccion?: string;
   telefono?: string;
   correo?: string;
+  activo?: boolean;
   tipoPersona: string;
   codigo?: string;
   cargo?: string;
@@ -452,10 +456,13 @@ export interface PersonaResponse {
   nombres: string;
   apellidos: string;
   documentoIdentidad: string;
+  tipoDocumento?: string;
   fechaNacimiento?: string;
+  genero?: string;
   direccion?: string;
   telefono?: string;
   correo?: string;
+  activo: boolean;
   tipoPersona: string;
   codigo?: string;
   cargo?: string;

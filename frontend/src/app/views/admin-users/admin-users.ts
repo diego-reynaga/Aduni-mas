@@ -312,12 +312,7 @@ export class AdminUsers {
     this.userForm.controls.nombres.updateValueAndValidity();
     this.userForm.controls.apellidos.updateValueAndValidity();
     this.userForm.controls.documentoIdentidad.updateValueAndValidity();
-
-    this.userForm.controls.password.setValidators([
-      Validators.required,
-      Validators.minLength(8),
-      Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/)
-    ]);
+    this.userForm.controls.password.clearValidators();
     this.userForm.controls.password.updateValueAndValidity();
     this.passwordStrength.set(0);
     this.showUserModal.set(true);
@@ -426,10 +421,17 @@ export class AdminUsers {
     }
   }
 
+  onPersonaSelected(event: Event): void {
+    const personaId = (event.target as HTMLSelectElement).value;
+    const persona = this.personas().find((item) => item.id === personaId);
+    if (!persona) return;
+    this.userForm.controls.username.setValue(persona.correo || `${persona.documentoIdentidad}@aduni.local`);
+  }
+
   private executeSaveUser(personaId: EntityId, formVal: any): void {
     const req: UsuarioRequest = {
-      username: formVal.username,
-      personaId: personaId,
+      username: formVal.username || '',
+      personaId,
       roles: formVal.roles,
       password: formVal.password || undefined,
     };
@@ -442,7 +444,9 @@ export class AdminUsers {
       next: () => {
         this.saving.set(false);
         this.showAlertMsg(
-          this.isEditingUser() ? 'Cuenta de usuario actualizada exitosamente.' : 'Cuenta de usuario creada exitosamente.',
+          this.isEditingUser()
+            ? 'Cuenta de usuario actualizada exitosamente.'
+            : 'Usuario creado. Credenciales iniciales: correo y DNI.',
           'success'
         );
         this.showUserModal.set(false);

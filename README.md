@@ -116,7 +116,7 @@ Las direcciones `.local` son cuentas de prueba creadas por la migración; no dep
 
 ### Administrador
 
-Inicie sesión y use los módulos administrativos para crear personas, subtipos (docente, estudiante o padre), usuarios de Auth, gestión, nivel, grado, materia, curso, periodo, matrícula, asignación docente y vínculo familiar. `administrar-usuario` vuelve a validar JWT, perfil activo y rol `ADMINISTRADOR` antes de usar la API administrativa de Auth.
+Inicie sesión y use los módulos administrativos para crear personas, subtipos (docente, estudiante o padre), usuarios de Auth, gestión, nivel, grado, materia, curso, periodo, matrícula, asignación docente y vínculo familiar. Al crear un usuario nuevo, las credenciales iniciales son el correo de la persona y su DNI como contraseña.
 
 ### Docente
 
@@ -132,17 +132,33 @@ El padre ve únicamente estudiantes con un vínculo activo en `estudiante_apoder
 
 ## Probar importación Excel
 
-Se incluye `outputs/aduni-supabase-migration/registro-notas-demo.xlsx`.
+Plantilla universal de notas:
+
+`C:\Users\Diego\Documents\SoftEscolar\NOTAS.xlsx`
+
+Hojas relevantes: `INICIO`, `I TRIMESTRE`, `II TRIMESTRE`, `III TRIMESTRE`. La función lee metadatos desde `INICIO` y las notas desde la hoja del trimestre seleccionado (fila 17 en adelante, columnas PRACTICA/EXAMEN/CUADERNO por competencia).
+
+También se incluye un archivo demo en `outputs/aduni-supabase-migration/registro-notas-demo.xlsx`.
 
 1. Inicie sesión como docente.
 2. Abra **Importación Excel**.
-3. Seleccione la asignación demo y `I_TRIMESTRE`.
-4. Seleccione el archivo incluido.
-5. Pulse **Previsualizar** y confirme que aparecen dos estudiantes sin errores.
+3. Seleccione la asignación y el trimestre (`I_TRIMESTRE`, `II_TRIMESTRE` o `III_TRIMESTRE`).
+4. Suba `NOTAS.xlsx` o el demo incluido.
+5. Pulse **Previsualizar** y confirme estudiantes mapeados sin errores críticos.
 6. Pulse **Confirmar importación**.
 7. Revise el historial y los promedios guardados.
 
 La función acepta solo `.xlsx`, máximo 10 MB, 12 hojas, 100 estudiantes, 40 columnas útiles, 5000 celdas procesadas y 50 MB descomprimidos. Lee desde la fila 17, no evalúa fórmulas, no crea estudiantes y rechaza contenedores ZIP inválidos, cifrados o sospechosos.
+
+## Usuario nuevo creado por el administrador
+
+Al crear una cuenta desde **Administración → Usuarios**:
+
+- **Usuario:** correo de la persona.
+- **Contraseña inicial:** número de documento (DNI).
+- Mensaje mostrado: *Usuario creado. Credenciales iniciales: correo y DNI.*
+
+La Edge Function `administrar-usuario` valida JWT, perfil activo y rol `ADMINISTRADOR` antes de usar la API administrativa de Auth.
 
 ## Seguridad RLS
 

@@ -30,7 +30,7 @@ Las tres se aplicaron al proyecto `cpduuguhpxhxwoemzmgy`. Se comprobaron las tab
 - Estudiante: 1 perfil, 1 estudiante y solo 5 notas publicadas propias.
 - Padre: 1 perfil, 1 estudiante vinculado y solo 5 notas publicadas de ese estudiante.
 - Un administrador creó un usuario temporal mediante `administrar-usuario`, se verificó su login y se retiró el dato temporal.
-- Importación: preview de 2 estudiantes, 0 errores y confirmación correcta; se guardaron 48 detalles, 8 promedios por competencia y 2 promedios finales.
+- Importación: preview y confirmación con plantilla `NOTAS.xlsx` (`C:\Users\Diego\Documents\SoftEscolar\NOTAS.xlsx`); columnas PRACTICA/EXAMEN/CUADERNO por competencia en hojas `I TRIMESTRE`, `II TRIMESTRE`, `III TRIMESTRE`.
 - CORS: las funciones publican únicamente `http://localhost:4200` por defecto; ya no usan `*`.
 - Build Angular y pruebas unitarias ejecutados correctamente.
 
@@ -38,6 +38,8 @@ Las tres se aplicaron al proyecto `cpduuguhpxhxwoemzmgy`. Se comprobaron las tab
 
 - Login administrativo fallaba potencialmente porque `AuthService` usaba `.single()` sin filtrar el perfil; ahora filtra por el UUID de Auth.
 - Se retiró la constante heredada `http://localhost:8080/api`.
+- Se adaptó `importar-notas-trimestre` a la plantilla real `NOTAS.xlsx` (notas en columnas M-O y T-V por competencia, logros en S y Z).
+- Creación de usuarios: contraseña inicial = DNI de la persona; correo = correo de la persona.
 - Se eliminó CORS abierto en las dos Edge Functions.
 - Se corrigió la configuración de animaciones del test Angular.
 - Se actualizaron los paquetes Angular 21 a versiones parcheadas; quedaron 0 vulnerabilidades altas o críticas. `npm audit` conserva 4 avisos bajos en herramientas de compilación que requieren un salto mayor de Angular.
