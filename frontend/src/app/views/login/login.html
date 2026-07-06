@@ -1,54 +1,76 @@
 <main class="login-page" [@fadeIn]>
   <section class="login-institution">
-    <div class="institution-mark">
-      <span>AD+</span>
-    </div>
+    <div class="institution-pattern" aria-hidden="true"></div>
 
-    <div>
-      <p class="section-kicker">Academia Preuniversitaria</p>
-      <h1>ADUNI+</h1>
+    <header class="institution-head">
+      <img src="/ADUNI+.png" alt="ADUNI+" class="institution-logo">
+    </header>
+
+    <div class="institution-copy-block">
       <p class="institution-copy">
-        Plataforma de gestion academica para registro de notas, supervision docente y consulta inmediata de rendimiento.
+        Gestión académica integral: notas, supervisión docente y rendimiento estudiantil.
       </p>
     </div>
 
-    <div class="institution-grid" aria-label="Resumen institucional">
-      <div>
-        <span>Gestion</span>
-        <strong>2026-I</strong>
-      </div>
+    <figure class="institution-illustration" aria-label="Estudiante resolviendo un examen">
+      <div class="illustration-glow" aria-hidden="true"></div>
+      <img
+        src="/estudiante.png"
+        alt="Estudiante resolviendo un examen"
+        class="student-illustration"
+      >
+    </figure>
+
+    <div class="period-card" aria-label="Periodo activo">
+      <span>Periodo activo</span>
+      <strong>2026-I</strong>
     </div>
   </section>
 
   <section class="login-access" aria-label="Ingreso al sistema">
-    <div class="login-card">
-      <p class="login-mobile-brand">ADUNI+</p>
+    <div class="login-shell">
       <div class="login-heading">
-        <p class="section-kicker">Acceso institucional</p>
-        <h2>Inicio de sesion</h2>
-        <p>Ingrese con las credenciales asignadas por secretaria academica.</p>
+        <p class="section-kicker">ACCESO INSTITUCIONAL</p>
+        <h2>Inicio de sesión</h2>
+        <p>Ingrese con las credenciales asignadas por secretaría académica.</p>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
-        <label>
-          <span>Correo institucional</span>
+        <label class="form-label" for="login-email">Correo institucional</label>
+        <div class="input-shell">
+          <span class="input-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5zm2 .5v.2l7 4.8 7-4.8V7zM19 9.1l-6.4 4.4a1 1 0 0 1-1.2 0L5 9.1v8.4a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5z"></path></svg>
+          </span>
           <input
+            id="login-email"
             type="email"
             formControlName="username"
             autocomplete="username"
             placeholder="usuario@aduni.local"
           >
-        </label>
+        </div>
 
-        <label>
-          <span>Contrasena</span>
+        <label class="form-label" for="login-password">Contraseña</label>
+        <div class="input-shell">
+          <span class="input-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 1 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zm2 0h6V8a3 3 0 0 0-6 0zm3 4a2 2 0 0 1 1 3.7V19h-2v-1.3A2 2 0 0 1 12 14"></path></svg>
+          </span>
           <input
-            type="password"
+            id="login-password"
+            [type]="showPassword() ? 'text' : 'password'"
             formControlName="password"
             autocomplete="current-password"
-            placeholder="contrasena"
+            placeholder="contraseña"
           >
-        </label>
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            {{ showPassword() ? 'Ocultar' : 'Mostrar' }}
+          </button>
+        </div>
 
         @if (error()) {
           <p class="login-error">{{ error() }}</p>
@@ -58,6 +80,8 @@
           {{ loading() ? 'Validando acceso...' : 'Ingresar al sistema' }}
         </button>
       </form>
+
+      <p class="login-footnote">Acceso exclusivo para usuarios autorizados.</p>
     </div>
   </section>
 </main>

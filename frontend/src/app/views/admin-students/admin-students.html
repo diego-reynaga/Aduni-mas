@@ -11,26 +11,29 @@
   @if (success()) { <p class="read-only-note">{{ success() }}</p> }
 
   <!-- TABS -->
-  <div class="tab-container">
-    <button [class.active]="activeTab() === 'directorio'" (click)="setTab('directorio')">Directorio de Alumnos</button>
-    <button [class.active]="activeTab() === 'matriculas'" (click)="setTab('matriculas')">Proceso de Matrícula</button>
-  </div>
+  <nav class="tabs-nav">
+    <button class="tab-btn" [class.active]="activeTab() === 'directorio'" (click)="setTab('directorio')">Directorio de Alumnos</button>
+    <button class="tab-btn" [class.active]="activeTab() === 'matriculas'" (click)="setTab('matriculas')">Proceso de Matrícula</button>
+  </nav>
 
   <!-- TAB: DIRECTORIO -->
   @if (activeTab() === 'directorio') {
-    <div class="surface mt-4">
+    <section class="surface">
       <div class="surface-header">
         <div>
           <h3>Ficha Única del Estudiante</h3>
           <p>Buscador global indexado.</p>
         </div>
         <div class="data-chip-row">
-          <input type="text" [formControl]="searchControl" placeholder="Buscar por DNI, Nombres o Código..." class="p-2 border rounded" style="width: 300px;">
+          <label class="field search-input">
+            <span class="sr-only">Buscar</span>
+            <input type="text" [formControl]="searchControl" placeholder="Buscar por DNI, nombres o código...">
+          </label>
           <button class="btn-primary btn-compact" (click)="openModalEstudiante()">+ Nuevo Alumno</button>
         </div>
       </div>
-      <div class="surface-body">
-        <table class="data-table">
+      <div class="quiet-table-wrap">
+        <table class="quiet-table">
           <thead>
             <tr>
               <th>Código</th>
@@ -38,7 +41,7 @@
               <th>Apellidos y Nombres</th>
               <th>Correo</th>
               <th>Estado</th>
-              <th>Acciones</th>
+              <th class="text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -48,28 +51,34 @@
                 <td>{{ est.documentoIdentidad }}</td>
                 <td>{{ est.apellidos }}, {{ est.nombres }}</td>
                 <td>{{ est.correo || '—' }}</td>
-                <td><span class="badge" [class.badge-success]="est.activo" [class.badge-neutral]="!est.activo">{{ est.activo ? 'ACTIVO' : 'INACTIVO' }}</span></td>
                 <td>
-                  <button class="btn-subtle" (click)="editEstudiante(est)" [disabled]="loading()">Editar</button>
-                  @if (est.activo) {
-                    <button class="btn-subtle" (click)="desactivarEstudiante(est)" [disabled]="loading()">Desactivar</button>
-                  } @else {
-                    <button class="btn-subtle" (click)="activarEstudiante(est)" [disabled]="loading()">Activar</button>
-                  }
+                  <span class="status-pill" [class.is-good]="est.activo" [class.is-warning]="!est.activo">
+                    {{ est.activo ? 'ACTIVO' : 'INACTIVO' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-row-btns">
+                    <button class="btn-subtle" (click)="editEstudiante(est)" [disabled]="loading()">Editar</button>
+                    @if (est.activo) {
+                      <button class="btn-subtle" (click)="desactivarEstudiante(est)" [disabled]="loading()">Desactivar</button>
+                    } @else {
+                      <button class="btn-subtle" (click)="activarEstudiante(est)" [disabled]="loading()">Activar</button>
+                    }
+                  </div>
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="6" class="text-center">No hay alumnos registrados.</td></tr>
+              <tr><td colspan="6"><p class="empty-state">No hay alumnos registrados.</p></td></tr>
             }
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   }
 
   <!-- TAB: MATRICULAS -->
   @if (activeTab() === 'matriculas') {
-    <div class="surface mt-4">
+    <section class="surface">
       <div class="surface-header">
         <div>
           <h3>Historial de Inscripciones</h3>
@@ -77,8 +86,8 @@
         </div>
         <button class="btn-primary btn-compact" (click)="startWizard()">+ Asistente de Matrícula</button>
       </div>
-      <div class="surface-body">
-        <table class="data-table">
+      <div class="quiet-table-wrap">
+        <table class="quiet-table">
           <thead>
             <tr>
               <th>Código MAT</th>
@@ -86,7 +95,7 @@
               <th>Estudiante</th>
               <th>Aula / Grado</th>
               <th>Estado</th>
-              <th>Acciones</th>
+              <th class="text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -97,41 +106,40 @@
                 <td>{{ mat.estudianteCodigo }} - {{ mat.estudianteNombre }}</td>
                 <td>{{ mat.gradoNombre }} - {{ mat.paralelo }} ({{ mat.nivelNombre }})</td>
                 <td>
-                  <span class="badge"                        [class.badge-success]="mat.estado === 'ACTIVA'"
-                        [class.badge-neutral]="mat.estado === 'PRE_MATRICULADA'"
-                        [class.badge-danger]="mat.estado === 'RETIRADA'"
-                        [class.badge-warning]="mat.estado === 'SUSPENDIDA'"
-                        style="padding: 0.35rem 0.85rem; border-radius: 20px; font-weight: 700;">
+                  <span class="status-pill"
+                        [class.is-good]="mat.estado === 'ACTIVA'"
+                        [class.is-warning]="mat.estado === 'PRE_MATRICULADA' || mat.estado === 'SUSPENDIDA'"
+                        [class.is-danger]="mat.estado === 'RETIRADA'">
                     {{ mat.estado }}
                   </span>
                 </td>
                 <td>
-                  <div style="display: flex; gap: 0.5rem;">
+                  <div class="action-row-btns">
                     @if (mat.estado !== 'ACTIVA') {
                       <button class="btn-compact btn-primary" (click)="cambiarEstadoMatricula(mat.id, 'ACTIVA')">Activar</button>
                     }
                     @if (mat.estado !== 'RETIRADA') {
-                      <button class="btn-compact" style="color: #dc2626;" (click)="cambiarEstadoMatricula(mat.id, 'RETIRADA')">Retirar</button>
+                      <button class="btn-compact btn-subtle" (click)="cambiarEstadoMatricula(mat.id, 'RETIRADA')">Retirar</button>
                     }
                     @if (mat.estado === 'ACTIVA' || mat.estado === 'PRE_MATRICULADA') {
-                      <button class="btn-compact" style="color: #ea580c;" (click)="cambiarEstadoMatricula(mat.id, 'SUSPENDIDA')">Suspender</button>
+                      <button class="btn-compact btn-subtle" (click)="cambiarEstadoMatricula(mat.id, 'SUSPENDIDA')">Suspender</button>
                     }
                   </div>
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="6" class="text-center">No hay matrículas registradas.</td></tr>
+              <tr><td colspan="6"><p class="empty-state">No hay matrículas registradas.</p></td></tr>
             }
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   }
 
   <!-- MODAL: ESTUDIANTE -->
   @if (showModalEstudiante()) {
     <div class="modal-overlay">
-      <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-card is-wide">
         <div class="modal-header">
           <h3>{{ editingStudent() ? 'Editar estudiante' : 'Alta de Estudiante' }}</h3>
           <button class="close-btn" (click)="showModalEstudiante.set(false)">×</button>
@@ -164,70 +172,75 @@
   <!-- WIZARD MATRICULA -->
   @if (showWizardMatricula()) {
     <div class="modal-overlay">
-      <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-card is-wide">
         <div class="modal-header">
-          <h3>Asistente de Matrícula (Paso {{ wizardStep() }} de 3)</h3>
+          <h3>Asistente de Matrícula</h3>
           <button class="close-btn" (click)="showWizardMatricula.set(false)">×</button>
         </div>
         <div class="modal-body">
-          <!-- PASO 1: ESTUDIANTE -->
-          @if (wizardStep() === 1) {
-            <p>Seleccione un estudiante activo para iniciar la inscripción.</p>
-            <form [formGroup]="formMatricula" class="mt-4">
-              <label class="field">
-                <span>Estudiante *</span>
-                <select formControlName="estudianteId" class="p-2 border rounded" style="width: 100%;">
-                  <option [ngValue]="null">-- Seleccione --</option>
-                  @for (est of estudiantes(); track est.id) {
-                    @if (est.activo) {
-                      <option [ngValue]="est.id">{{ est.codigoEstudiante }} - {{ est.apellidos }}, {{ est.nombres }}</option>
-                    }
-                  }
-                </select>
-              </label>
-            </form>
-          }
+          <form [formGroup]="formMatricula">
+            <div class="wizard-stepper">
+              <span class="step" [class.is-active]="wizardStep() === 1" [class.is-completed]="wizardStep() > 1">1</span>
+              <span class="step-line"></span>
+              <span class="step" [class.is-active]="wizardStep() === 2" [class.is-completed]="wizardStep() > 2">2</span>
+              <span class="step-line"></span>
+              <span class="step" [class.is-active]="wizardStep() === 3">3</span>
+            </div>
 
-          <!-- PASO 2: AULA -->
-          @if (wizardStep() === 2) {
-            <p>Filtre por nivel educativo y asigne el aula deseada. El aforo será validado.</p>
-            <div class="form-grid mt-4">
-              <label class="field">
-                <span>Nivel Educativo</span>
-                <select (change)="onNivelSelected($event)" class="p-2 border rounded">
-                  <option value="">-- Nivel --</option>
-                  @for (niv of niveles(); track niv.id) {
-                    <option [value]="niv.id">{{ niv.nombre }}</option>
-                  }
-                </select>
-              </label>
-              <form [formGroup]="formMatricula">
+            <!-- PASO 1: ESTUDIANTE -->
+            @if (wizardStep() === 1) {
+              <p>Seleccione un estudiante activo para iniciar la inscripción.</p>
+              <div class="form-grid" style="margin-top: 16px;">
+                <label class="field form-grid-wide">
+                  <span>Estudiante *</span>
+                  <select formControlName="estudianteId">
+                    <option [ngValue]="null">-- Seleccione --</option>
+                    @for (est of estudiantes(); track est.id) {
+                      @if (est.activo) {
+                        <option [ngValue]="est.id">{{ est.codigoEstudiante }} - {{ est.apellidos }}, {{ est.nombres }}</option>
+                      }
+                    }
+                  </select>
+                </label>
+              </div>
+            }
+
+            <!-- PASO 2: AULA -->
+            @if (wizardStep() === 2) {
+              <p>Filtre por nivel educativo y asigne el aula deseada. El aforo será validado.</p>
+              <div class="form-grid" style="margin-top: 16px;">
+                <label class="field">
+                  <span>Nivel Educativo</span>
+                  <select (change)="onNivelSelected($event)">
+                    <option value="">-- Nivel --</option>
+                    @for (niv of niveles(); track niv.id) {
+                      <option [value]="niv.id">{{ niv.nombre }}</option>
+                    }
+                  </select>
+                </label>
                 <label class="field">
                   <span>Grado / Aula *</span>
-                  <select formControlName="gradoId" class="p-2 border rounded" style="width: 100%;">
+                  <select formControlName="gradoId">
                     <option [ngValue]="null">-- Seleccione Grado --</option>
                     @for (gra of grados(); track gra.id) {
                       <option [ngValue]="gra.id">{{ gra.nombre }} - {{ gra.paralelo }} (Aforo: {{ gra.capacidad }})</option>
                     }
                   </select>
                 </label>
-              </form>
-            </div>
-          }
+              </div>
+            }
 
-          <!-- PASO 3: CONFIRMACION -->
-          @if (wizardStep() === 3) {
-            <div style="background: rgba(79, 70, 229, 0.05); padding: 1.5rem; border-radius: 8px;">
-              <h4 style="color: var(--primary-color); margin-bottom: 1rem;">Revisión Final</h4>
-              <p>Está a punto de inscribir al alumno seleccionado en el grado designado.</p>
-              <p style="margin-top: 0.5rem; color: var(--danger-color); font-weight: 600;">
-                Se validará la unicidad de matrícula y el aforo del aula. Esta acción generará el acta oficial.
-              </p>
-            </div>
-          }
-
+            <!-- PASO 3: CONFIRMACION -->
+            @if (wizardStep() === 3) {
+              <div class="wizard-summary">
+                <h4>Revisión Final</h4>
+                <p>Está a punto de inscribir al alumno seleccionado en el grado designado.</p>
+                <p class="warning-note">Se validará la unicidad de matrícula y el aforo del aula. Esta acción generará el acta oficial.</p>
+              </div>
+            }
+          </form>
         </div>
-        <div class="modal-footer" style="justify-content: space-between;">
+        <div class="modal-footer is-spaced">
           <button class="btn-secondary" [disabled]="wizardStep() === 1" (click)="prevStep()">Atrás</button>
           @if (wizardStep() < 3) {
             <button class="btn-primary" (click)="nextStep()" [disabled]="(wizardStep() === 1 && !formMatricula.value.estudianteId) || (wizardStep() === 2 && !formMatricula.value.gradoId)">Siguiente</button>

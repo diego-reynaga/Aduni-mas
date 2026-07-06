@@ -1,221 +1,392 @@
+:host {
+  display: block;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .login-page {
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
-  background: linear-gradient(140deg, #1f1f1f 0%, #141414 42%, #272727 100%);
+  grid-template-columns: minmax(560px, 1.05fr) minmax(430px, 0.95fr);
+  font-family: "Segoe UI Variable", "Segoe UI", "Trebuchet MS", sans-serif;
+  background: #faf8f1;
 }
 
 .login-institution {
   position: relative;
+  height: 100dvh;
   overflow: hidden;
-  padding: clamp(30px, 6vw, 74px);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 52px;
+  isolation: isolate;
+  padding: clamp(28px, 3.2vw, 46px) clamp(42px, 5vw, 72px);
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(16px, 2.2vh, 24px);
   color: #fff;
+  background:
+    radial-gradient(circle at 74% 18%, rgba(244, 194, 64, 0.12), transparent 36%),
+    radial-gradient(circle at 18% 82%, rgba(47, 94, 173, 0.28), transparent 42%),
+    linear-gradient(140deg, #0b1633 0%, #102650 52%, #173b7a 100%);
 }
 
 .login-institution::before {
   content: "";
   position: absolute;
-  inset: 24px;
-  border: 1px solid rgba(255, 215, 64, 0.28);
+  inset: 22px;
+  border: 1px solid rgba(244, 194, 64, 0.22);
   pointer-events: none;
+  z-index: 0;
 }
 
 .login-institution::after {
   content: "";
   position: absolute;
-  right: -90px;
-  bottom: -130px;
+  right: -130px;
+  bottom: -115px;
+  width: 370px;
+  height: 370px;
+  border: 58px solid rgba(255, 255, 255, 0.10);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.institution-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.institution-pattern::before {
+  content: "";
+  position: absolute;
+  top: -34px;
+  right: -92px;
   width: 360px;
-  height: 360px;
-  border: 62px solid rgba(255, 196, 0, 0.18);
-  transform: rotate(8deg);
+  height: 240px;
+  opacity: 0.55;
+  background: repeating-linear-gradient(
+    -17deg,
+    transparent 0,
+    transparent 15px,
+    rgba(244, 194, 64, 0.12) 16px,
+    rgba(244, 194, 64, 0.12) 17px
+  );
 }
 
-.institution-mark {
+.institution-pattern::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  width: 160px;
+  height: 160px;
+  border-left: 2px solid rgba(244, 194, 64, 0.32);
+  border-top: 2px solid rgba(244, 194, 64, 0.32);
+}
+
+.institution-head,
+.institution-copy-block,
+.institution-illustration,
+.period-card {
   position: relative;
   z-index: 1;
-  width: 102px;
-  height: 102px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 214, 74, 0.42);
-  background: rgba(255, 196, 0, 0.16);
 }
 
-.institution-mark span {
-  font-size: 30px;
-  font-weight: 800;
-  color: #ffd44e;
+.institution-head {
+  display: flex;
+  align-items: center;
 }
 
-.login-institution h1 {
-  position: relative;
-  z-index: 1;
-  margin: 8px 0 14px;
-  font-family: "Georgia", serif;
-  font-size: clamp(48px, 8vw, 88px);
-  line-height: 0.94;
-  color: #ffd44e;
+.institution-logo {
+  width: clamp(170px, 16vw, 240px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.28));
+}
+
+.institution-copy-block {
+  max-width: 520px;
+  margin-top: clamp8px, 2vh, 24px;
 }
 
 .institution-copy {
+  margin: 0;
+  color: rgba(244, 248, 255, 0.94);
+  font-size: clamp(17px, 1.45vw, 20px);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.institution-illustration {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: min(92%, 680px);
+  max-height: 48vh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+
+.illustration-glow {
+  position: absolute;
+  width: 78%;
+  height: 52%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(244, 194, 64, 0.20) 0%, rgba(244, 194, 64, 0.08) 48%, transparent 72%),
+    radial-gradient(circle, rgba(47, 94, 173, 0.22) 0%, transparent 68%);
+  filter: blur(24px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.student-illustration {
   position: relative;
   z-index: 1;
-  max-width: 520px;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 18px;
-  line-height: 1.6;
+  width: clamp(460px, 44vw, 680px);
+  max-width: 100%;
+  max-height: 48vh;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 18px 34px rgba(8, 16, 38, 0.38));
 }
 
-.institution-grid {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 180px);
-  gap: 12px;
+.period-card {
+  width: fit-content;
+  min-width: 178px;
+  padding: 12px 16px;
+  margin-bottom: clamp(4px, 1vh, 12px);
+  border: 1px solid rgba(244, 194, 64, 0.46);
+  background: rgba(12, 28, 59, 0.74);
+  backdrop-filter: blur(2px);
 }
 
-.institution-grid div {
-  min-height: 94px;
-  padding: 16px;
-  display: grid;
-  align-content: center;
-  gap: 4px;
-  border: 1px solid rgba(255, 214, 74, 0.24);
-  background: rgba(255, 196, 0, 0.1);
-}
-
-.institution-grid span {
-  color: rgba(255, 255, 255, 0.62);
+.period-card span {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(230, 239, 255, 0.82);
   font-size: 12px;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.institution-grid strong {
-  color: #fff3c0;
-  font-size: 18px;
+.period-card strong {
+  color: #f4c240;
+  font-size: 20px;
+  font-weight: 800;
 }
 
 .login-access {
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
   display: grid;
   place-items: center;
-  padding: 32px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(252, 251, 244, 0.96));
-  color: var(--ink);
+  padding: clamp(28px, 4vw, 56px);
+  background: linear-gradient(180deg, #faf8f1 0%, #fffdf7 100%);
+  color: #172033;
 }
 
-.login-card {
+.login-shell {
   width: min(100%, 460px);
-  padding: clamp(28px, 5vw, 44px);
-  border: 1px solid var(--line);
-  background: #fff;
-  box-shadow: 0 22px 56px rgba(21, 21, 21, 0.12);
-}
-
-.login-mobile-brand {
-  display: none;
-  margin: 0 0 10px;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  color: var(--primary);
-}
-
-.login-heading h2 {
-  margin: 6px 0 8px;
-  font-size: 32px;
-  font-weight: 760;
-}
-
-.login-heading p:last-child {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.login-form {
   display: grid;
-  gap: 18px;
-  margin-top: 30px;
+  gap: 24px;
 }
 
-.login-form label {
+.login-heading {
   display: grid;
   gap: 8px;
 }
 
-.login-form span {
-  color: var(--ink);
+.login-heading h2 {
+  margin: 0;
+  font-size: clamp(30px, 3.3vw, 42px);
+  line-height: 1.05;
+  font-weight: 780;
+  color: #111b2d;
+}
+
+.login-heading p {
+  margin: 0;
+  color: #5a6373;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.section-kicker {
+  margin: 0;
+  color: #f4c240;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.form-label {
+  margin-top: 8px;
+  color: #1f2b40;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 760;
+}
+
+.input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  border: 1px solid #d8dce4;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 32, 66, 0.06);
+}
+
+.input-shell:focus-within {
+  border-color: #f4c240;
+  box-shadow: 0 0 0 3px rgba(244, 194, 64, 0.2);
+}
+
+.input-icon {
+  width: 44px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #61708b;
+}
+
+.input-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
 }
 
 .login-form input {
-  height: 48px;
-  width: 100%;
-  border: 1px solid var(--line-strong);
-  background: var(--field-bg);
-  padding: 0 14px;
-  color: var(--ink);
+  flex: 1;
+  min-height: 50px;
+  border: 0;
+  background: transparent;
+  padding: 0 12px 0 2px;
+  color: #172033;
+  font-size: 15px;
   outline: none;
 }
 
-.login-form input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(255, 196, 0, 0.2);
+.toggle-password {
+  border: 0;
+  background: transparent;
+  color: #173b7a;
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.toggle-password:hover {
+  color: #0b1633;
 }
 
 .login-error {
   margin: 0;
+  margin-top: 6px;
   padding: 10px 12px;
-  border-left: 3px solid var(--danger);
-  background: #fff6df;
-  color: #8a5c00;
+  border-left: 3px solid #9f1239;
+  background: #fff4f6;
+  color: #9f1239;
   font-size: 13px;
 }
 
 .login-submit {
-  min-height: 48px;
+  margin-top: 12px;
+  min-height: 52px;
+  border: 1px solid #e0b223;
+  background: linear-gradient(180deg, #f5c84c 0%, #e8b12a 100%);
+  color: #111111;
+  font-size: 15px;
+  font-weight: 780;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 20px rgba(232, 177, 42, 0.32);
 }
 
-@media (max-width: 860px) {
+.login-submit:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f6d168 0%, #eab735 100%);
+}
+
+.login-footnote {
+  margin: 0;
+  color: #6a7487;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  :host {
+    height: auto;
+    overflow: auto;
+  }
+
   .login-page {
+    height: auto;
+    min-height: 100dvh;
+    overflow: auto;
     grid-template-columns: 1fr;
-    background: linear-gradient(180deg, #fffef8, #fff7cf);
   }
 
   .login-institution {
-    display: none;
+    height: auto;
+    min-height: 48vh;
+    padding: 24px;
+  }
+
+  .institution-illustration {
+    width: min(520px, 90%);
+    max-height: none;
+  }
+
+  .student-illustration {
+    width: min(520px, 100%);
+    max-height: none;
   }
 
   .login-access {
-    min-height: 100vh;
-    padding: 20px;
-    background: transparent;
+    height: auto;
+    min-height: auto;
+    padding: 28px 22px 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-institution {
+    min-height: 42vh;
+    gap: 14px;
+    padding: 18px;
   }
 
-  .login-card {
-    width: min(100%, 420px);
-    padding: 26px 22px;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+  .institution-logo {
+    width: min(160px, 48vw);
   }
 
-  .login-mobile-brand {
-    display: block;
+  .institution-copy {
+    font-size: 14px;
   }
 
-  .login-heading .section-kicker,
-  .login-heading p:last-child {
+  .institution-illustration {
     display: none;
   }
 
-  .login-heading h2 {
-    margin: 0 0 2px;
-    font-size: 24px;
+  .period-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .login-access {
+    padding: 22px 14px 30px;
   }
 }

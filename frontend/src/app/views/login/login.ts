@@ -19,6 +19,7 @@ export class Login {
 
   readonly loading = signal(false);
   readonly error = signal('');
+  readonly showPassword = signal(false);
 
   readonly form = new FormGroup({
     username: new FormControl('', {
@@ -51,5 +52,9 @@ export class Login {
         this.error.set(reason?.message || 'No se pudo iniciar sesión. Verifique sus credenciales de Supabase Auth.');
       },
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update((value) => !value);
   }
 }
