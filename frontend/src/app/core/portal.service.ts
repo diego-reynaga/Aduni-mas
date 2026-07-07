@@ -32,6 +32,7 @@ import {
   UsuarioRequest,
   UsuarioResponse,
   UserRow,
+  ALL_ROLES,
 } from './models';
 import { supabase } from './supabase.client';
 
@@ -71,7 +72,7 @@ export class PortalService {
           { label: 'Importaciones observadas', value: String(imports.count ?? 0), detail: 'Requieren revisión', tone: 'ink' },
         ],
         progress: await this.fetchSupervision(),
-        audits: audits.slice(0, 12).map((item) => ({
+        audits: audits.slice(0, 12).map((item: any) => ({
           accion: item.accion,
           entidad: item.entidad,
           responsable: item.usuarioResponsable,
@@ -335,9 +336,15 @@ export class PortalService {
   activateUser(id: EntityId): Observable<void> { return this.userFunction({ action: 'activar', userId: id }).pipe(map(() => undefined)); }
 
   getRoles(): Observable<RolResponse[]> {
-    return of(['ADMINISTRADOR', 'DOCENTE', 'ESTUDIANTE', 'PADRE_FAMILIA'].map((nombre) => ({ id: nombre, nombre, creadoEn: '-' })));
+    return this.observe(async () => {
+      const { data, error } = await supabase.from('profiles').select('rol');
+      if (error) throw error;
+      const usedRoles = [...new Set(data?.map(r => r.rol).filter(Boolean))];
+      const allRoles = new Set([...usedRoles, ...ALL_ROLES]);
+      return Array.from(allRoles).map((nombre) => ({ id: nombre as string, nombre: nombre as string, creadoEn: '-' }));
+    });
   }
-  createRole(_req: RolRequest): Observable<RolResponse> { return throwError(() => new Error('Los roles son fijos y se administran en la migración SQL.')); }
+  createRole(_req: RolRequest): Observable<RolResponse> { return throwError(() => new Error('Los roles son fijos y se administran en el enum app_role de la BD.')); }
   updateRole(_id: EntityId, _req: RolRequest): Observable<RolResponse> { return throwError(() => new Error('Los roles son fijos.')); }
   deleteRole(_id: EntityId): Observable<void> { return throwError(() => new Error('Los roles son fijos y no pueden eliminarse.')); }
 
@@ -571,7 +578,7 @@ export class PortalService {
     } as PersonaResponse;
   }
 
-  private async fetchAudits(filters: any): Promise<AuditoriaResponse[]> { let query: any = supabase.from('auditoria').select('*').order('created_at', { ascending: false }); if (filters.usuario) query = query.ilike('usuario_responsable', `%${filters.usuario}%`); if (filters.accion) query = query.eq('accion', filters.accion); if (filters.entidad) query = query.eq('entidad', filters.entidad); if (filters.fechaInicio) query = query.gte('created_at', filters.fechaInicio); if (filters.fechaFin) query = query.lte('created_at', `${filters.fechaFin}T23:59:59`); const rows = dataOf(await query as DbResult<any[]>); return rows.map((row: any) => ({ id: row.id, creadoEn: dateText(row.created_at), accion: row.accion, entidad: row.entidad, entidadId: row.entidad_id, usuarioResponsable: row.usuario_responsable, detalle: typeof row.detalle === 'string' ? row.detalle : JSON.stringify(row.detalle) })); }
+  private async fetchAudits(filters: any): Promise<AuditoriaResponse[]> { let query: any = supabase.from('auditoria').select('*').order('created_at', { ascending: false }); if (filters.usuario) query = query.ilike('usuario_responsable', `%${filters.usuario}%`); if (filters.accion) query = query.eq('accion', filters.accion); if (filters.entidad) query = query.eq('entidad', filters.entidad); if (filters.fechaInicio) query = query.gte('created_at', filters.fechaInicio); if (filters.fechaFin) query = query.lte('created_at', `${filters.fechaFin}T23:59:59`); const rows = dataOf(await query as DbResult<any[]>); return rows.map((row: any) => ({ id: row.id, creadoEn: row.created_at, accion: row.accion, entidad: row.entidad, entidadId: row.entidad_id, usuarioResponsable: row.usuario_responsable, detalle: typeof row.detalle === 'string' ? row.detalle : JSON.stringify(row.detalle) })); }
   private async fetchSupervision(): Promise<TeacherProgress[]> { const rows = dataOf(await supabase.from('asignaciones_docente').select('estado,docentes(codigo,area_academica,personas(nombres,apellidos)),cursos(materias(nombre),grados(nombre,paralelo)),periodos(nombre)').order('created_at', { ascending: false }) as DbResult<any[]>); return rows.map((row) => { const teacher = embedded<any>(row.docentes); const person = embedded<any>(teacher?.personas); const course = embedded<any>(row.cursos); const subject = embedded<any>(course?.materias); const grade = embedded<any>(course?.grados); const period = embedded<any>(row.periodos); return { docente: `${person?.apellidos ?? ''}, ${person?.nombres ?? ''}`, codigo: teacher?.codigo ?? '', area: teacher?.area_academica ?? '', curso: subject?.nombre ?? '', grado: `${grade?.nombre ?? ''} ${grade?.paralelo ?? ''}`, periodo: period?.nombre ?? '', avance: 0, estado: row.estado === 'CERRADA' ? 'Completo' : 'En proceso' } as TeacherProgress; }); }
 
   private async fetchTeacherCourses(): Promise<CourseAssignment[]> { const rows = dataOf(await supabase.from('asignaciones_docente').select('*,cursos!inner(grado_id,materias(nombre),grados(nombre,paralelo)),periodos!inner(nombre,gestion_id)').eq('estado', 'ACTIVA').order('created_at') as DbResult<any[]>); return Promise.all(rows.map(async (row) => { const course = embedded<any>(row.cursos)!; const subject = embedded<any>(course.materias); const grade = embedded<any>(course.grados); const period = embedded<any>(row.periodos); const enrollment = await supabase.from('matriculas').select('*', { count: 'exact', head: true }).eq('grado_id', course.grado_id).eq('gestion_id', period.gestion_id).eq('estado', 'ACTIVA'); const notes = await supabase.from('notas').select('*', { count: 'exact', head: true }).eq('asignacion_docente_id', row.id).eq('tipo', 'PROMEDIO_FINAL'); const students = enrollment.count ?? 0; const evaluated = notes.count ?? 0; return { assignmentId: row.id, codigo: row.id.slice(0, 8).toUpperCase(), curso: subject?.nombre ?? '', grado: grade?.nombre ?? '', seccion: grade?.paralelo ?? '', periodo: period?.nombre ?? '', estudiantes: students, evaluaciones: evaluated, avance: students ? Math.min(100, Math.round((evaluated / students) * 100)) : 0, estado: row.estado } as CourseAssignment; })); }

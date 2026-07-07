@@ -64,6 +64,7 @@ export class AdminUsers {
 
   // Auditoria signals
   readonly auditoriasList = signal<AuditoriaResponse[]>([]);
+  readonly auditLoading = signal(false);
   readonly auditUserQuery = signal('');
   readonly auditActionFilter = signal('TODAS');
   readonly auditEntityFilter = signal('TODAS');
@@ -87,9 +88,6 @@ export class AdminUsers {
   readonly showUserModal = signal(false);
   readonly isEditingUser = signal(false);
   readonly editingUserId = signal<EntityId | null>(null);
-  // Modales Rol
-  readonly showRoleModal = signal(false);
-
   // Formulario de Usuario
   readonly selectedRoles = signal<string[]>([]);
   readonly userForm = new FormGroup({
@@ -104,14 +102,6 @@ export class AdminUsers {
       validators: [Validators.required],
     }),
     roles: new FormControl<string[]>([], {
-      nonNullable: true,
-      validators: [Validators.required],
-    }),
-  });
-
-  // Formulario de Rol
-  readonly roleForm = new FormGroup({
-    nombre: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required],
     }),
@@ -220,6 +210,7 @@ export class AdminUsers {
 
   loadAudits(): void {
     this.error.set('');
+    this.auditLoading.set(true);
     this.portal.getAuditorias({
       usuario: this.auditUserQuery() || undefined,
       accion: this.auditActionFilter() === 'TODAS' ? undefined : this.auditActionFilter(),
@@ -227,8 +218,12 @@ export class AdminUsers {
       fechaInicio: this.auditDateInicio() || undefined,
       fechaFin: this.auditDateFin() || undefined
     }).subscribe({
-      next: (data) => this.auditoriasList.set(data),
-      error: () => this.error.set('No se pudo cargar el historial de auditorías.')
+      next: (data) => { this.auditoriasList.set(data); this.auditLoading.set(false); },
+      error: (err) => {
+        console.error('Error al cargar auditorías:', err);
+        this.error.set('No se pudo cargar el historial de auditorías.');
+        this.auditLoading.set(false);
+      }
     });
   }
 
@@ -434,36 +429,6 @@ export class AdminUsers {
         this.loadData();
       },
       error: () => this.showAlertMsg('No se pudo reactivar la cuenta del usuario.', 'error'),
-    });
-  }
-
-  // --- Operaciones de Rol ---
-
-  openAddRoleModal(): void {
-    this.error.set('');
-    this.roleForm.reset({ nombre: '' });
-    this.showRoleModal.set(true);
-  }
-
-  saveRole(): void {
-    if (this.roleForm.invalid) {
-      this.roleForm.markAllAsTouched();
-      return;
-    }
-
-    const req = {
-      nombre: this.roleForm.value.nombre!,
-    };
-
-    this.portal.createRole(req).subscribe({
-      next: () => {
-        this.showAlertMsg('Rol registrado exitosamente.', 'success');
-        this.showRoleModal.set(false);
-        this.loadData();
-      },
-      error: (err) => {
-        this.showAlertMsg(err.error?.message || 'No se pudo registrar el rol en la base de datos.', 'error');
-      },
     });
   }
 

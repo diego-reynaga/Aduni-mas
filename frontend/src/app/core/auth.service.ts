@@ -24,7 +24,7 @@ export class AuthService {
 
   constructor() {
     this.initialization = this.restoreSession();
-    supabase.auth.onAuthStateChange((_event, authSession) => {
+    supabase.auth.onAuthStateChange((_event: any, authSession: any) => {
       if (!authSession) {
         this.sessionState.set(null);
         return;
@@ -48,9 +48,26 @@ export class AuthService {
     }
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    const session = this.sessionState();
+    if (session) {
+      try {
+        const { error: insertError } = await supabase.from('auditoria').insert({
+          usuario_id: session.userId,
+          accion: 'LOGOUT',
+          entidad: 'auth',
+          entidad_id: session.userId,
+          usuario_responsable: session.username,
+          detalle: { tipo: 'cierre_sesion' },
+        });
+        if (insertError) throw insertError;
+      } catch (e) {
+        console.error('Error logging out audit:', e);
+      }
+    }
     this.sessionState.set(null);
-    void supabase.auth.signOut().finally(() => this.router.navigate(['/login']));
+    await supabase.auth.signOut();
+    this.router.navigate(['/login']);
   }
 
   hasAnyRole(roles: RoleName[]): boolean {
@@ -75,7 +92,21 @@ export class AuthService {
     const email = request.username.trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: request.password });
     if (error || !data.session) throw error ?? new Error('Supabase Auth no devolvió una sesión.');
-    return this.loadProfile(data.session.access_token, data.user.id);
+    const session = await this.loadProfile(data.session.access_token, data.user.id);
+    try {
+      const { error: insertError } = await supabase.from('auditoria').insert({
+        usuario_id: session.userId,
+        accion: 'LOGIN',
+        entidad: 'auth',
+        entidad_id: session.userId,
+        usuario_responsable: session.username,
+        detalle: { tipo: 'inicio_sesion', rol: session.preferredRole },
+      });
+      if (insertError) throw insertError;
+    } catch (e) {
+      console.error('Error logging login audit:', e);
+    }
+    return session;
   }
 
   private async loadProfile(accessToken: string, userId: string): Promise<Session> {

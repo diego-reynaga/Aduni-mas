@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { supabase } from '../../core/supabase.client';
 import { ROLE_HOME } from '../../core/models';
 import { fadeIn } from '../../core/animations';
 
@@ -47,9 +48,16 @@ export class Login {
         this.loading.set(false);
         void this.router.navigate([ROLE_HOME[session.preferredRole]]);
       },
-      error: (reason) => {
+      error: (err) => {
         this.loading.set(false);
-        this.error.set(reason?.message || 'No se pudo iniciar sesión. Verifique sus credenciales de Supabase Auth.');
+        this.error.set(err?.message || 'No se pudo iniciar sesión. Verifique sus credenciales de Supabase Auth.');
+        supabase.rpc('registrar_intento_login_fallido', {
+          p_email: this.form.getRawValue().username,
+          p_detalle: { error: err.message || 'Error de login' }
+        }).then(
+          (res) => { if (res.error) console.error('Error registrando login fallido:', res.error); },
+          (e: unknown) => console.error('Excepción en rpc:', e)
+        );
       },
     });
   }
