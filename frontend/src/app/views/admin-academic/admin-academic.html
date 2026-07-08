@@ -1,377 +1,619 @@
-<div class="admin-dashboard-layout" [@fadeIn]>
-  <!-- Cabecera -->
-  <header class="dashboard-header">
-    <div class="header-titles">
-      <h1 class="page-title">Estructura Académica</h1>
-      <p class="page-subtitle">Gestión de niveles, grados, materias y asignación de cursos</p>
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Gestión de Institución</p>
+      <h2>
+        @if (activeTab() === 'resumen') { Resumen Académico }
+        @else if (activeTab() === 'niveles') { Niveles Educativos }
+        @else if (activeTab() === 'grados') { Estructura de Grados }
+        @else if (activeTab() === 'materias') { Materias }
+      </h2>
+      <p>
+        @if (activeTab() === 'resumen') { Vista general de la estructura académica y configuración actual. }
+        @else if (activeTab() === 'niveles') { Administre los niveles educativos impartidos en la institución. }
+        @else if (activeTab() === 'grados') { Gestione los grados y secciones para cada nivel. }
+        @else if (activeTab() === 'materias') { Catálogo centralizado de asignaturas y áreas. }
+      </p>
     </div>
-    <div class="header-actions">
-      <!-- Alerts -->
-      @if (error()) {
-        <div class="alert alert-danger" role="alert">{{ error() }}</div>
-      }
-      @if (successMessage()) {
-        <div class="alert alert-success" role="alert">{{ successMessage() }}</div>
-      }
+  </div>
+
+  @if (successMessage()) {
+    <div class="success-alert" [@slideAlert]>
+      {{ successMessage() }}
     </div>
-  </header>
+  }
 
-  <!-- Pestañas -->
-  <nav class="tabs-nav">
-    <button class="tab-btn" [class.active]="activeTab() === 'niveles'" (click)="setTab('niveles')">
-      Niveles Educativos
-    </button>
-    <button class="tab-btn" [class.active]="activeTab() === 'grados'" (click)="setTab('grados')">
-      Grados y Secciones
-    </button>
-    <button class="tab-btn" [class.active]="activeTab() === 'materias'" (click)="setTab('materias')">
-      Catálogo de Materias
-    </button>
-    <button class="tab-btn" [class.active]="activeTab() === 'oferta'" (click)="setTab('oferta')">
-      Oferta Educativa
-    </button>
-  </nav>
+  @if (error()) {
+    <div class="form-error-note" style="margin-bottom: 20px; padding: 13px 14px;" [@slideAlert]>
+      {{ error() }}
+    </div>
+  }
 
-  <main class="dashboard-content">
-    <!-- ==================== TABS ==================== -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.is-active]="activeTab() === 'resumen'" (click)="setTab('resumen')">Resumen</button>
+    <button class="tab-btn" [class.is-active]="activeTab() === 'niveles'" (click)="setTab('niveles')">Niveles Educativos</button>
+    <button class="tab-btn" [class.is-active]="activeTab() === 'grados'" (click)="setTab('grados')">Grados y Secciones</button>
+    <button class="tab-btn" [class.is-active]="activeTab() === 'materias'" (click)="setTab('materias')">Materias</button>
+  </div>
 
-    <!-- TAB: NIVELES EDUCATIVOS -->
-    @if (activeTab() === 'niveles') {
-      <div class="card panel-card fade-in">
-        <div class="panel-header">
-          <h2>Niveles Educativos</h2>
-          <button class="btn-primary" (click)="openAddNivel()">+ Nuevo Nivel</button>
+  @if (activeTab() === 'resumen') {
+    <div [@tabTransition]>
+      <!-- KPI Cards Globales -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon is-admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Niveles Educativos</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalNiveles()">{{ totalNiveles() }}</strong></span>
+            <span class="kpi-subtext">Registrados en la BD</span>
+          </div>
         </div>
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Turno</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-                <th class="text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (nivel of niveles(); track nivel.id) {
-                <tr [class.inactive-row]="!nivel.activo">
-                  <td>{{ nivel.id }}</td>
-                  <td class="font-bold">{{ nivel.nombre }}</td>
-                  <td>{{ nivel.turno }}</td>
-                  <td>{{ nivel.descripcion || '-' }}</td>
-                  <td>
-                    <span class="status-badge" [class.status-active]="nivel.activo" [class.status-inactive]="!nivel.activo">
-                      {{ nivel.activo ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-                  <td class="text-right">
-                    <div class="action-row-btns">
-                      <button class="btn-primary-subtle" (click)="openEditNivel(nivel)">Editar</button>
-                      @if (nivel.activo) {
-                        <button class="btn-danger-subtle" (click)="deleteNivel(nivel.id)">Desactivar</button>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6" class="text-center text-muted">No hay niveles educativos registrados.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="kpi-card">
+          <div class="kpi-icon is-good">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Grados Totales</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalGrados()">{{ totalGrados() }}</strong></span>
+            <span class="kpi-subtext">En todos los niveles</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon is-student">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Materias Totales</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalMaterias()">{{ totalMaterias() }}</strong></span>
+            <span class="kpi-subtext">{{ materiasActivas() }} activas</span>
+          </div>
         </div>
       </div>
-    }
 
-    <!-- TAB: GRADOS Y SECCIONES (Tree View) -->
-    @if (activeTab() === 'grados') {
-      <div class="card panel-card fade-in">
-        <div class="panel-header">
-          <h2>Grados y Secciones</h2>
-          <p class="text-sm text-muted">Haga clic en un nivel para expandir sus grados.</p>
-        </div>
-        <div class="tree-view-container">
+      <!-- Árbol de Estructura Simplificado -->
+      <section class="surface" style="padding: 24px;">
+        <h3 style="margin-top: 0; margin-bottom: 24px; font-size: 16px; font-weight: 700;">Árbol de Estructura Académica</h3>
+        <div class="tree-view-container" style="padding: 0;">
           @for (nivel of niveles(); track nivel.id) {
             <div class="tree-node">
-              <div class="tree-node-header" (click)="toggleNivelExpansion(nivel.id)">
+              <div class="tree-node-header" style="cursor: default;">
                 <div class="tree-node-info">
-                  <span class="tree-icon">{{ expandedNiveles().has(nivel.id) ? '▼' : '▶' }}</span>
-                  <span class="font-bold">{{ nivel.nombre }} ({{ nivel.turno }})</span>
+                  <span class="tree-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                  </span>
+                  <span style="font-weight: 700;">{{ nivel.nombre }}</span>
+                  <span style="color: var(--muted); font-size: 12px; margin-left: 8px;">({{ nivel.turno }})</span>
                 </div>
-                <div class="tree-node-actions" (click)="$event.stopPropagation()">
-                  <button class="btn-primary-subtle text-xs" (click)="openAddGrado(nivel.id)">+ Añadir Grado</button>
+                <div>
+                  <span class="status-pill-premium" [class.is-active]="nivel.activo" [class.is-inactive]="!nivel.activo" style="transform: scale(0.85); transform-origin: right;">
+                    <div class="status-dot"></div>
+                    {{ nivel.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
                 </div>
               </div>
-              @if (expandedNiveles().has(nivel.id)) {
-                <div class="tree-node-children fade-in">
-                  @if (gradosPorNivel().get(nivel.id)?.length) {
-                    <table class="data-table tree-table">
-                      <thead>
-                        <tr>
-                          <th>Grado</th>
-                          <th>Paralelo / Sección</th>
-                          <th>Aforo</th>
-                          <th>Estado</th>
-                          <th class="text-right">Acciones</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (grado of gradosPorNivel().get(nivel.id); track grado.id) {
-                          <tr [class.inactive-row]="!grado.activo">
-                            <td class="font-bold pl-4">{{ grado.nombre }}</td>
-                            <td>{{ grado.paralelo }}</td>
-                            <td>{{ grado.capacidad }}</td>
-                            <td>
-                              <span class="status-badge" [class.status-active]="grado.activo" [class.status-inactive]="!grado.activo">
-                                {{ grado.activo ? 'Activo' : 'Inactivo' }}
-                              </span>
-                            </td>
-                            <td class="text-right">
-                              <div class="action-row-btns">
-                                <button class="btn-primary-subtle" (click)="openEditGrado(grado)">Editar</button>
-                                @if (grado.activo) {
-                                  <button class="btn-danger-subtle" (click)="deleteGrado(grado)">Desactivar</button>
-                                }
-                              </div>
-                            </td>
-                          </tr>
-                        }
-                      </tbody>
-                    </table>
+              <div class="tree-node-children" style="padding-left: 40px; margin-top: 12px; margin-bottom: 20px;">
+                @if (gradosPorNivel().get(nivel.id); as gs) {
+                  @if (gs.length > 0) {
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                      @for (g of gs; track g.id) {
+                        <span class="premium-chip" style="font-size: 12px; padding: 4px 12px;">{{ g.nombre }} {{ g.paralelo }}</span>
+                      }
+                    </div>
                   } @else {
-                    <div class="empty-state-small">No hay grados registrados en este nivel.</div>
+                    <span style="color: var(--muted); font-size: 12px;">No hay grados asignados.</span>
                   }
-                </div>
-              }
+                } @else {
+                  <span style="color: var(--muted); font-size: 12px;">No hay grados asignados.</span>
+                }
+              </div>
             </div>
           } @empty {
-            <div class="empty-state">
-              <p>No hay niveles educativos registrados. Primero cree un Nivel Educativo.</p>
+            <div class="empty-state-enhanced">
+              <p>No se encontraron niveles educativos registrados.</p>
             </div>
           }
         </div>
-      </div>
-    }
+      </section>
+    </div>
+  }
 
-    <!-- TAB: MATERIAS -->
-    @if (activeTab() === 'materias') {
-      <div class="card panel-card fade-in">
-        <div class="panel-header with-search">
-          <div class="search-box">
-            <select class="form-input search-input" [ngModel]="selectedArea()" (ngModelChange)="selectedArea.set($event)">
+  @if (activeTab() === 'niveles') {
+    <div [@tabTransition]>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon is-admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Total Niveles</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalNiveles()">{{ totalNiveles() }}</strong></span>
+            <span class="kpi-subtext">Registrados en la BD</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modern-toolbar" [@slideInRight]>
+        <div class="toolbar-search">
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn-primary pill-btn" (click)="openAddNivel()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="margin-right: 6px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nuevo Nivel
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container-full">
+        <section class="surface">
+          <div class="surface-header">
+            <div>
+              <h3>Niveles Educativos</h3>
+            </div>
+          </div>
+          <div class="quiet-table-wrap">
+            <table class="quiet-table" style="min-width: 100%;">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Turno</th>
+                  <th>Descripción</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody [@staggerRows]="niveles().length">
+                @for (nivel of niveles(); track nivel.id) {
+                  <tr>
+                    <td><strong># {{ nivel.id }}</strong></td>
+                    <td class="font-bold">{{ nivel.nombre }}</td>
+                    <td>{{ nivel.turno }}</td>
+                    <td><span class="text-muted">{{ nivel.descripcion || '-' }}</span></td>
+                    <td>
+                      <span class="status-pill-premium" [class.is-active]="nivel.activo" [class.is-inactive]="!nivel.activo">
+                        <div class="status-dot"></div>
+                        {{ nivel.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="action-row-btns">
+                        <button class="action-icon-btn edit" title="Editar" (click)="openEditNivel(nivel)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </button>
+                        @if (nivel.activo) {
+                          <button class="action-icon-btn deactivate" title="Desactivar" (click)="deleteNivel(nivel.id)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6">
+                      <div class="empty-state-enhanced">
+                        <p>No hay niveles educativos registrados.</p>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+
+  @if (activeTab() === 'grados') {
+    <div [@tabTransition]>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon is-teacher">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Total Grados</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalGrados()">{{ totalGrados() }}</strong></span>
+            <span class="kpi-subtext">Secciones registradas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container-full">
+        <section class="surface">
+          <div class="surface-header">
+            <div>
+              <h3>Estructura de Grados</h3>
+              <p>Haga clic en un nivel para expandir sus grados y secciones.</p>
+            </div>
+          </div>
+          <div class="tree-view-container">
+            @for (nivel of niveles(); track nivel.id) {
+              <div class="tree-node">
+                <div class="tree-node-header" (click)="toggleNivelExpansion(nivel.id)">
+                  <div class="tree-node-info">
+                    <span class="tree-icon" [@expandCollapse]="expandedNiveles().has(nivel.id) ? 'expanded' : 'collapsed'">
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </span>
+                    <strong style="font-size: 14px;">{{ nivel.nombre }} ({{ nivel.turno }})</strong>
+                  </div>
+                  <div class="tree-node-actions" (click)="$event.stopPropagation()">
+                    <button class="btn-primary-subtle text-xs" (click)="openAddGrado(nivel.id)">+ Añadir Grado</button>
+                  </div>
+                </div>
+                
+                @if (expandedNiveles().has(nivel.id)) {
+                  <div class="tree-node-children" [@expandCollapse]="'expanded'">
+                    @if (gradosAgrupadosPorNivel().get(nivel.id)?.length) {
+                      <div style="padding-left: 20px; border-left: 2px solid var(--line); margin-left: 12px; margin-bottom: 16px;">
+                        @for (grupo of gradosAgrupadosPorNivel().get(nivel.id); track grupo.nombreGrado) {
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px; margin-top: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="color: var(--slate-400);"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path></svg>
+                              <strong style="color: var(--ink); font-size: 15px;">{{ grupo.nombreGrado }}</strong>
+                            </div>
+                            <button class="btn-primary-subtle text-xs" (click)="openPlanEstudios(grupo, $event)" title="Plan de Estudios">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14" style="margin-right: 4px;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                              Plan de Estudios ({{ grupo.paralelos.length }} secciones)
+                            </button>
+                          </div>
+                          
+                          <div class="quiet-table-wrap" style="margin-bottom: 24px; margin-left: 16px;">
+                            <table class="quiet-table" style="min-width: 100%;">
+                              <thead>
+                                <tr>
+                                  <th>Paralelo / Sección</th>
+                                  <th>Aforo</th>
+                                  <th>Estado</th>
+                                  <th>Acciones</th>
+                                </tr>
+                              </thead>
+                              <tbody [@staggerRows]="grupo.paralelos.length">
+                                @for (grado of grupo.paralelos; track grado.id) {
+                                  <tr>
+                                    <td><strong>{{ grado.paralelo }}</strong></td>
+                                    <td>{{ grado.capacidad }}</td>
+                                    <td>
+                                      <span class="status-pill-premium" [class.is-active]="grado.activo" [class.is-inactive]="!grado.activo">
+                                        <div class="status-dot"></div>
+                                        {{ grado.activo ? 'Activo' : 'Inactivo' }}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      <div class="action-row-btns" style="gap: 8px;">
+                                        <button class="action-icon-btn edit" title="Editar" (click)="openEditGrado(grado)">
+                                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                        </button>
+                                        @if (grado.activo) {
+                                          <button class="action-icon-btn deactivate" title="Desactivar" (click)="deleteGrado(grado)">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                          </button>
+                                        }
+                                      </div>
+                                    </td>
+                                  </tr>
+                                }
+                              </tbody>
+                            </table>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <div class="empty-state-enhanced" style="margin: 16px 0 16px 32px; border: 1px dashed var(--line); border-radius: 8px;">
+                        <p style="font-size: 13px;">No hay grados registrados en este nivel.</p>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            } @empty {
+              <div class="empty-state-enhanced">
+                <p>No hay niveles educativos registrados. Primero cree un Nivel Educativo.</p>
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+
+  @if (activeTab() === 'materias') {
+    <div [@tabTransition]>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon is-good">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Materias Activas</span>
+            <span class="kpi-value"><strong [@counterAnimate]="materiasActivas()">{{ materiasActivas() }}</strong></span>
+            <span class="kpi-subtext">de {{ totalMaterias() }} materias en catálogo</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modern-toolbar" [@slideInRight]>
+        <div class="toolbar-search">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text"
+                 placeholder="Buscar materia..."
+                 [ngModel]="searchMateriaQuery()"
+                 (ngModelChange)="searchMateriaQuery.set($event)">
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-filters">
+          <div class="toolbar-select-wrap">
+            <span class="select-label">Área:</span>
+            <select class="toolbar-select" [ngModel]="selectedArea()" (ngModelChange)="selectedArea.set($event)">
               <option value="">Todas las Áreas</option>
               @for (area of areas(); track area) {
                 <option [value]="area">{{ area }}</option>
               }
             </select>
-            <input type="text" class="form-input search-input" placeholder="Buscar materia por código, nombre..."                   [ngModel]="searchMateriaQuery()" (ngModelChange)="searchMateriaQuery.set($event)">
           </div>
-          <button class="btn-primary" (click)="openAddMateria()">+ Nueva Materia</button>
         </div>
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nombre de Asignatura</th>
-                <th>Área Académica</th>
-                <th>Estado</th>
-                <th class="text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (materia of filteredMaterias(); track materia.id) {
-                <tr [class.inactive-row]="!materia.activa">
-                  <td class="font-mono">{{ materia.codigo }}</td>
-                  <td class="font-bold">{{ materia.nombre }}</td>
-                  <td><span class="area-chip">{{ materia.area }}</span></td>
-                  <td>
-                    <span class="status-badge" [class.status-active]="materia.activa" [class.status-inactive]="!materia.activa">
-                      {{ materia.activa ? 'Activa' : 'Inactiva' }}
-                    </span>
-                  </td>
-                  <td class="text-right">
-                    <div class="action-row-btns">
-                      <button class="btn-primary-subtle" (click)="openEditMateria(materia)">Editar</button>
-                      @if (materia.activa) {
-                        <button class="btn-danger-subtle" (click)="deleteMateria(materia.id)">Desactivar</button>
-                      }
-                    </div>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="5" class="text-center text-muted">No se encontraron materias.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+
+        <div class="toolbar-actions">
+          <button class="btn-primary pill-btn" (click)="openAddMateria()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="margin-right: 6px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nueva Materia
+          </button>
         </div>
       </div>
-    }
 
-    <!-- TAB: OFERTA EDUCATIVA (ASIGNACIÓN MASIVA) -->
-    @if (activeTab() === 'oferta') {
-      <div class="oferta-grid fade-in">
-        <!-- Panel Izquierdo: Selección y Grados -->
-        <div class="card panel-card oferta-left">
-          <div class="panel-header">
-            <h3>Seleccionar Grado</h3>
-          </div>
-          <div class="form-group selector-grado">
-            <select class="form-input mb-3" (change)="onSelectNivelForOferta($event)" [value]="selectedNivelForOferta() || ''">
-              <option value="" disabled selected>-- Seleccione un Nivel --</option>
-              @for (nivel of niveles(); track nivel.id) {
-                <option [value]="nivel.id">{{ nivel.nombre }} ({{ nivel.turno }})</option>
-              }
-            </select>
-            @if (selectedNivelForOferta()) {
-              <select class="form-input" (change)="onSelectGradoForOferta($event)" [value]="selectedGradoForOferta() || ''">
-                <option value="" disabled selected>-- Seleccione un Grado --</option>
-                @for (grado of gradosForOferta(); track grado.id) {
-                  <option [value]="grado.id">{{ grado.nombre }} "{{ grado.paralelo }}"</option>
-                }
-              </select>
-            }
-          </div>
-
-          @if (selectedGradoForOferta()) {
-            <h4 class="mt-4 mb-2">Materias Actuales en este Grado:</h4>
-            <div class="current-courses-list">
-              @for (curso of cursos(); track curso.id) {
-                <div class="course-item">
-                  <div class="course-info">
-                    <span class="font-mono text-xs">{{ curso.materiaCodigo }}</span>
-                    <strong>{{ curso.materiaNombre }}</strong>
-                  </div>
-                  <button class="btn-icon text-danger" title="Remover" (click)="removeCurso(curso.id)">×</button>
-                </div>
-              } @empty {
-                <p class="text-muted text-sm">Este grado aún no tiene materias asignadas.</p>
-              }
+      <div class="table-container-full">
+        <section class="surface">
+          <div class="surface-header">
+            <div>
+              <h3>Materias ({{ filteredMaterias().length }})</h3>
             </div>
-          }
-        </div>
-
-        <!-- Panel Derecho: Catálogo para asignar -->
-        <div class="card panel-card oferta-right" [class.disabled-panel]="!selectedGradoForOferta()">
-          <div class="panel-header">
-            <h3>Asignar Nuevas Materias</h3>
-            <button class="btn-primary" [disabled]="selectedMateriasToAssign().length === 0" (click)="assignMaterias()">
-              Asignar Seleccionadas ({{ selectedMateriasToAssign().length }})
-            </button>
           </div>
-          <div class="materias-checklist">
-            @for (materia of materias(); track materia.id) {
-              @if (materia.activa && !assignedMateriasIds().has(materia.id)) {
-                <label class="checklist-item">
-                  <input type="checkbox"                         [checked]="selectedMateriasToAssign().includes(materia.id)"
-                         (change)="toggleMateriaSelection(materia.id)">
-                  <div class="checklist-content">
-                    <span class="materia-name">{{ materia.nombre }}</span>
-                    <span class="materia-area">{{ materia.area }}</span>
-                  </div>
-                </label>
-              }
-            }
+          <div class="quiet-table-wrap">
+            <table class="quiet-table" style="min-width: 100%;">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre de Asignatura</th>
+                  <th>Área Académica</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody [@staggerRows]="filteredMaterias().length">
+                @for (materia of filteredMaterias(); track materia.id) {
+                  <tr>
+                    <td><strong style="color: var(--slate-800); font-family: monospace;">{{ materia.codigo }}</strong></td>
+                    <td class="font-bold">{{ materia.nombre }}</td>
+                    <td><span class="area-chip">{{ materia.area }}</span></td>
+                    <td>
+                      <span class="status-pill-premium" [class.is-active]="materia.activa" [class.is-inactive]="!materia.activa">
+                        <div class="status-dot"></div>
+                        {{ materia.activa ? 'Activa' : 'Inactiva' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="action-row-btns">
+                        <button class="action-icon-btn edit" title="Editar" (click)="openEditMateria(materia)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        </button>
+                        @if (materia.activa) {
+                          <button class="action-icon-btn deactivate" title="Desactivar" (click)="deleteMateria(materia.id)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5">
+                      <div class="empty-state-enhanced">
+                        <p>No se encontraron materias.</p>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
-        </div>
-
+        </section>
       </div>
-    }
+    </div>
+  }
+</section>
 
-  </main>
+<!-- MODALS -->
 
-  <!-- ==================== MODALES ==================== -->
-
-  <!-- Modal Nivel -->
-  @if (isAddingNivel() || isEditingNivel()) {
-    <div class="modal-overlay">
-      <div class="modal-container">
-        <h2 class="modal-title">{{ isAddingNivel() ? 'Nuevo Nivel Educativo' : 'Editar Nivel Educativo' }}</h2>
-        <form [formGroup]="nivelForm" (ngSubmit)="saveNivel()" class="modal-form">
-          <div class="form-group">
-            <label>Nombre del Nivel (Ej. Primaria)</label>
-            <input type="text" class="form-input" formControlName="nombre" placeholder="Nombre...">
+@if (isAddingNivel() || isEditingNivel()) {
+  <div class="modal-overlay" (click)="closeNivelModal()" [@fadeIn]>
+    <div class="modal-card" (click)="$event.stopPropagation()" [@scaleInModal]>
+      <div class="modal-header">
+        <h3>{{ isEditingNivel() ? 'Editar' : 'Nuevo' }} Nivel Educativo</h3>
+        <button class="close-btn" (click)="closeNivelModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="nivelForm" (ngSubmit)="saveNivel()" class="premium-form-group">
+          <div class="premium-field">
+            <span>Nombre del Nivel</span>
+            <input type="text" formControlName="nombre" class="premium-input" placeholder="Ej. Secundaria">
           </div>
-          <div class="form-group">
-            <label>Turno</label>
-            <select class="form-input" formControlName="turno">
+          <div class="premium-field">
+            <span>Turno</span>
+            <select formControlName="turno" class="premium-select">
               <option value="MANANA">Mañana</option>
               <option value="TARDE">Tarde</option>
               <option value="NOCHE">Noche</option>
             </select>
           </div>
-          <div class="form-group">
-            <label>Descripción</label>
-            <textarea class="form-input" formControlName="descripcion" rows="3"></textarea>
+          <div class="premium-field">
+            <span>Gestión Académica</span>
+            <select formControlName="gestionAcademicaId" class="premium-select">
+              <option value="" disabled>Seleccione...</option>
+              @for (g of gestiones(); track g.id) { <option [value]="g.id">{{ g.anio }} - {{ g.nombre }}</option> }
+            </select>
+          </div>
+          <div class="premium-field">
+            <span>Descripción (Opcional)</span>
+            <input type="text" formControlName="descripcion" class="premium-input">
+          </div>
+          <div class="premium-field">
+            <label class="premium-checkbox">
+              <input type="checkbox" formControlName="activo">
+              <span class="custom-check"></span>
+              <span>Nivel Activo</span>
+            </label>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" (click)="closeNivelModal()">Cancelar</button>
-            <button type="submit" class="btn-primary" [disabled]="nivelForm.invalid">Guardar</button>
+            <button type="submit" class="btn-primary" [disabled]="nivelForm.invalid">Guardar Nivel</button>
           </div>
         </form>
       </div>
     </div>
-  }
+  </div>
+}
 
-  <!-- Modal Grado -->
-  @if (isAddingGrado() || isEditingGrado()) {
-    <div class="modal-overlay">
-      <div class="modal-container">
-        <h2 class="modal-title">{{ isAddingGrado() ? 'Nuevo Grado' : 'Editar Grado' }}</h2>
-        <form [formGroup]="gradoForm" (ngSubmit)="saveGrado()" class="modal-form">
-          <div class="form-group">
-            <label>Nombre del Grado (Ej. 1° Año)</label>
-            <input type="text" class="form-input" formControlName="nombre">
+@if (isAddingGrado() || isEditingGrado()) {
+  <div class="modal-overlay" (click)="closeGradoModal()" [@fadeIn]>
+    <div class="modal-card" (click)="$event.stopPropagation()" [@scaleInModal]>
+      <div class="modal-header">
+        <h3>{{ isEditingGrado() ? 'Editar' : 'Añadir' }} Grado o Sección</h3>
+        <button class="close-btn" (click)="closeGradoModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="gradoForm" (ngSubmit)="saveGrado()" class="premium-form-group">
+          <div class="premium-field">
+            <span>Nombre del Grado</span>
+            <input type="text" formControlName="nombre" class="premium-input" placeholder="Ej. Primero">
           </div>
-          <div class="form-group">
-            <label>Paralelo / Sección (Ej. A, B, Única)</label>
-            <input type="text" class="form-input" formControlName="paralelo">
+          <div class="premium-field">
+            <span>Sección / Paralelo</span>
+            <input type="text" formControlName="paralelo" class="premium-input" placeholder="Ej. A">
           </div>
-          <div class="form-group">
-            <label>Aforo</label>
-            <input type="number" min="1" class="form-input" formControlName="capacidad">
+          <div class="premium-field">
+            <span>Aforo Máximo (Capacidad)</span>
+            <input type="number" formControlName="capacidad" class="premium-input" min="1">
+          </div>
+          <div class="premium-field">
+            <label class="premium-checkbox">
+              <input type="checkbox" formControlName="activo">
+              <span class="custom-check"></span>
+              <span>Grado Activo</span>
+            </label>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" (click)="closeGradoModal()">Cancelar</button>
-            <button type="submit" class="btn-primary" [disabled]="gradoForm.invalid">Guardar</button>
+            <button type="submit" class="btn-primary" [disabled]="gradoForm.invalid">Guardar Grado</button>
           </div>
         </form>
       </div>
     </div>
-  }
+  </div>
+}
 
-  <!-- Modal Materia -->
-  @if (isAddingMateria() || isEditingMateria()) {
-    <div class="modal-overlay">
-      <div class="modal-container">
-        <h2 class="modal-title">{{ isAddingMateria() ? 'Nueva Materia' : 'Editar Materia' }}</h2>
-        <form [formGroup]="materiaForm" (ngSubmit)="saveMateria()" class="modal-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Código (Ej. MAT-101)</label>
-              <input type="text" class="form-input font-mono" formControlName="codigo">
-            </div>
-            <div class="form-group flex-2">
-              <label>Nombre de Asignatura</label>
-              <input type="text" class="form-input" formControlName="nombre">
-            </div>
+@if (isAddingMateria() || isEditingMateria()) {
+  <div class="modal-overlay" (click)="closeMateriaModal()" [@fadeIn]>
+    <div class="modal-card" (click)="$event.stopPropagation()" [@scaleInModal]>
+      <div class="modal-header">
+        <h3>{{ isEditingMateria() ? 'Editar' : 'Nueva' }} Materia</h3>
+        <button class="close-btn" (click)="closeMateriaModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="materiaForm" (ngSubmit)="saveMateria()" class="premium-form-group">
+          <div class="premium-field">
+            <span>Código de Asignatura</span>
+            <input type="text" formControlName="codigo" class="premium-input" placeholder="Ej. MAT-101">
           </div>
-          <div class="form-group">
-            <label>Área Académica (Ej. Ciencias, Matemáticas)</label>
-            <input type="text" class="form-input" formControlName="area">
+          <div class="premium-field">
+            <span>Nombre Completo</span>
+            <input type="text" formControlName="nombre" class="premium-input" placeholder="Ej. Matemáticas">
+          </div>
+          <div class="premium-field">
+            <span>Área Académica</span>
+            <input type="text" formControlName="area" class="premium-input" placeholder="Ej. Ciencias Exactas">
+          </div>
+          <div class="premium-field">
+            <label class="premium-checkbox">
+              <input type="checkbox" formControlName="activa">
+              <span class="custom-check"></span>
+              <span>Materia Activa</span>
+            </label>
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" (click)="closeMateriaModal()">Cancelar</button>
-            <button type="submit" class="btn-primary" [disabled]="materiaForm.invalid">Guardar</button>
+            <button type="submit" class="btn-primary" [disabled]="materiaForm.invalid">Guardar Materia</button>
           </div>
         </form>
       </div>
     </div>
-  }
+  </div>
+}
 
-</div>
+<!-- DRAWER DE PLAN DE ESTUDIOS -->
+@if (isOfertaDrawerOpen()) {
+  <div class="drawer-overlay" (click)="closePlanEstudios()" [@fadeIn]></div>
+  <div class="drawer drawer-large" [@slideInRight]>
+    <div class="drawer-header">
+      <div>
+        <p class="section-kicker" style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin: 0 0 4px 0;">Plan de Estudios</p>
+        <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--ink);">Grado Base: {{ selectedGrupoGradoForDrawer()?.nombreGrado }}</h3>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--slate-500);">Aplica a {{ selectedGrupoGradoForDrawer()?.paralelos?.length }} secciones</p>
+      </div>
+      <button class="close-btn" (click)="closePlanEstudios()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: var(--steel);">&times;</button>
+    </div>
+    
+    <div class="drawer-body">
+      <div style="margin-bottom: 24px;">
+        <p style="color: var(--steel); font-size: 14px; margin: 0;">Seleccione las asignaturas que formarán parte del plan de estudios de este grado para la gestión activa.</p>
+      </div>
+      
+      <div class="premium-checkbox-grid">
+        @for (materia of materias(); track materia.id) {
+          @if (materia.activa) {
+            <label class="premium-chip" [class.is-active]="drawerSelectedMaterias().has(materia.id)">
+              <input type="checkbox"
+                     [checked]="drawerSelectedMaterias().has(materia.id)"
+                     (change)="toggleDrawerMateria(materia.id)">
+              <div class="custom-check"></div>
+              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+                <span>{{ materia.nombre }}</span>
+                <span style="font-size: 10px; opacity: 0.7;">{{ materia.area }}</span>
+              </div>
+            </label>
+          }
+        }
+      </div>
+      @if (materias().length === 0) {
+        <div class="empty-state-enhanced">
+          <p>No hay materias activas en el catálogo.</p>
+        </div>
+      }
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-secondary" (click)="closePlanEstudios()">Cancelar</button>
+      <button class="btn-primary" (click)="savePlanEstudios()">Guardar Plan de Estudios</button>
+    </div>
+  </div>
+}

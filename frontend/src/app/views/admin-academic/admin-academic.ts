@@ -3,25 +3,42 @@ import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } 
 import { CommonModule } from '@angular/common';
 import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
-import { fadeIn } from '../../core/animations';
+import {
+  fadeIn, staggerRows, slideInRight, slideAlert,
+  scaleInModal, tabTransition, counterAnimate, expandCollapse
+} from '../../core/animations';
 import { EntityId } from '../../core/models';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
-type Tab = 'niveles' | 'grados' | 'materias' | 'oferta';
+type Tab = 'resumen' | 'niveles' | 'grados' | 'materias';
+
+export interface GrupoGrado {
+  nombreGrado: string;
+  paralelos: Academico.GradoResponse[];
+}
 
 @Component({
   selector: 'app-admin-academic',
+  standalone: true,
   imports: [ReactiveFormsModule, FormsModule, CommonModule],
   templateUrl: './admin-academic.html',
   styleUrl: './admin-academic.css',
-  animations: [fadeIn],
+  animations: [fadeIn, staggerRows, slideInRight, slideAlert, scaleInModal, tabTransition, counterAnimate, expandCollapse],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminAcademic {
   private readonly portal = inject(PortalService);
 
-  readonly activeTab = signal<Tab>('niveles');
+  readonly activeTab = signal<Tab>('resumen');
   readonly error = signal('');
   readonly successMessage = signal('');
+
+  // --- KPIs ---
+  readonly totalNiveles = computed(() => this.niveles().length);
+  readonly totalGrados = computed(() => Array.from(this.gradosPorNivel().values()).reduce((acc, curr) => acc + curr.length, 0));
+  readonly totalMaterias = computed(() => this.materias().length);
+  readonly materiasActivas = computed(() => this.materias().filter(m => m.activa).length);
 
   // --- NIVELES EDUCATIVOS ---
   readonly niveles = signal<Academico.NivelEducativoResponse[]>([]);
@@ -42,6 +59,57 @@ export class AdminAcademic {
   // --- GRADOS (Tree View) ---
   readonly expandedNiveles = signal<Set<EntityId>>(new Set());
   readonly gradosPorNivel = signal<Map<EntityId, Academico.GradoResponse[]>>(new Map());
+  
+  readonly gradosAgrupadosPorNivel = computed(() => {
+    const map = this.gradosPorNivel();
+    const result = new Map<EntityId, GrupoGrado[]>();
+    
+    // Diccionario de orden lógico escolar
+    const ordenAcademico: Record<string, number> = {
+      'INICIAL': 0, 'PREKINDER': 1, 'KINDER': 2,
+      'PRIMERO': 3, 'SEGUNDO': 4, 'TERCERO': 5, 'CUARTO': 6,
+      'QUINTO': 7, 'SEXTO': 8, 'SEPTIMO': 9, 'SÉPTIMO': 9, 'OCTAVO': 10, 'NOVENO': 11, 'DECIMO': 12, 'DÉCIMO': 12
+    };
+
+    const getOrder = (nombre: string): number => {
+      const key = nombre.toUpperCase();
+      // Si empieza con un número (ej. "1ro", "2do"), intentamos usar ese número
+      const match = key.match(/^(\d+)/);
+      if (match) return parseInt(match[1]);
+      return ordenAcademico[key] ?? 99; // 99 para grados desconocidos (van al final)
+    };
+    
+    map.forEach((grados, nivelId) => {
+      const groupsMap = new Map<string, Academico.GradoResponse[]>();
+      
+      grados.forEach(g => {
+        // Limpieza mágica: Quitar espacios al inicio y final
+        const cleanName = g.nombre.trim();
+        // Capitalizar de forma bonita: "TERCERO " -> "Tercero"
+        const displayKey = cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+        
+        const arr = groupsMap.get(displayKey) || [];
+        arr.push(g);
+        groupsMap.set(displayKey, arr);
+      });
+      
+      const grupos = Array.from(groupsMap.entries()).map(([nombreGrado, paralelos]) => ({
+        nombreGrado,
+        paralelos: paralelos.sort((a, b) => a.paralelo.localeCompare(b.paralelo))
+      })).sort((a, b) => {
+        const orderA = getOrder(a.nombreGrado);
+        const orderB = getOrder(b.nombreGrado);
+        
+        if (orderA !== orderB) return orderA - orderB;
+        // Si no están en el diccionario (ambos son 99), se ordenan alfabéticamente
+        return a.nombreGrado.localeCompare(b.nombreGrado);
+      });
+      
+      result.set(nivelId, grupos);
+    });
+    return result;
+  });
+
   readonly isAddingGrado = signal(false);
   readonly isEditingGrado = signal(false);
   readonly editingGradoId = signal<EntityId | null>(null);
@@ -60,6 +128,8 @@ export class AdminAcademic {
   readonly isEditingMateria = signal(false);
   readonly editingMateriaId = signal<EntityId | null>(null);
   readonly searchMateriaQuery = signal('');
+  readonly selectedArea = signal<string>('');
+  readonly areas = computed(() => Array.from(new Set(this.materias().map(m => m.area))));
 
   readonly filteredMaterias = computed(() => {
     const q = this.searchMateriaQuery().toLowerCase();
@@ -78,14 +148,11 @@ export class AdminAcademic {
     activa: new FormControl(true, { nonNullable: true }),
   });
 
-  // --- OFERTA EDUCATIVA (CURSOS) ---
-  readonly cursos = signal<Academico.CursoResponse[]>([]);
-  readonly selectedNivelForOferta = signal<EntityId | null>(null);
-  readonly gradosForOferta = signal<Academico.GradoResponse[]>([]);
-  readonly selectedGradoForOferta = signal<EntityId | null>(null);
-  readonly assignedMateriasIds = computed(() => new Set(this.cursos().map(c => c.materiaId)));
-  // Checklist de asignación masiva
-  selectedMateriasToAssign = signal<EntityId[]>([]);
+  // --- DRAWER PLAN DE ESTUDIOS (OFERTA ACADÉMICA MASIVA) ---
+  readonly isOfertaDrawerOpen = signal(false);
+  readonly selectedGrupoGradoForDrawer = signal<GrupoGrado | null>(null);
+  readonly drawerSelectedMaterias = signal<Set<EntityId>>(new Set()); // UI state
+  private oldMateriaIdsForDrawer = signal<Set<EntityId>>(new Set()); // Para saber qué se quitó/añadió
 
   constructor() {
     this.loadGestiones();
@@ -96,7 +163,7 @@ export class AdminAcademic {
   loadGestiones() {
     this.portal.getGestiones().subscribe({
       next: (data) => this.gestiones.set(data),
-      error: () => this.error.set('No se pudieron cargar las gestiones académicas.')
+      error: () => this.showError('No se pudieron cargar las gestiones académicas.')
     });
   }
 
@@ -111,8 +178,9 @@ export class AdminAcademic {
     this.portal.getNiveles().subscribe({
       next: (data) => {
         this.niveles.set(data);
+        data.forEach(nivel => this.loadGradosForNivel(nivel.id));
       },
-      error: () => this.error.set('No se pudieron cargar los niveles educativos.')
+      error: () => this.showError('No se pudieron cargar los niveles educativos.')
     });
   }
 
@@ -137,53 +205,33 @@ export class AdminAcademic {
   saveNivel() {
     if (this.nivelForm.invalid) return;
     const req = this.nivelForm.getRawValue() as Academico.NivelEducativoRequest;
-    if (this.isAddingNivel()) {
-      this.portal.createNivel(req).subscribe({
-        next: () => {
-          this.successMessage.set('Nivel educativo creado.');
-          this.closeNivelModal();
-          this.loadNiveles();
-        },
-        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al crear nivel.')
+    if (this.isEditingNivel() && this.editingNivelId()) {
+      this.portal.updateNivel(this.editingNivelId()!, req).subscribe({
+        next: () => { this.showSuccess('Nivel actualizado'); this.closeNivelModal(); this.loadNiveles(); },
+        error: () => this.showError('Error al actualizar nivel')
       });
-    } else if (this.isEditingNivel()) {
-      const id = this.editingNivelId();
-      if (!id) return;
-      this.portal.updateNivel(id, req).subscribe({
-        next: () => {
-          this.successMessage.set('Nivel educativo actualizado.');
-          this.closeNivelModal();
-          this.loadNiveles();
-        },
-        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al actualizar nivel.')
+    } else {
+      this.portal.createNivel(req).subscribe({
+        next: () => { this.showSuccess('Nivel creado'); this.closeNivelModal(); this.loadNiveles(); },
+        error: () => this.showError('Error al crear nivel')
       });
     }
   }
 
   deleteNivel(id: EntityId) {
-    if (!confirm('¿Desactivar este nivel educativo?')) return;
+    if (!confirm('¿Desactivar este nivel?')) return;
     this.portal.deleteNivel(id).subscribe({
-      next: () => {
-        this.successMessage.set('Nivel desactivado.');
-        this.loadNiveles();
-      },
-      error: () => this.error.set('Error al desactivar nivel.')
+      next: () => { this.showSuccess('Nivel desactivado'); this.loadNiveles(); },
+      error: () => this.showError('Error al desactivar nivel')
     });
   }
 
-  // --- LÓGICA GRADOS (Tree View) ---
+  // --- LÓGICA GRADOS ---
   toggleNivelExpansion(nivelId: EntityId) {
     const current = new Set(this.expandedNiveles());
-    if (current.has(nivelId)) {
-      current.delete(nivelId);
-      this.expandedNiveles.set(current);
-    } else {
-      current.add(nivelId);
-      this.expandedNiveles.set(current);
-      if (!this.gradosPorNivel().has(nivelId)) {
-        this.loadGradosForNivel(nivelId);
-      }
-    }
+    if (current.has(nivelId)) current.delete(nivelId);
+    else current.add(nivelId);
+    this.expandedNiveles.set(current);
   }
 
   loadGradosForNivel(nivelId: EntityId) {
@@ -192,8 +240,7 @@ export class AdminAcademic {
         const map = new Map(this.gradosPorNivel());
         map.set(nivelId, data);
         this.gradosPorNivel.set(map);
-      },
-      error: () => this.error.set('No se pudieron cargar los grados del nivel.')
+      }
     });
   }
 
@@ -218,25 +265,15 @@ export class AdminAcademic {
   saveGrado() {
     if (this.gradoForm.invalid) return;
     const req = this.gradoForm.getRawValue() as Academico.GradoRequest;
-    if (this.isAddingGrado()) {
-      this.portal.createGrado(req).subscribe({
-        next: () => {
-          this.successMessage.set('Grado creado.');
-          this.closeGradoModal();
-          this.loadGradosForNivel(req.nivelEducativoId!);
-        },
-        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al crear grado.')
+    if (this.isEditingGrado() && this.editingGradoId()) {
+      this.portal.updateGrado(this.editingGradoId()!, req).subscribe({
+        next: () => { this.showSuccess('Grado actualizado'); this.closeGradoModal(); this.loadGradosForNivel(req.nivelEducativoId); },
+        error: () => this.showError('Error al actualizar grado')
       });
-    } else if (this.isEditingGrado()) {
-      const id = this.editingGradoId();
-      if (!id) return;
-      this.portal.updateGrado(id, req).subscribe({
-        next: () => {
-          this.successMessage.set('Grado actualizado.');
-          this.closeGradoModal();
-          this.loadGradosForNivel(req.nivelEducativoId!);
-        },
-        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al actualizar grado.')
+    } else {
+      this.portal.createGrado(req).subscribe({
+        next: () => { this.showSuccess('Grado creado'); this.closeGradoModal(); this.loadGradosForNivel(req.nivelEducativoId); },
+        error: () => this.showError('Error al crear grado')
       });
     }
   }
@@ -244,25 +281,92 @@ export class AdminAcademic {
   deleteGrado(grado: Academico.GradoResponse) {
     if (!confirm('¿Desactivar este grado?')) return;
     this.portal.deleteGrado(grado.id).subscribe({
+      next: () => { this.showSuccess('Grado desactivado'); this.loadGradosForNivel(grado.nivelEducativoId); },
+      error: () => this.showError('Error al desactivar grado')
+    });
+  }
+
+  // --- DRAWER PLAN DE ESTUDIOS (GROUPED) ---
+  openPlanEstudios(grupo: GrupoGrado, event: Event) {
+    event.stopPropagation();
+    this.selectedGrupoGradoForDrawer.set(grupo);
+    this.isOfertaDrawerOpen.set(true);
+    this.drawerSelectedMaterias.set(new Set());
+    this.oldMateriaIdsForDrawer.set(new Set());
+    
+    // Load currently assigned materias for the FIRST paralelo to prefill the UI
+    if (grupo.paralelos.length > 0) {
+      const firstParaleloId = grupo.paralelos[0].id;
+      this.portal.getCursos(firstParaleloId).subscribe({
+        next: (cursos) => {
+          const assignedIds = new Set(cursos.map(c => c.materiaId));
+          this.drawerSelectedMaterias.set(assignedIds);
+          this.oldMateriaIdsForDrawer.set(new Set(assignedIds)); // Clonamos para referencia
+        },
+        error: () => this.showError('No se pudieron cargar las materias asignadas.')
+      });
+    }
+  }
+
+  closePlanEstudios() {
+    this.isOfertaDrawerOpen.set(false);
+    this.selectedGrupoGradoForDrawer.set(null);
+  }
+
+  toggleDrawerMateria(materiaId: EntityId) {
+    const current = new Set(this.drawerSelectedMaterias());
+    if (current.has(materiaId)) {
+      current.delete(materiaId);
+    } else {
+      current.add(materiaId);
+    }
+    this.drawerSelectedMaterias.set(current);
+  }
+
+  savePlanEstudios() {
+    const grupo = this.selectedGrupoGradoForDrawer();
+    if (!grupo) return;
+
+    const oldMateriaIds = this.oldMateriaIdsForDrawer();
+    const newMateriaIds = this.drawerSelectedMaterias();
+
+    // 1. Find added materias
+    const addedIds = Array.from(newMateriaIds).filter(id => !oldMateriaIds.has(id));
+    
+    // 2. Find removed materias
+    const removedIds = Array.from(oldMateriaIds).filter(id => !newMateriaIds.has(id));
+
+    const requests: any[] = [];
+
+    // For EACH paralelo in the group, apply the changes
+    for (const paralelo of grupo.paralelos) {
+      if (addedIds.length > 0) {
+        requests.push(this.portal.asignarCursosMasivo({ gradoId: paralelo.id, materiasIds: addedIds }));
+      }
+      if (removedIds.length > 0) {
+        requests.push(this.portal.removerCursosMasivo(paralelo.id, removedIds).pipe(catchError(e => of(null))));
+      }
+    }
+
+    if (requests.length === 0) {
+      this.closePlanEstudios();
+      return;
+    }
+
+    forkJoin(requests).subscribe({
       next: () => {
-        this.successMessage.set('Grado desactivado.');
-        this.loadGradosForNivel(grado.nivelEducativoId!);
+        this.showSuccess(`Plan de estudios aplicado a todos los paralelos de ${grupo.nombreGrado}.`);
+        this.closePlanEstudios();
       },
-      error: () => this.error.set('Error al desactivar grado.')
+      error: () => this.showError('Ocurrió un error al guardar los cambios del plan de estudios masivo.')
     });
   }
 
   // --- LÓGICA MATERIAS ---
-  readonly areas = computed(() => {
-    const areasSet = new Set(this.materias().map(m => m.area));
-    return Array.from(areasSet).sort();
-  });
-  readonly selectedArea = signal<string>('');
-
   loadMaterias() {
     this.portal.getMaterias().subscribe({
       next: (data) => this.materias.set(data),
-      error: () => this.error.set('No se pudieron cargar las materias.')
+      error: () => this.showError('No se pudieron cargar las materias.')
     });
   }
 
@@ -287,25 +391,15 @@ export class AdminAcademic {
   saveMateria() {
     if (this.materiaForm.invalid) return;
     const req = this.materiaForm.getRawValue() as Academico.MateriaRequest;
-    if (this.isAddingMateria()) {
-      this.portal.createMateria(req).subscribe({
-        next: () => {
-          this.successMessage.set('Materia creada.');
-          this.closeMateriaModal();
-          this.loadMaterias();
-        },
-        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al crear materia.')
+    if (this.isEditingMateria() && this.editingMateriaId()) {
+      this.portal.updateMateria(this.editingMateriaId()!, req).subscribe({
+        next: () => { this.showSuccess('Materia actualizada'); this.closeMateriaModal(); this.loadMaterias(); },
+        error: () => this.showError('Error al actualizar materia')
       });
-    } else if (this.isEditingMateria()) {
-      const id = this.editingMateriaId();
-      if (!id) return;
-      this.portal.updateMateria(id, req).subscribe({
-        next: () => {
-          this.successMessage.set('Materia actualizada.');
-          this.closeMateriaModal();
-          this.loadMaterias();
-        },
-        error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al actualizar materia.')
+    } else {
+      this.portal.createMateria(req).subscribe({
+        next: () => { this.showSuccess('Materia creada'); this.closeMateriaModal(); this.loadMaterias(); },
+        error: () => this.showError('Error al crear materia')
       });
     }
   }
@@ -313,75 +407,18 @@ export class AdminAcademic {
   deleteMateria(id: EntityId) {
     if (!confirm('¿Desactivar esta materia?')) return;
     this.portal.deleteMateria(id).subscribe({
-      next: () => {
-        this.successMessage.set('Materia desactivada.');
-        this.loadMaterias();
-      },
-      error: () => this.error.set('Error al desactivar materia.')
+      next: () => { this.showSuccess('Materia desactivada'); this.loadMaterias(); },
+      error: () => this.showError('Error al desactivar materia')
     });
   }
 
-  // --- LÓGICA OFERTA EDUCATIVA (CURSOS) ---
-  onSelectNivelForOferta(event: Event) {
-    const id = (event.target as HTMLSelectElement).value;
-    this.selectedNivelForOferta.set(id);
-    this.selectedGradoForOferta.set(null);
-    this.cursos.set([]);
-    this.portal.getGrados(id).subscribe({
-      next: (data) => this.gradosForOferta.set(data),
-      error: () => this.error.set('No se pudieron cargar los grados del nivel.')
-    });
+  private showError(msg: string) {
+    this.error.set(msg);
+    setTimeout(() => this.error.set(''), 4000);
   }
 
-  onSelectGradoForOferta(event: Event) {
-    const id = (event.target as HTMLSelectElement).value;
-    this.selectedGradoForOferta.set(id);
-    this.loadCursos();
-  }
-
-  loadCursos() {
-    const gradoId = this.selectedGradoForOferta();
-    if (!gradoId) return;
-    this.portal.getCursos(gradoId).subscribe({
-      next: (data) => {
-        this.cursos.set(data);
-        this.selectedMateriasToAssign.set([]); // Limpiar checklist
-      },
-      error: () => this.error.set('No se pudieron cargar los cursos.')
-    });
-  }
-
-  toggleMateriaSelection(materiaId: EntityId) {
-    const current = this.selectedMateriasToAssign();
-    if (current.includes(materiaId)) {
-      this.selectedMateriasToAssign.set(current.filter(id => id !== materiaId));
-    } else {
-      this.selectedMateriasToAssign.set([...current, materiaId]);
-    }
-  }
-
-  assignMaterias() {
-    const gradoId = this.selectedGradoForOferta();
-    const materiasIds = this.selectedMateriasToAssign();
-    if (!gradoId || materiasIds.length === 0) return;
-
-    this.portal.asignarCursosMasivo({ gradoId, materiasIds }).subscribe({
-      next: () => {
-        this.successMessage.set('Materias asignadas al grado exitosamente.');
-        this.loadCursos();
-      },
-      error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al asignar materias. Transacción revertida.')
-    });
-  }
-
-  removeCurso(id: EntityId) {
-    if (!confirm('¿Remover esta materia del grado?')) return;
-    this.portal.removerCurso(id).subscribe({
-      next: () => {
-        this.successMessage.set('Materia removida del grado.');
-        this.loadCursos();
-      },
-      error: () => this.error.set('Error al remover materia.')
-    });
+  private showSuccess(msg: string) {
+    this.successMessage.set(msg);
+    setTimeout(() => this.successMessage.set(''), 4000);
   }
 }

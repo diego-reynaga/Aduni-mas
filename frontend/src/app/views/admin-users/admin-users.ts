@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { EntityId, ROLE_LABELS, RoleName, UserRow, PersonaDropdown, RolResponse, ALL_ROLES, UsuarioRequest, AuditoriaResponse } from '../../core/models';
+import { EntityId, ROLE_LABELS, RoleName, UserRow, PersonaDropdown, RolResponse, ALL_ROLES, UsuarioRequest, AuditoriaResponse, AuditDatePreset } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
 import {
   fadeIn, staggerRows, slideInRight, slideAlert,
@@ -63,15 +63,22 @@ export class AdminUsers {
 
 
   // Auditoria signals
+  readonly Math = Math;
   readonly auditoriasList = signal<AuditoriaResponse[]>([]);
   readonly auditLoading = signal(false);
+  readonly auditTotal = signal(0);
+  readonly auditPages = signal(0);
+  readonly auditPage = signal(1);
+  readonly auditPageSize = signal(50);
   readonly auditUserQuery = signal('');
   readonly auditActionFilter = signal('TODAS');
   readonly auditEntityFilter = signal('TODAS');
   readonly auditDateInicio = signal('');
   readonly auditDateFin = signal('');
+  readonly auditDatePreset = signal<AuditDatePreset | null>(null);
   readonly showAuditDetailModal = signal(false);
   readonly selectedAudit = signal<AuditoriaResponse | null>(null);
+  private readonly auditSearchTimer = signal<ReturnType<typeof setTimeout> | null>(null);
 
   readonly parsedDetail = computed(() => {
     const audit = this.selectedAudit();
@@ -211,20 +218,120 @@ export class AdminUsers {
   loadAudits(): void {
     this.error.set('');
     this.auditLoading.set(true);
+    const page = this.auditPage();
+    const limit = this.auditPageSize();
+    const offset = (page - 1) * limit;
+
     this.portal.getAuditorias({
       usuario: this.auditUserQuery() || undefined,
       accion: this.auditActionFilter() === 'TODAS' ? undefined : this.auditActionFilter(),
       entidad: this.auditEntityFilter() === 'TODAS' ? undefined : this.auditEntityFilter(),
       fechaInicio: this.auditDateInicio() || undefined,
-      fechaFin: this.auditDateFin() || undefined
+      fechaFin: this.auditDateFin() || undefined,
+      limit,
+      offset,
     }).subscribe({
-      next: (data) => { this.auditoriasList.set(data); this.auditLoading.set(false); },
+      next: (res) => {
+        this.auditoriasList.set(res.data);
+        this.auditTotal.set(res.meta.total);
+        this.auditPages.set(res.meta.pages);
+        this.auditLoading.set(false);
+      },
       error: (err) => {
         console.error('Error al cargar auditorías:', err);
         this.error.set('No se pudo cargar el historial de auditorías.');
         this.auditLoading.set(false);
       }
     });
+  }
+
+  triggerAuditSearch(): void {
+    const timer = this.auditSearchTimer();
+    if (timer) clearTimeout(timer);
+    this.auditSearchTimer.set(setTimeout(() => {
+      this.auditPage.set(1);
+      this.loadAudits();
+    }, 400));
+  }
+
+  setDatePreset(preset: AuditDatePreset): void {
+    this.auditDatePreset.set(preset);
+    const now = new Date();
+
+    switch (preset) {
+      case 'hoy': {
+        const hoy = now.toISOString().slice(0, 10);
+        this.auditDateInicio.set(hoy);
+        this.auditDateFin.set(hoy);
+        break;
+      }
+      case '7d': {
+        const ult7 = new Date(now);
+        ult7.setDate(ult7.getDate() - 7);
+        this.auditDateInicio.set(ult7.toISOString().slice(0, 10));
+        this.auditDateFin.set(now.toISOString().slice(0, 10));
+        break;
+      }
+      case '30d': {
+        const ult30 = new Date(now);
+        ult30.setDate(ult30.getDate() - 30);
+        this.auditDateInicio.set(ult30.toISOString().slice(0, 10));
+        this.auditDateFin.set(now.toISOString().slice(0, 10));
+        break;
+      }
+      case 'mes': {
+        const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+        this.auditDateInicio.set(inicioMes.toISOString().slice(0, 10));
+        this.auditDateFin.set(now.toISOString().slice(0, 10));
+        break;
+      }
+      case 'personalizado':
+        break;
+    }
+    this.triggerAuditSearch();
+  }
+
+  clearAuditFilters(): void {
+    this.auditUserQuery.set('');
+    this.auditActionFilter.set('TODAS');
+    this.auditEntityFilter.set('TODAS');
+    this.auditDateInicio.set('');
+    this.auditDateFin.set('');
+    this.auditDatePreset.set(null);
+    this.auditPage.set(1);
+    this.loadAudits();
+  }
+
+  goToAuditPage(page: number): void {
+    if (page < 1 || page > this.auditPages()) return;
+    this.auditPage.set(page);
+    this.loadAudits();
+  }
+
+  readonly activeAuditChips = computed(() => {
+    const chips: { label: string; key: string }[] = [];
+    const q = this.auditUserQuery();
+    if (q) chips.push({ label: `Usuario: ${q}`, key: 'usuario' });
+    const a = this.auditActionFilter();
+    if (a !== 'TODAS') chips.push({ label: `Acción: ${a}`, key: 'accion' });
+    const e = this.auditEntityFilter();
+    if (e !== 'TODAS') chips.push({ label: `Entidad: ${e}`, key: 'entidad' });
+    const di = this.auditDateInicio();
+    const df = this.auditDateFin();
+    if (di && df) chips.push({ label: `${di} → ${df}`, key: 'fecha' });
+    else if (di) chips.push({ label: `Desde: ${di}`, key: 'fecha' });
+    else if (df) chips.push({ label: `Hasta: ${df}`, key: 'fecha' });
+    return chips;
+  });
+
+  removeAuditChip(key: string): void {
+    switch (key) {
+      case 'usuario': this.auditUserQuery.set(''); break;
+      case 'accion': this.auditActionFilter.set('TODAS'); break;
+      case 'entidad': this.auditEntityFilter.set('TODAS'); break;
+      case 'fecha': this.auditDateInicio.set(''); this.auditDateFin.set(''); this.auditDatePreset.set(null); break;
+    }
+    this.triggerAuditSearch();
   }
 
   openAuditDetailModal(audit: AuditoriaResponse): void {

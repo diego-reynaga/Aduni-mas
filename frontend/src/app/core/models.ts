@@ -464,6 +464,7 @@ export interface PersonaResponse {
   correo?: string;
   activo: boolean;
   tipoPersona: string;
+  subtypeId?: EntityId;
   codigo?: string;
   cargo?: string;
   especialidad?: string;
@@ -504,6 +505,30 @@ export interface AuditoriaResponse {
   usuarioResponsable: string;
   detalle: string;
 }
+
+export interface AuditFilters {
+  usuario?: string;
+  accion?: string;
+  entidad?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface AuditPageMeta {
+  total: number;
+  limit: number;
+  offset: number;
+  pages: number;
+}
+
+export interface AuditPageResponse {
+  data: AuditoriaResponse[];
+  meta: AuditPageMeta;
+}
+
+export type AuditDatePreset = 'hoy' | '7d' | '30d' | 'mes' | 'personalizado';
 
 
 

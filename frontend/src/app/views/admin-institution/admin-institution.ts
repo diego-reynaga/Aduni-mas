@@ -7,7 +7,7 @@ import { PortalService } from '../../core/portal.service';
 import * as Academico from '../../core/academico.models';
 import { fadeIn } from '../../core/animations';
 
-type Tab = 'institucion' | 'gestiones' | 'periodos';
+type Tab = 'institucion';
 
 @Component({
   selector: 'app-admin-institution',
@@ -43,40 +43,8 @@ export class AdminInstitution {
     logoUrl: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(500), Validators.pattern(/^https?:\/\/.+/i)] }),
   });
 
-  // --- GESTIONES ACADEMICAS ---
-  readonly gestiones = signal<Academico.GestionAcademicaResponse[]>([]);
-  readonly isAddingGestion = signal(false);
-  readonly editingGestion = signal<Academico.GestionAcademicaResponse | null>(null);
-
-  readonly formGestion = new FormGroup({
-    anio: new FormControl<number | null>(null, [Validators.required, Validators.min(2000)]),
-    nombre: new FormControl('', [Validators.required]),
-    fechaInicio: new FormControl('', [Validators.required]),
-    fechaFin: new FormControl('', [Validators.required]),
-    activa: new FormControl(false),
-  }, { validators: dateRangeValidator });
-
-  // --- PERIODOS ACADEMICOS ---
-  readonly selectedGestionId = signal<EntityId | null>(null);
-  readonly periodos = signal<Academico.PeriodoAcademicoResponse[]>([]);
-  readonly isAddingPeriodo = signal(false);
-  readonly editingPeriodo = signal<Academico.PeriodoAcademicoResponse | null>(null);
-
-  readonly formPeriodo = new FormGroup({
-    nombre: new FormControl('', [Validators.required]),
-    orden: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
-    fechaInicio: new FormControl('', [Validators.required]),
-    fechaFin: new FormControl('', [Validators.required]),
-    cerrado: new FormControl(false),
-  }, { validators: dateRangeValidator });
-
-  // Modal confirmación cierre
-  readonly showCloseConfirmModal = signal(false);
-  readonly pendingPeriodoData = signal<any>(null);
-
   constructor() {
     this.loadConfig();
-    this.loadGestiones();
   }
 
   setTab(tab: Tab): void {
@@ -133,155 +101,4 @@ export class AdminInstitution {
     this.successMessage.set('');
   }
 
-  // --- LOGIC: GESTIONES ACADEMICAS ---
-  private loadGestiones(): void {
-    this.portal.getGestiones().subscribe({
-      next: (res) => this.gestiones.set(res),
-      error: () => this.error.set('Error al cargar gestiones académicas')
-    });
-  }
-
-  openAddGestion(): void {
-    this.isAddingGestion.set(true);
-    this.editingGestion.set(null);
-    this.formGestion.reset({ activa: false });
-  }
-
-  openEditGestion(gestion: Academico.GestionAcademicaResponse): void {
-    this.isAddingGestion.set(true);
-    this.editingGestion.set(gestion);
-    this.formGestion.reset({
-      anio: gestion.anio,
-      nombre: gestion.nombre,
-      fechaInicio: gestion.fechaInicio,
-      fechaFin: gestion.fechaFin,
-      activa: gestion.activa
-    });
-  }
-
-  cancelAddGestion(): void {
-    this.isAddingGestion.set(false);
-    this.editingGestion.set(null);
-  }
-
-  saveGestion(): void {
-    if (this.formGestion.invalid) {
-      this.formGestion.markAllAsTouched();
-      return;
-    }
-    const req: Academico.GestionAcademicaRequest = {
-      anio: this.formGestion.value.anio!,
-      nombre: this.formGestion.value.nombre!,
-      fechaInicio: this.formGestion.value.fechaInicio!,
-      fechaFin: this.formGestion.value.fechaFin!,
-      activa: this.formGestion.value.activa ?? false
-    };
-
-    const edit = this.editingGestion();
-    const obs = edit ? this.portal.updateGestion(edit.id, req) : this.portal.createGestion(req);
-
-    obs.subscribe({
-      next: () => {
-        this.loadGestiones();
-        this.cancelAddGestion();
-        this.successMessage.set(edit ? 'Gestión actualizada.' : 'Gestión creada.');
-      },
-      error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al guardar gestión.')
-    });
-  }
-
-  // --- LOGIC: PERIODOS ACADEMICOS ---
-  onGestionSelectedForPeriodos(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    const gId = select.value || null;
-    this.selectedGestionId.set(gId);
-    if (gId) {
-      this.loadPeriodos(gId);
-    } else {
-      this.periodos.set([]);
-    }
-  }
-
-  private loadPeriodos(gestionId: EntityId): void {
-    this.portal.getPeriodos(gestionId).subscribe({
-      next: (res) => this.periodos.set(res),
-      error: () => this.error.set('Error al cargar periodos')
-    });
-  }
-
-  openAddPeriodo(): void {
-    if (!this.selectedGestionId()) return;
-    this.isAddingPeriodo.set(true);
-    this.editingPeriodo.set(null);
-    this.formPeriodo.reset({ cerrado: false });
-  }
-
-  openEditPeriodo(periodo: Academico.PeriodoAcademicoResponse): void {
-    this.isAddingPeriodo.set(true);
-    this.editingPeriodo.set(periodo);
-    this.formPeriodo.reset({
-      nombre: periodo.nombre,
-      orden: periodo.orden,
-      fechaInicio: periodo.fechaInicio,
-      fechaFin: periodo.fechaFin,
-      cerrado: periodo.cerrado
-    });
-  }
-
-  cancelAddPeriodo(): void {
-    this.isAddingPeriodo.set(false);
-    this.editingPeriodo.set(null);
-  }
-
-  savePeriodo(): void {
-    const gId = this.selectedGestionId();
-    if (this.formPeriodo.invalid || !gId) {
-      this.formPeriodo.markAllAsTouched();
-      return;
-    }
-
-    const edit = this.editingPeriodo();
-    const req: Academico.PeriodoAcademicoRequest = {
-      nombre: this.formPeriodo.value.nombre!,
-      orden: this.formPeriodo.value.orden!,
-      fechaInicio: this.formPeriodo.value.fechaInicio!,
-      fechaFin: this.formPeriodo.value.fechaFin!,
-      cerrado: this.formPeriodo.value.cerrado ?? false,
-      gestionAcademicaId: gId
-    };
-
-    if (this.formPeriodo.value.cerrado && (!edit || !edit.cerrado)) {
-      this.pendingPeriodoData.set({ edit, req, gId });
-      this.showCloseConfirmModal.set(true);
-      return;
-    }
-
-    this.executeSavePeriodo(edit, req, gId);
-  }
-
-  cancelClosePeriodo(): void {
-    this.showCloseConfirmModal.set(false);
-    this.pendingPeriodoData.set(null);
-  }
-
-  confirmClosePeriodo(): void {
-    const data = this.pendingPeriodoData();
-    if (!data) return;
-    this.showCloseConfirmModal.set(false);
-    this.pendingPeriodoData.set(null);
-    this.executeSavePeriodo(data.edit, data.req, data.gId);
-  }
-
-  private executeSavePeriodo(edit: any, req: Academico.PeriodoAcademicoRequest, gId: EntityId): void {
-    const obs = edit ? this.portal.updatePeriodo(edit.id, req) : this.portal.createPeriodo(req);
-
-    obs.subscribe({
-      next: () => {
-        this.loadPeriodos(gId);
-        this.cancelAddPeriodo();
-        this.successMessage.set(edit ? 'Periodo actualizado.' : 'Periodo creado.');
-      },
-      error: (err) => this.error.set(err?.message || err?.error?.message || 'Error al guardar periodo.')
-    });
-  }
 }

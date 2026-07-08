@@ -30,7 +30,8 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
 
     // Módulo Académico
     { label: 'Estructura académica', route: '/admin/academico', eyebrow: 'Gestión Académica' },
-    { label: 'Periodos y asignaciones', route: '/admin/asignaciones', eyebrow: 'Gestión Académica' },
+    { label: 'Gestiones y Periodos', route: '/admin/periodos', eyebrow: 'Gestión Académica' },
+    { label: 'Asignaciones Docentes', route: '/admin/asignaciones', eyebrow: 'Gestión Académica' },
 
     // Módulo Gestión de Alumnos
     { label: 'Matrículas y Alumnos', route: '/admin/alumnos', eyebrow: 'Gestión de Alumnos' },

@@ -1,53 +1,101 @@
-<section class="page-stack" [@fadeIn]>
-  <div class="page-heading"><div><p class="section-kicker">Planificación académica</p><h2>Gestiones, periodos y asignaciones docentes</h2><p>Prepare el año lectivo y asigne cada curso antes de registrar o importar notas.</p></div></div>
+<section class="page-container" [@fadeIn]>
+  <!-- Header / Filters -->
+  <div class="modern-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 16px 24px; background: white; border: 1px solid var(--line, #e2e8f0); border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+    <div>
+      <h2 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 800; color: var(--ink, #0f172a);">Asignación Docente</h2>
+      <p style="margin: 0; color: var(--steel, #64748b); font-size: 14px;">Asigne profesores a cada materia según el aula.</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <select class="premium-select" style="min-width: 200px; height: 42px;" (change)="selectGestion($event)">
+        @for (row of gestiones(); track row.id) {
+          <option [value]="row.id" [selected]="row.id === selectedGestionId()">{{ row.anio }} - {{ row.nombre }}</option>
+        }
+      </select>
+      <select class="premium-select" style="min-width: 200px; height: 42px;" (change)="selectPeriodo($event)">
+        <option [value]="null">Seleccione un Periodo</option>
+        @for (row of periodos(); track row.id) {
+          <option [value]="row.id" [selected]="row.id === selectedPeriodoId()">{{ row.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
   @if (error()) { <p class="form-error-note">{{ error() }}</p> }
   @if (success()) { <p class="read-only-note">{{ success() }}</p> }
 
-  <section class="surface">
-    <div class="surface-header"><div><p class="section-kicker">Paso 1</p><h3>Gestión académica</h3></div></div>
-    <div class="surface-body two-column">
-      <form class="form-grid" [formGroup]="gestionForm" (ngSubmit)="saveGestion()">
-        <label class="field"><span>Año</span><input type="number" formControlName="anio"></label>
-        <label class="field"><span>Nombre</span><input formControlName="nombre" placeholder="Año lectivo 2026"></label>
-        <label class="field"><span>Inicio</span><input type="date" formControlName="fechaInicio"></label>
-        <label class="field"><span>Fin</span><input type="date" formControlName="fechaFin"></label>
-        <label class="check-line"><input type="checkbox" formControlName="activa"> Gestión activa</label>
-        <div class="action-row"><button class="btn-primary" type="submit">{{ editingGestionId() ? 'Actualizar' : 'Crear gestión' }}</button><button class="btn-secondary" type="button" (click)="cancelGestion()">Limpiar</button></div>
-      </form>
-      <div class="quiet-table-wrap"><table class="quiet-table"><thead><tr><th>Gestión</th><th>Fechas</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
-        @for (row of gestiones(); track row.id) { <tr><td><strong>{{ row.nombre }}</strong><br>{{ row.anio }}</td><td>{{ row.fechaInicio }} — {{ row.fechaFin }}</td><td>{{ row.activa ? 'Activa' : 'Inactiva' }}</td><td><button class="btn-subtle" (click)="editGestion(row)">Editar</button><button class="btn-subtle" (click)="closeGestion(row)">Desactivar</button></td></tr> }
-      </tbody></table></div>
-    </div>
-  </section>
-
-  <section class="surface">
-    <div class="surface-header"><div><p class="section-kicker">Paso 2</p><h3>Trimestres</h3><p>Seleccione la gestión a la que pertenecen.</p></div><select (change)="selectGestion($event)">@for (row of gestiones(); track row.id) { <option [value]="row.id" [selected]="row.id === selectedGestionId()">{{ row.nombre }}</option> }</select></div>
-    <div class="surface-body two-column">
-      <form class="form-grid" [formGroup]="periodoForm" (ngSubmit)="savePeriodo()">
-        <label class="field"><span>Nombre</span><input formControlName="nombre" placeholder="I Trimestre"></label>
-        <label class="field"><span>Orden (1–3)</span><input type="number" formControlName="orden"></label>
-        <label class="field"><span>Inicio</span><input type="date" formControlName="fechaInicio"></label>
-        <label class="field"><span>Fin</span><input type="date" formControlName="fechaFin"></label>
-        <label class="check-line"><input type="checkbox" formControlName="cerrado"> Periodo cerrado</label>
-        <div class="action-row"><button class="btn-primary" type="submit">{{ editingPeriodoId() ? 'Actualizar' : 'Crear periodo' }}</button><button class="btn-secondary" type="button" (click)="cancelPeriodo()">Limpiar</button></div>
-      </form>
-      <div class="history-list">@for (row of periodos(); track row.id) { <article class="history-row"><div><strong>{{ row.orden }}. {{ row.nombre }}</strong><span>{{ row.fechaInicio }} — {{ row.fechaFin }}</span></div><div><button class="btn-subtle" (click)="editPeriodo(row)">Editar</button><button class="btn-subtle" (click)="closePeriodo(row)">Cerrar</button></div></article> } @empty { <p class="empty-state">No hay periodos en esta gestión.</p> }</div>
-    </div>
-  </section>
-
-  <section class="surface">
-    <div class="surface-header"><div><p class="section-kicker">Paso 3</p><h3>Asignar curso a docente</h3><p>Solo las asignaciones activas pueden registrar e importar notas.</p></div></div>
-    <div class="surface-body">
-      <form class="assignment-form" [formGroup]="asignacionForm" (ngSubmit)="saveAsignacion()">
-        <label class="field"><span>Docente</span><select formControlName="docenteId"><option [ngValue]="null">Seleccione</option>@for (row of docentes(); track row.id) { <option [ngValue]="row.id">{{ row.codigo }} · {{ row.nombres }} {{ row.apellidos }}</option> }</select></label>
-        <label class="field"><span>Curso</span><select formControlName="cursoId"><option [ngValue]="null">Seleccione</option>@for (row of cursos(); track row.id) { <option [ngValue]="row.id">{{ row.materiaNombre }} · {{ row.gradoNombre }} {{ row.paralelo }}</option> }</select></label>
-        <label class="field"><span>Periodo</span><select formControlName="periodoAcademicoId"><option [ngValue]="null">Seleccione</option>@for (row of periodos(); track row.id) { <option [ngValue]="row.id">{{ row.nombre }}</option> }</select></label>
-        <label class="field"><span>Estado</span><select formControlName="estado"><option value="ACTIVA">Activa</option><option value="CERRADA">Cerrada</option></select></label>
-        <div class="action-row"><button class="btn-primary" type="submit">{{ editingAsignacionId() ? 'Actualizar' : 'Asignar docente' }}</button><button class="btn-secondary" type="button" (click)="cancelAsignacion()">Limpiar</button></div>
-      </form>
-      <div class="quiet-table-wrap"><table class="quiet-table"><thead><tr><th>Docente</th><th>Curso</th><th>Periodo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
-        @for (row of asignaciones(); track row.id) { <tr><td><strong>{{ row.docenteNombre }}</strong><br>{{ row.docenteCodigo }}</td><td>{{ row.materia }} · {{ row.grado }} {{ row.seccion }}</td><td>{{ row.periodo }}</td><td><span class="status-pill" [class.is-good]="row.estado === 'ACTIVA'">{{ row.estado }}</span></td><td><button class="btn-subtle" (click)="editAsignacion(row)">Editar</button><button class="btn-subtle" (click)="closeAsignacion(row)">Cerrar</button></td></tr> }
-      </tbody></table></div>
-    </div>
-  </section>
+  <!-- Main Grid of Classrooms -->
+  <div class="content-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; padding-bottom: 40px;" [@staggerList]="aulas().length">
+    @for (aula of aulas(); track aula.nombreAula) {
+      <div class="classroom-card">
+        <div class="classroom-header">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <h3 style="margin:0; font-size: 16px; font-weight: 700;">{{ aula.nombreAula }}</h3>
+        </div>
+        <div class="classroom-body">
+          @for (curso of aula.materias; track curso.id) {
+            <div class="subject-row">
+              <div class="subject-info">
+                <span class="subject-name">{{ curso.materiaNombre }}</span>
+                <span class="subject-code">{{ curso.materiaCodigo }}</span>
+              </div>
+              <div class="subject-assignment">
+                @if (asignacionesActivas().has(curso.id)) {
+                  <div class="assigned-wrapper">
+                    <button class="assigned-pill" (click)="openDrawer(curso)">
+                      <div class="avatar-micro">{{ asignacionesActivas().get(curso.id)!.docenteNombre.charAt(0) }}</div>
+                      <span class="teacher-name">{{ asignacionesActivas().get(curso.id)!.docenteNombre }}</span>
+                    </button>
+                    <button class="remove-assignment-btn" title="Quitar profesor" (click)="removeAsignacion(curso, $event)">×</button>
+                  </div>
+                } @else {
+                  <button class="unassigned-pill" (click)="openDrawer(curso)">
+                    <div class="status-dot"></div>
+                    Sin Asignar
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    
+    @if (aulas().length === 0) {
+      <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; border: 1px dashed var(--line); border-radius: 12px;">
+        <p style="color: var(--steel);">No hay materias registradas para la gestión activa.</p>
+      </div>
+    }
+  </div>
 </section>
+
+<!-- Drawer para seleccionar Profesor -->
+@if (isDrawerOpen()) {
+  <div class="drawer-overlay" (click)="closeDrawer()" [@fadeIn]></div>
+  <div class="drawer" [@slideInRight]>
+    <div class="drawer-header">
+      <div>
+        <p class="section-kicker" style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin: 0 0 4px 0;">Asignando profesor a:</p>
+        <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--ink);">{{ selectedCursoForDrawer()?.materiaNombre }}</h3>
+        <p style="margin: 4px 0 0 0; color: var(--steel); font-size: 14px;">{{ selectedCursoForDrawer()?.gradoNombre }} {{ selectedCursoForDrawer()?.paralelo }}</p>
+      </div>
+      <button class="close-btn" (click)="closeDrawer()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: var(--steel);">&times;</button>
+    </div>
+    
+    <div class="drawer-body">
+      <div class="teacher-list">
+        @for (docente of docentes(); track docente.id) {
+          <button class="teacher-card" (click)="assignTeacher(docente)">
+            <div class="avatar-large">{{ docente.nombres.charAt(0) }}{{ docente.apellidos.charAt(0) }}</div>
+            <div class="teacher-details">
+              <span class="teacher-name-large">{{ docente.nombres }} {{ docente.apellidos }}</span>
+              <span class="teacher-code">{{ docente.codigo }}</span>
+            </div>
+            <div class="teacher-load" title="Materias asignadas en este periodo">
+              <span class="load-badge">{{ teacherLoad().get(docente.subtypeId!) || 0 }} clases</span>
+            </div>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

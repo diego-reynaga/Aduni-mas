@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@a
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PortalService } from '../../core/portal.service';
-import { fadeIn } from '../../core/animations';
+import { fadeIn, tabTransition, slideAlert, counterAnimate, slideInRight } from '../../core/animations';
 import { EntityId, StudentAdminRequest, StudentAdminResponse } from '../../core/models';
 
 type Tab = 'directorio' | 'matriculas';
@@ -13,7 +13,7 @@ type Tab = 'directorio' | 'matriculas';
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './admin-students.html',
   styleUrl: './admin-students.css',
-  animations: [fadeIn],
+  animations: [fadeIn, tabTransition, slideAlert, counterAnimate, slideInRight],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminStudents {
@@ -27,6 +27,12 @@ export class AdminStudents {
   // Directorio State
   readonly estudiantes = signal<StudentAdminResponse[]>([]);
   readonly searchControl = new FormControl('');
+
+  // KPIs
+  readonly totalEstudiantes = computed(() => this.estudiantes().length);
+  readonly activosEstudiantes = computed(() => this.estudiantes().filter(e => e.activo).length);
+  readonly inactivasEstudiantes = computed(() => this.totalEstudiantes() - this.activosEstudiantes());
+
   // Modal de Alta Estudiante
   readonly showModalEstudiante = signal(false);
   readonly editingStudent = signal<StudentAdminResponse | null>(null);
@@ -48,6 +54,12 @@ export class AdminStudents {
   readonly showWizardMatricula = signal(false);
   readonly wizardStep = signal(1); // 1: Alumno, 2: Aula, 3: Confirmación
   readonly matriculas = signal<any[]>([]);
+  
+  // KPIs Matriculas
+  readonly matriculasActivas = computed(() => this.matriculas().filter(m => m.estado === 'ACTIVA').length);
+  readonly matriculasSuspendidas = computed(() => this.matriculas().filter(m => m.estado === 'SUSPENDIDA').length);
+  readonly matriculasRetiradas = computed(() => this.matriculas().filter(m => m.estado === 'RETIRADA').length);
+
   readonly formMatricula = new FormGroup({
     estudianteId: new FormControl<EntityId | null>(null, Validators.required),
     gradoId: new FormControl<EntityId | null>(null, Validators.required),

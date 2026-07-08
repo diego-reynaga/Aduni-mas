@@ -33,6 +33,8 @@ import {
   UsuarioResponse,
   UserRow,
   ALL_ROLES,
+  AuditFilters,
+  AuditPageResponse,
 } from './models';
 import { supabase } from './supabase.client';
 
@@ -72,7 +74,7 @@ export class PortalService {
           { label: 'Importaciones observadas', value: String(imports.count ?? 0), detail: 'Requieren revisión', tone: 'ink' },
         ],
         progress: await this.fetchSupervision(),
-        audits: audits.slice(0, 12).map((item: any) => ({
+        audits: audits.data.slice(0, 12).map((item: any) => ({
           accion: item.accion,
           entidad: item.entidad,
           responsable: item.usuarioResponsable,
@@ -120,7 +122,7 @@ export class PortalService {
       const audits = await this.fetchAudits({ entidad: 'configuracion_institucional' });
       return {
         config: this.toInstitution(row),
-        audits: audits.map((item) => ({ accion: item.accion, entidad: item.entidad, responsable: item.usuarioResponsable, fecha: item.creadoEn, detalle: item.detalle })),
+        audits: audits.data.map((item: any) => ({ accion: item.accion, entidad: item.entidad, responsable: item.usuarioResponsable, fecha: item.creadoEn, detalle: item.detalle })),
       };
     });
   }
@@ -140,6 +142,81 @@ export class PortalService {
     });
   }
 
+  cloneGestionStructure(origenId: EntityId, destinoId: EntityId, options: { niveles?: boolean; periodos?: boolean }): Observable<{ message: string }> {
+    return this.observe(async () => {
+      const origenResult = await supabase.from('gestiones').select('anio').eq('id', origenId).single();
+      const destinoResult = await supabase.from('gestiones').select('anio').eq('id', destinoId).single();
+      const yearDiff = (destinoResult.data?.anio || 0) - (origenResult.data?.anio || 0);
+
+      if (options.niveles) {
+        const nivelesResult = await supabase.from('niveles').select('*').eq('gestion_id', origenId);
+        const niveles = dataOf(nivelesResult as DbResult<any[]>);
+        
+        for (const nivel of niveles) {
+          const newNivel = dataOf(await supabase.from('niveles').insert({
+            gestion_id: destinoId,
+            nombre: nivel.nombre,
+            orden: nivel.orden
+          }).select().single() as DbResult<any>);
+          
+          const gradosResult = await supabase.from('grados').select('*').eq('nivel_id', nivel.id);
+          const grados = dataOf(gradosResult as DbResult<any[]>);
+          
+          for (const grado of grados) {
+            const newGrado = dataOf(await supabase.from('grados').insert({
+              nivel_id: newNivel.id,
+              nombre: grado.nombre,
+              paralelo: grado.paralelo,
+              orden: grado.orden,
+              capacidad: grado.capacidad
+            }).select().single() as DbResult<any>);
+            
+            const cursosResult = await supabase.from('cursos').select('*').eq('grado_id', grado.id);
+            const cursos = dataOf(cursosResult as DbResult<any[]>);
+            
+            if (cursos.length > 0) {
+              await supabase.from('cursos').insert(
+                cursos.map(c => ({
+                  grado_id: newGrado.id,
+                  materia_id: c.materia_id,
+                  area_academica: c.area_academica
+                }))
+              );
+            }
+          }
+        }
+      }
+
+      if (options.periodos) {
+        const periodosResult = await supabase.from('periodos').select('*').eq('gestion_id', origenId);
+        const periodos = dataOf(periodosResult as DbResult<any[]>);
+        
+        if (periodos.length > 0) {
+          await supabase.from('periodos').insert(
+            periodos.map(p => {
+              const shiftDate = (dateStr: string) => {
+                if (!dateStr) return null;
+                const d = new Date(dateStr);
+                d.setFullYear(d.getFullYear() + yearDiff);
+                return d.toISOString().split('T')[0];
+              };
+              return {
+                gestion_id: destinoId,
+                nombre: p.nombre,
+                orden: p.orden,
+                fecha_inicio: shiftDate(p.fecha_inicio),
+                fecha_fin: shiftDate(p.fecha_fin),
+                cerrado: false
+              };
+            })
+          );
+        }
+      }
+
+      return { message: 'Estructura clonada exitosamente.' };
+    });
+  }
+
   getGestiones(): Observable<Academico.GestionAcademicaResponse[]> {
     return this.observe(async () => (dataOf(await supabase.from('gestiones').select('*').order('anio', { ascending: false }) as DbResult<any[]>)).map(this.toGestion));
   }
@@ -150,6 +227,16 @@ export class PortalService {
 
   updateGestion(id: EntityId, req: Academico.GestionAcademicaRequest): Observable<Academico.GestionAcademicaResponse> {
     return this.updateOne('gestiones', id, { anio: req.anio, nombre: req.nombre, fecha_inicio: req.fechaInicio || null, fecha_fin: req.fechaFin || null, activa: req.activa }, this.toGestion);
+  }
+
+  patchGestion(id: EntityId, partial: Partial<Academico.GestionAcademicaRequest>): Observable<Academico.GestionAcademicaResponse> {
+    const payload: any = {};
+    if (partial.anio !== undefined) payload.anio = partial.anio;
+    if (partial.nombre !== undefined) payload.nombre = partial.nombre;
+    if (partial.fechaInicio !== undefined) payload.fecha_inicio = partial.fechaInicio;
+    if (partial.fechaFin !== undefined) payload.fecha_fin = partial.fechaFin;
+    if (partial.activa !== undefined) payload.activa = partial.activa;
+    return this.updateOne('gestiones', id, payload, this.toGestion);
   }
 
   deleteGestion(id: EntityId): Observable<void> { return this.deleteOne('gestiones', id); }
@@ -166,6 +253,17 @@ export class PortalService {
     return this.updateOne('periodos', id, this.periodPayload(req), this.toPeriodo);
   }
 
+  patchPeriodo(id: EntityId, partial: Partial<Academico.PeriodoAcademicoRequest>): Observable<Academico.PeriodoAcademicoResponse> {
+    const payload: any = {};
+    if (partial.nombre !== undefined) payload.nombre = partial.nombre;
+    if (partial.orden !== undefined) payload.orden = partial.orden;
+    if (partial.fechaInicio !== undefined) payload.fecha_inicio = partial.fechaInicio;
+    if (partial.fechaFin !== undefined) payload.fecha_fin = partial.fechaFin;
+    if (partial.cerrado !== undefined) payload.cerrado = partial.cerrado;
+    if (partial.gestionAcademicaId !== undefined) payload.gestion_id = partial.gestionAcademicaId;
+    return this.updateOne('periodos', id, payload, this.toPeriodo);
+  }
+
   deletePeriodo(id: EntityId): Observable<void> { return this.deleteOne('periodos', id); }
 
   getAsignacionesDocentes(): Observable<Academico.AsignacionDocenteResponse[]> {
@@ -177,7 +275,10 @@ export class PortalService {
 
   createAsignacionDocente(req: Academico.AsignacionDocenteRequest): Observable<Academico.AsignacionDocenteResponse> {
     return this.observe(async () => {
-      dataOf(await supabase.from('asignaciones_docente').insert({ docente_id: req.docenteId, curso_id: req.cursoId, periodo_id: req.periodoAcademicoId, estado: req.estado }) as DbResult);
+      dataOf(await supabase.from('asignaciones_docente').upsert(
+        { docente_id: req.docenteId, curso_id: req.cursoId, periodo_id: req.periodoAcademicoId, estado: req.estado },
+        { onConflict: 'docente_id,curso_id,periodo_id' }
+      ) as DbResult);
       return await this.fetchAssignmentByKeys(req.docenteId, req.cursoId, req.periodoAcademicoId);
     });
   }
@@ -388,7 +489,7 @@ export class PortalService {
     return this.observe(async () => { dataOf(await supabase.from('personas').update({ activo: false }).eq('id', id) as DbResult); });
   }
 
-  getAuditorias(filters: { usuario?: string; accion?: string; entidad?: string; fechaInicio?: string; fechaFin?: string }): Observable<AuditoriaResponse[]> {
+  getAuditorias(filters: AuditFilters): Observable<AuditPageResponse> {
     return this.observe(() => this.fetchAudits(filters));
   }
 
@@ -484,6 +585,12 @@ export class PortalService {
   }
   asignarCursosMasivo(req: Academico.CursoAsignacionMasivaRequest): Observable<void> { return this.observe(async () => { dataOf(await supabase.from('cursos').upsert(req.materiasIds.map((materiaId) => ({ grado_id: req.gradoId, materia_id: materiaId, activo: true })), { onConflict: 'grado_id,materia_id' }) as DbResult); }); }
   removerCurso(id: EntityId): Observable<void> { return this.deleteOne('cursos', id); }
+  removerCursosMasivo(gradoId: EntityId, materiasIds: EntityId[]): Observable<void> {
+    if (!materiasIds.length) return of(undefined);
+    return this.observe(async () => {
+      await supabase.from('cursos').delete().eq('grado_id', gradoId).in('materia_id', materiasIds);
+    });
+  }
 
   getApoderados(estudianteId: EntityId): Observable<EstudianteApoderadoResponse[]> {
     return this.observe(async () => {
@@ -567,6 +674,7 @@ export class PortalService {
       correo: row.correo,
       activo: row.activo,
       tipoPersona: type,
+      subtypeId: subtype?.id,
       codigo: subtype?.codigo,
       cargo: admin?.cargo,
       especialidad: teacher?.especialidad,
@@ -578,7 +686,55 @@ export class PortalService {
     } as PersonaResponse;
   }
 
-  private async fetchAudits(filters: any): Promise<AuditoriaResponse[]> { let query: any = supabase.from('auditoria').select('*').order('created_at', { ascending: false }); if (filters.usuario) query = query.ilike('usuario_responsable', `%${filters.usuario}%`); if (filters.accion) query = query.eq('accion', filters.accion); if (filters.entidad) query = query.eq('entidad', filters.entidad); if (filters.fechaInicio) query = query.gte('created_at', filters.fechaInicio); if (filters.fechaFin) query = query.lte('created_at', `${filters.fechaFin}T23:59:59`); const rows = dataOf(await query as DbResult<any[]>); return rows.map((row: any) => ({ id: row.id, creadoEn: row.created_at, accion: row.accion, entidad: row.entidad, entidadId: row.entidad_id, usuarioResponsable: row.usuario_responsable, detalle: typeof row.detalle === 'string' ? row.detalle : JSON.stringify(row.detalle) })); }
+  private async fetchAudits(filters: AuditFilters): Promise<AuditPageResponse> {
+    const limit = filters.limit ?? 50;
+    const offset = filters.offset ?? 0;
+
+    let countQuery: any = supabase.from('auditoria').select('*', { count: 'exact', head: true });
+    let dataQuery: any = supabase.from('auditoria').select('*').order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+
+    if (filters.usuario) {
+      countQuery = countQuery.ilike('usuario_responsable', `%${filters.usuario}%`);
+      dataQuery = dataQuery.ilike('usuario_responsable', `%${filters.usuario}%`);
+    }
+    if (filters.accion) {
+      countQuery = countQuery.eq('accion', filters.accion);
+      dataQuery = dataQuery.eq('accion', filters.accion);
+    }
+    if (filters.entidad) {
+      countQuery = countQuery.eq('entidad', filters.entidad);
+      dataQuery = dataQuery.eq('entidad', filters.entidad);
+    }
+    if (filters.fechaInicio) {
+      countQuery = countQuery.gte('created_at', filters.fechaInicio);
+      dataQuery = dataQuery.gte('created_at', filters.fechaInicio);
+    }
+    if (filters.fechaFin) {
+      countQuery = countQuery.lte('created_at', `${filters.fechaFin}T23:59:59`);
+      dataQuery = dataQuery.lte('created_at', `${filters.fechaFin}T23:59:59`);
+    }
+
+    const countRes = await countQuery;
+    if (countRes.error) throw new Error(countRes.error.details || countRes.error.message);
+    const count = countRes.count;
+    const rows = dataOf(await dataQuery as DbResult<any[]>);
+
+    const data: AuditoriaResponse[] = rows.map((row: any) => ({
+      id: row.id,
+      creadoEn: row.created_at,
+      accion: row.accion,
+      entidad: row.entidad,
+      entidadId: row.entidad_id,
+      usuarioResponsable: row.usuario_responsable,
+      detalle: typeof row.detalle === 'string' ? row.detalle : JSON.stringify(row.detalle)
+    }));
+
+    const total = count ?? 0;
+    return {
+      data,
+      meta: { total, limit, offset, pages: Math.ceil(total / limit) }
+    };
+  }
   private async fetchSupervision(): Promise<TeacherProgress[]> { const rows = dataOf(await supabase.from('asignaciones_docente').select('estado,docentes(codigo,area_academica,personas(nombres,apellidos)),cursos(materias(nombre),grados(nombre,paralelo)),periodos(nombre)').order('created_at', { ascending: false }) as DbResult<any[]>); return rows.map((row) => { const teacher = embedded<any>(row.docentes); const person = embedded<any>(teacher?.personas); const course = embedded<any>(row.cursos); const subject = embedded<any>(course?.materias); const grade = embedded<any>(course?.grados); const period = embedded<any>(row.periodos); return { docente: `${person?.apellidos ?? ''}, ${person?.nombres ?? ''}`, codigo: teacher?.codigo ?? '', area: teacher?.area_academica ?? '', curso: subject?.nombre ?? '', grado: `${grade?.nombre ?? ''} ${grade?.paralelo ?? ''}`, periodo: period?.nombre ?? '', avance: 0, estado: row.estado === 'CERRADA' ? 'Completo' : 'En proceso' } as TeacherProgress; }); }
 
   private async fetchTeacherCourses(): Promise<CourseAssignment[]> { const rows = dataOf(await supabase.from('asignaciones_docente').select('*,cursos!inner(grado_id,materias(nombre),grados(nombre,paralelo)),periodos!inner(nombre,gestion_id)').eq('estado', 'ACTIVA').order('created_at') as DbResult<any[]>); return Promise.all(rows.map(async (row) => { const course = embedded<any>(row.cursos)!; const subject = embedded<any>(course.materias); const grade = embedded<any>(course.grados); const period = embedded<any>(row.periodos); const enrollment = await supabase.from('matriculas').select('*', { count: 'exact', head: true }).eq('grado_id', course.grado_id).eq('gestion_id', period.gestion_id).eq('estado', 'ACTIVA'); const notes = await supabase.from('notas').select('*', { count: 'exact', head: true }).eq('asignacion_docente_id', row.id).eq('tipo', 'PROMEDIO_FINAL'); const students = enrollment.count ?? 0; const evaluated = notes.count ?? 0; return { assignmentId: row.id, codigo: row.id.slice(0, 8).toUpperCase(), curso: subject?.nombre ?? '', grado: grade?.nombre ?? '', seccion: grade?.paralelo ?? '', periodo: period?.nombre ?? '', estudiantes: students, evaluaciones: evaluated, avance: students ? Math.min(100, Math.round((evaluated / students) * 100)) : 0, estado: row.estado } as CourseAssignment; })); }

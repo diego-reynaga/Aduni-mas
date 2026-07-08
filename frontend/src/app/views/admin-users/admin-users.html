@@ -340,80 +340,122 @@
   <!-- TAB DE AUDITORÍA -->
   @if (activeTab() === 'auditoria') {
     <div [@tabTransition]>
-      <div class="audit-filters-bar surface" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; border: 1px solid var(--line); background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-        <div class="form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: flex-end;">
-          <div class="premium-field" style="margin-bottom: 0;">
-            <span style="font-size: 12px; color: var(--steel);">Usuario Responsable</span>
-            <input type="text"
-                   class="premium-input"
-                   placeholder="Ej: admin"
-                   [value]="auditUserQuery()"
-                   (input)="auditUserQuery.set($any($event.target).value)">
-          </div>
+      <!-- AUDIT TOOLBAR -->
+<div class="audit-toolbar surface" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; border: 1px solid var(--line); background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+  <div class="audit-toolbar-row">
+    <div class="audit-search-field">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text"
+             placeholder="Buscar por responsable…"
+             [value]="auditUserQuery()"
+             (input)="auditUserQuery.set($any($event.target).value); triggerAuditSearch()">
+    </div>
 
-          <div class="premium-field" style="margin-bottom: 0;">
-            <span style="font-size: 12px; color: var(--steel);">Acción</span>
-            <select class="premium-select" [value]="auditActionFilter()" (change)="auditActionFilter.set($any($event.target).value)">
-              <option value="TODAS">TODAS</option>
-              <option value="INSERT">INSERT</option>
-              <option value="UPDATE">UPDATE</option>
-              <option value="DELETE">DELETE</option>
-              <option value="LOGIN_SUCCESS">LOGIN_SUCCESS</option>
-              <option value="LOGIN_FAIL">LOGIN_FAIL</option>
-              <option value="LOGOUT">LOGOUT</option>
-              <option value="CREAR_USUARIO">CREAR_USUARIO</option>
-              <option value="ACTUALIZAR_USUARIO">ACTUALIZAR_USUARIO</option>
-              <option value="ACTIVAR_USUARIO">ACTIVAR_USUARIO</option>
-              <option value="DESACTIVAR_USUARIO">DESACTIVAR_USUARIO</option>
-              <option value="CREAR_ESTUDIANTE">CREAR_ESTUDIANTE</option>
-              <option value="ACTUALIZAR_ESTUDIANTE">ACTUALIZAR_ESTUDIANTE</option>
-              <option value="ACTIVAR_ESTUDIANTE">ACTIVAR_ESTUDIANTE</option>
-              <option value="DESACTIVAR_ESTUDIANTE">DESACTIVAR_ESTUDIANTE</option>
-              <option value="CREAR_PERSONA">CREAR_PERSONA</option>
-              <option value="ACTUALIZAR_PERSONA">ACTUALIZAR_PERSONA</option>
-              <option value="IMPORTAR_NOTAS_TRIMESTRE">IMPORTAR_NOTAS_TRIMESTRE</option>
-            </select>
-          </div>
+    <div class="audit-select-wrap">
+      <span class="audit-select-label">Acción</span>
+      <select class="audit-select" [value]="auditActionFilter()" (change)="auditActionFilter.set($any($event.target).value); triggerAuditSearch()">
+        <option value="TODAS">Todas las acciones</option>
+        <optgroup label="CRUD">
+          <option value="INSERT">INSERT (Creación)</option>
+          <option value="UPDATE">UPDATE (Actualización)</option>
+          <option value="DELETE">DELETE (Eliminación)</option>
+        </optgroup>
+        <optgroup label="Autenticación">
+          <option value="LOGIN_SUCCESS">LOGIN (Éxito)</option>
+          <option value="LOGIN_FAIL">LOGIN (Fallido)</option>
+          <option value="LOGOUT">LOGOUT (Cierre)</option>
+        </optgroup>
+        <optgroup label="Gestión de Usuarios">
+          <option value="CREAR_USUARIO">Crear usuario</option>
+          <option value="ACTUALIZAR_USUARIO">Actualizar usuario</option>
+          <option value="ACTIVAR_USUARIO">Activar usuario</option>
+          <option value="DESACTIVAR_USUARIO">Desactivar usuario</option>
+        </optgroup>
+        <optgroup label="Gestión de Estudiantes">
+          <option value="CREAR_ESTUDIANTE">Crear estudiante</option>
+          <option value="ACTUALIZAR_ESTUDIANTE">Actualizar estudiante</option>
+          <option value="ACTIVAR_ESTUDIANTE">Activar estudiante</option>
+          <option value="DESACTIVAR_ESTUDIANTE">Desactivar estudiante</option>
+        </optgroup>
+        <optgroup label="Gestión de Personas">
+          <option value="CREAR_PERSONA">Crear persona</option>
+          <option value="ACTUALIZAR_PERSONA">Actualizar persona</option>
+        </optgroup>
+        <optgroup label="Sistema">
+          <option value="IMPORTAR_NOTAS_TRIMESTRE">Importar notas</option>
+        </optgroup>
+      </select>
+    </div>
 
-          <div class="premium-field" style="margin-bottom: 0;">
-            <span style="font-size: 12px; color: var(--steel);">Entidad</span>
-            <select class="premium-select" [value]="auditEntityFilter()" (change)="auditEntityFilter.set($any($event.target).value)">
-              <option value="TODAS">TODAS</option>
-              <option value="profiles">Usuarios / Cuentas</option>
-              <option value="personas">Personas</option>
-              <option value="estudiantes">Estudiantes</option>
-              <option value="docentes">Docentes</option>
-              <option value="notas">Notas</option>
-              <option value="matriculas">Matrículas</option>
-              <option value="cursos">Cursos</option>
-              <option value="importaciones_notas">Importaciones</option>
-              <option value="configuracion_institucional">Configuración</option>
-            </select>
-          </div>
+    <div class="audit-select-wrap">
+      <span class="audit-select-label">Entidad</span>
+      <select class="audit-select" [value]="auditEntityFilter()" (change)="auditEntityFilter.set($any($event.target).value); triggerAuditSearch()">
+        <option value="TODAS">Todas las entidades</option>
+        <option value="profiles">Usuarios / Cuentas</option>
+        <option value="personas">Personas</option>
+        <option value="estudiantes">Estudiantes</option>
+        <option value="docentes">Docentes</option>
+        <option value="notas">Notas</option>
+        <option value="matriculas">Matrículas</option>
+        <option value="cursos">Cursos</option>
+        <option value="importaciones_notas">Importaciones</option>
+        <option value="configuracion_institucional">Configuración</option>
+      </select>
+    </div>
 
-          <div class="premium-field" style="margin-bottom: 0;">
-            <span style="font-size: 12px; color: var(--steel);">Desde</span>
-            <input type="date"
-                   class="premium-input"
-                   [value]="auditDateInicio()"
-                   (input)="auditDateInicio.set($any($event.target).value)">
-          </div>
+    <button class="btn-secondary audit-clear-btn" (click)="clearAuditFilters()" title="Limpiar filtros">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
 
-          <div class="premium-field" style="margin-bottom: 0;">
-            <span style="font-size: 12px; color: var(--steel);">Hasta</span>
-            <input type="date"
-                   class="premium-input"
-                   [value]="auditDateFin()"
-                   (input)="auditDateFin.set($any($event.target).value)">
-          </div>
+    <button class="btn-primary audit-search-btn" (click)="loadAudits()">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 6px;">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Buscar
+    </button>
+  </div>
 
-          <div>
-            <button class="btn-primary" style="width: 100%; min-height: 46px; border-radius: 10px;" (click)="loadAudits()">
-              Buscar Logs
-            </button>
-          </div>
-        </div>
+  <!-- Date presets row -->
+  <div class="audit-date-row">
+    <div class="audit-presets">
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === 'hoy'" (click)="setDatePreset('hoy')">Hoy</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === '7d'" (click)="setDatePreset('7d')">Últ. 7 días</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === '30d'" (click)="setDatePreset('30d')">Últ. 30 días</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === 'mes'" (click)="setDatePreset('mes')">Este mes</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === 'personalizado'" (click)="setDatePreset('personalizado')">Personalizado</button>
+    </div>
+
+    @if (auditDatePreset() === 'personalizado' || auditDateInicio() || auditDateFin()) {
+      <div class="audit-date-range">
+        <span class="audit-date-label">Desde:</span>
+        <input type="date" class="audit-date-input"
+               [value]="auditDateInicio()"
+               (change)="auditDateInicio.set($any($event.target).value); triggerAuditSearch()">
+        <span class="audit-date-label">Hasta:</span>
+        <input type="date" class="audit-date-input"
+               [value]="auditDateFin()"
+               (change)="auditDateFin.set($any($event.target).value); triggerAuditSearch()">
       </div>
+    }
+  </div>
+</div>
+
+<!-- Active filter chips -->
+@if (activeAuditChips().length > 0) {
+  <div class="audit-chips-bar">
+    @for (chip of activeAuditChips(); track chip.key) {
+      <span class="audit-chip">
+        {{ chip.label }}
+        <button class="audit-chip-remove" (click)="removeAuditChip(chip.key)">×</button>
+      </span>
+    }
+    <button class="audit-chip-clear-all" (click)="clearAuditFilters()">Limpiar todo</button>
+  </div>
+}
 
     @if (auditLoading()) {
       <section class="surface">
@@ -435,7 +477,7 @@
     <section class="surface">
       <div class="surface-header">
         <div>
-          <h3>Historial de Auditoría Forense</h3>
+          <h3>Historial de Auditoría Forense <span class="audit-count-badge">{{ auditTotal() }} registros</span></h3>
           <p>Trazabilidad completa de operaciones y accesos críticos en el sistema.</p>
         </div>
       </div>
@@ -496,6 +538,32 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+      @if (auditPages() > 1) {
+        <div class="audit-pagination">
+          <span class="audit-pagination-info">
+            Página {{ auditPage() }} de {{ auditPages() }} ({{ auditTotal() }} resultados)
+          </span>
+          <div class="audit-pagination-controls">
+            <button class="audit-page-btn" [disabled]="auditPage() <= 1" (click)="goToAuditPage(auditPage() - 1)">
+              « Anterior
+            </button>
+            @for (p of [].constructor(auditPages()); track $index) {
+              @if ($index + 1 === auditPage() || $index + 1 === 1 || $index + 1 === auditPages() || Math.abs($index + 1 - auditPage()) <= 1) {
+                <button class="audit-page-btn" [class.is-current]="$index + 1 === auditPage()" (click)="goToAuditPage($index + 1)">
+                  {{ $index + 1 }}
+                </button>
+              } @else if ($index + 1 === auditPage() - 2 || $index + 1 === auditPage() + 2) {
+                <span class="audit-page-ellipsis">…</span>
+              }
+            }
+            <button class="audit-page-btn" [disabled]="auditPage() >= auditPages()" (click)="goToAuditPage(auditPage() + 1)">
+              Siguiente »
+            </button>
+          </div>
+        </div>
+      }
     </section>
     }
     </div>
