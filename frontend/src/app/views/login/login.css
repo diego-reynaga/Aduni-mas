@@ -15,6 +15,7 @@
 
 .login-institution {
   position: relative;
+  min-width: 0;
   height: 100dvh;
   overflow: hidden;
   isolation: isolate;
@@ -108,7 +109,7 @@
 
 .institution-copy-block {
   max-width: 520px;
-  margin-top: clamp8px, 2vh, 24px;
+  margin-top: clamp(8px, 2vh, 24px);
 }
 
 .institution-copy {
@@ -181,9 +182,11 @@
 }
 
 .login-access {
+  min-width: 0;
   height: 100dvh;
   min-height: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: clamp(28px, 4vw, 56px);
   background: linear-gradient(180deg, #faf8f1 0%, #fffdf7 100%);
@@ -192,7 +195,9 @@
 
 .login-shell {
   width: min(100%, 460px);
+  min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
 }
 
@@ -227,6 +232,7 @@
 
 .login-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -268,6 +274,7 @@
 
 .login-form input {
   flex: 1;
+  min-width: 0;
   min-height: 50px;
   border: 0;
   background: transparent;
@@ -364,29 +371,44 @@
 
 @media (max-width: 640px) {
   .login-institution {
-    min-height: 42vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: auto;
     gap: 14px;
-    padding: 18px;
+    padding: 22px 20px 0;
+  }
+
+  .institution-head {
+    align-self: flex-start;
   }
 
   .institution-logo {
-    width: min(160px, 48vw);
+    width: min(150px, 46vw);
   }
 
-  .institution-copy {
-    font-size: 14px;
-  }
-
-  .institution-illustration {
+  /* El diseño móvil de referencia no incluye el párrafo institucional ni la tarjeta de periodo */
+  .institution-copy-block,
+  .period-card {
     display: none;
   }
 
-  .period-card {
+  .institution-illustration {
+    width: min(320px, 82%);
+    max-height: 34vh;
+  }
+
+  .student-illustration {
     width: 100%;
-    min-width: 0;
+    max-height: 34vh;
   }
 
   .login-access {
-    padding: 22px 14px 30px;
+    position: relative;
+    z-index: 2;
+    margin-top: -28px;
+    padding: 34px 22px 32px;
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -18px 30px rgba(11, 22, 51, 0.18);
   }
 }
