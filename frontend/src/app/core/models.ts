@@ -75,11 +75,11 @@ export interface CourseAssignment {
 export interface GradeEntry {
   codigo: string;
   estudiante: string;
-  practica: number;
-  examen: number;
-  tarea: number;
-  participacion: number;
-  promedio: number;
+  practica: number | null;
+  examen: number | null;
+  tarea: number | null;
+  participacion: number | null;
+  promedio: number | null;
   observacion: string;
 }
 
@@ -143,10 +143,10 @@ export interface TeacherGradesPayload {
 
 export interface GradeEntryInput {
   codigo: string;
-  practica: number;
-  examen: number;
-  tarea: number;
-  participacion: number;
+  practica: number | null;
+  examen: number | null;
+  tarea: number | null;
+  participacion: number | null;
   observacion: string;
 }
 

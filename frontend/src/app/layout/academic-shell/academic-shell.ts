@@ -95,6 +95,15 @@ export class AcademicShell {
   });
 
   readonly expandedModules = signal<Record<string, boolean>>({});
+  readonly sidebarOpen = signal(false);
+
+  toggleSidebar(): void {
+    this.sidebarOpen.update(isOpen => !isOpen);
+  }
+
+  closeSidebar(): void {
+    this.sidebarOpen.set(false);
+  }
 
   toggleModule(module: string): void {
     this.expandedModules.update(state => ({

@@ -37,6 +37,7 @@ import {
   AuditPageResponse,
 } from './models';
 import { supabase } from './supabase.client';
+import { excelAchievement, excelAverage, hasInvalidGrade } from './grade-calculation';
 
 type DbResult<T = any> = { data: T; error: { message: string; details?: string } | null };
 
@@ -324,12 +325,19 @@ export class PortalService {
       const rows: GradeEntry[] = enrollments.map((item) => {
         const student = embedded<any>(item.estudiantes)!;
         const person = embedded<any>(student.personas)!;
-        const value = (type: string) => Number(noteMap.get(`${student.id}|${type}`)?.valor ?? 0);
+        const value = (type: string): number | null => {
+          const note = noteMap.get(`${student.id}|${type}`);
+          return note ? Number(note.valor) : null;
+        };
+        const practica = value('PRACTICA');
+        const examen = value('EXAMEN');
+        const tarea = value('TAREA');
+        const participacion = value('PARTICIPACION');
         return {
           codigo: student.codigo,
           estudiante: `${person.apellidos}, ${person.nombres}`,
-          practica: value('PRACTICA'), examen: value('EXAMEN'), tarea: value('TAREA'), participacion: value('PARTICIPACION'),
-          promedio: value('PROMEDIO_FINAL'),
+          practica, examen, tarea, participacion,
+          promedio: value('PROMEDIO_FINAL') ?? excelAverage([practica, examen, tarea, participacion]),
           observacion: noteMap.get(`${student.id}|PROMEDIO_FINAL`)?.observacion ?? '',
         };
       });
@@ -345,17 +353,26 @@ export class PortalService {
       const trimester = this.trimesterFrom(embedded<any>(assignment.periodos)?.nombre ?? '');
       const students = dataOf(await supabase.from('estudiantes').select('id,codigo').in('codigo', rows.map((row) => row.codigo)) as DbResult<any[]>);
       const studentByCode = new Map(students.map((student) => [student.codigo, student.id]));
-      const noteRows = rows.flatMap((row) => {
+      if (rows.some((row) => [row.practica, row.examen, row.tarea, row.participacion].some(hasInvalidGrade))) {
+        throw new Error('Cada nota debe ser un número entre 0 y 20.');
+      }
+      const rowsWithGrades = rows.filter((row) => [row.practica, row.examen, row.tarea, row.participacion].some((value) => value !== null));
+      if (rowsWithGrades.length === 0) {
+        throw new Error('Ingrese al menos una nota antes de guardar.');
+      }
+      const noteRows = rowsWithGrades.flatMap((row) => {
         const studentId = studentByCode.get(row.codigo);
         if (!studentId) return [];
         const grades = [
           ['PRACTICA', row.practica], ['EXAMEN', row.examen], ['TAREA', row.tarea], ['PARTICIPACION', row.participacion],
         ] as const;
-        const final = Math.round((grades.reduce((sum, [, value]) => sum + Number(value || 0), 0) / grades.length) * 100) / 100;
-        return [...grades.map(([tipo, valor]) => ({ estudiante_id: studentId, asignacion_docente_id: assignmentId, trimestre: trimester, tipo, valor: Number(valor), publicado: true, registrado_por: session.userId })),
-          { estudiante_id: studentId, asignacion_docente_id: assignmentId, trimestre: trimester, tipo: 'PROMEDIO_FINAL', valor: final, logro_literal: this.achievement(final), publicado: true, observacion: row.observacion || null, registrado_por: session.userId }];
+        const final = excelAverage(grades.map(([, value]) => value));
+        if (final === null) return [];
+        return [
+          ...grades.flatMap(([tipo, valor]) => valor === null ? [] : [{ estudiante_id: studentId, asignacion_docente_id: assignmentId, trimestre: trimester, tipo, valor, publicado: true, registrado_por: session.userId }]),
+          { estudiante_id: studentId, asignacion_docente_id: assignmentId, trimestre: trimester, tipo: 'PROMEDIO_FINAL', valor: final, logro_literal: excelAchievement(final), publicado: true, observacion: row.observacion || null, registrado_por: session.userId },
+        ];
       });
-      if (noteRows.some((row) => row.valor < 0 || row.valor > 20)) throw new Error('Todas las notas deben estar entre 0 y 20.');
       dataOf(await supabase.from('notas').upsert(noteRows, { onConflict: 'estudiante_id,asignacion_docente_id,trimestre,tipo' }) as DbResult);
       return { message: 'Notas guardadas y publicadas correctamente.' };
     });
@@ -789,5 +806,4 @@ export class PortalService {
   private toInstitution(row: any): InstitutionConfig { return { nombre: row.nombre, ruc: row.ruc ?? '', telefono: row.telefono ?? '', direccion: row.direccion ?? '', correoInstitucional: row.correo_institucional ?? '', sitioWeb: row.sitio_web ?? '', logoUrl: row.logo_url ?? '' }; }
   private toGuardianLink(row: any): EstudianteApoderadoResponse { const parent = embedded<any>(row.padres_familia); const person = embedded<any>(parent?.personas); return { id: row.id, estudianteId: row.estudiante_id, padreFamiliaId: row.padre_familia_id, padreNombreCompleto: `${person?.apellidos ?? ''}, ${person?.nombres ?? ''}`, padreDocumento: person?.numero_documento ?? '', padreTelefono: person?.telefono ?? '', padreCorreo: person?.correo ?? '', parentesco: row.parentesco, principal: row.principal }; }
   private trimesterFrom(value: string): 'I_TRIMESTRE' | 'II_TRIMESTRE' | 'III_TRIMESTRE' { const normalized = value.toUpperCase(); if (normalized.includes('III') || normalized.includes('3')) return 'III_TRIMESTRE'; if (normalized.includes('II') || normalized.includes('2')) return 'II_TRIMESTRE'; return 'I_TRIMESTRE'; }
-  private achievement(value: number): string { if (value <= 10) return 'C'; if (value <= 14) return 'B'; if (value <= 19) return 'A'; return 'AD'; }
 }

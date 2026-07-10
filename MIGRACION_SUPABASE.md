@@ -21,6 +21,7 @@ Fecha de revisión: 5 de julio de 2026. Rama revisada: `supabase-migration`.
 3. `supabase/migrations/20260704210835_demo_seed.sql`
 4. `supabase/migrations/20260705033556_administrar_estudiante.sql`
 5. `supabase/migrations/20260705035114_harden_notas_rls.sql`
+6. `supabase/migrations/20260710230000_preserve_excel_grade_precision.sql`: elimina la escala fija de dos decimales de las notas y promedios para conservar los resultados calculados por la plantilla universal.
 
 Las cinco se aplicaron al proyecto `cpduuguhpxhxwoemzmgy`. Se comprobaron las tablas, claves UUID, funciones privadas, índices, grants y políticas. Las 22 tablas públicas reportan `rls_enabled=true`.
 

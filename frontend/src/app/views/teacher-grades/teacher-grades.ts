@@ -6,6 +6,9 @@ import { ActivatedRoute } from '@angular/router';
 import { PortalService } from '../../core/portal.service';
 import { CourseAssignment } from '../../core/models';
 import { fadeIn } from '../../core/animations';
+import { excelAverage, hasInvalidGrade } from '../../core/grade-calculation';
+
+const GRADE_FIELDS = ['practica', 'examen', 'tarea', 'participacion'] as const;
 
 @Component({
   selector: 'app-teacher-grades',
@@ -34,13 +37,22 @@ export class TeacherGrades {
   }
 
   updateAverage(row: GradeEntry): void {
-    const values = [row.practica, row.examen, row.tarea, row.participacion].map((value) => Number(value) || 0);
-    row.promedio = Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 100) / 100;
+    const values = this.gradeValues(row);
+    row.promedio = values.some(hasInvalidGrade) ? null : excelAverage(values);
+    this.rows.update((rows) => [...rows]);
+  }
+
+  isGradeInvalid(value: unknown): boolean {
+    return hasInvalidGrade(value);
   }
 
   save(): void {
     if (!this.assignmentId()) {
       this.error.set('No hay asignacion seleccionada para guardar.');
+      return;
+    }
+    if (this.rows().some((row) => this.gradeValues(row).some(hasInvalidGrade))) {
+      this.error.set('Corrija las notas marcadas: solo se permiten números entre 0 y 20.');
       return;
     }
 
@@ -52,10 +64,10 @@ export class TeacherGrades {
       this.assignmentId()!,
       this.rows().map((row) => ({
         codigo: row.codigo,
-        practica: Number(row.practica) || 0,
-        examen: Number(row.examen) || 0,
-        tarea: Number(row.tarea) || 0,
-        participacion: Number(row.participacion) || 0,
+        practica: row.practica,
+        examen: row.examen,
+        tarea: row.tarea,
+        participacion: row.participacion,
         observacion: row.observacion || '',
       })),
     ).subscribe({
@@ -90,6 +102,10 @@ export class TeacherGrades {
         this.rows.set([]);
       },
     });
+  }
+
+  private gradeValues(row: GradeEntry): Array<number | null> {
+    return GRADE_FIELDS.map((field) => row[field]);
   }
 
   private errorMessage(error: unknown, fallback: string): string {

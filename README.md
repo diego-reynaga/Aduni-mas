@@ -152,7 +152,7 @@ También se incluye un archivo demo en `outputs/aduni-supabase-migration/registr
 6. Pulse **Confirmar importación**.
 7. Revise el historial y los promedios guardados.
 
-La función acepta solo `.xlsx`, máximo 10 MB, 12 hojas, 100 estudiantes, 40 columnas útiles, 5000 celdas procesadas y 50 MB descomprimidos. Lee desde la fila 17, no evalúa fórmulas, no crea estudiantes y rechaza contenedores ZIP inválidos, cifrados o sospechosos.
+La función acepta solo `.xlsx`, máximo 10 MB, 12 hojas, 100 estudiantes, 40 columnas útiles, 5000 celdas procesadas y 50 MB descomprimidos. Lee desde la fila 17 y usa los valores que Excel ya calculó y guardó en `L`, `S`, `Z`, `AG` y `AL`; no ejecuta ni reescala fórmulas en el servidor. Las notas y promedios se conservan sin redondeo adicional y se validan entre 0 y 20. No crea estudiantes y rechaza contenedores ZIP inválidos, cifrados o sospechosos.
 
 ## Usuario nuevo creado por el administrador
 

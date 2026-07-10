@@ -1,16 +1,19 @@
-<section class="page-stack" [@fadeIn]>
-  <div class="page-heading">
+<section class="page-stack teacher-page teacher-dashboard-page" [@fadeIn]>
+  <div class="page-heading teacher-hero">
     <div>
       <p class="section-kicker">Portal docente</p>
-      <h2>Cursos asignados por periodo</h2>
+      <h2>Mi carga docente</h2>
       <p>
-        Acceda solo a las asignaciones habilitadas para registrar notas manuales o cargar archivos Excel institucionales.
+        Revise sus cursos asignados y elija como registrar las notas de cada grupo.
       </p>
     </div>
-    <a class="btn-primary" [routerLink]="['/docente/notas']">Abrir acta de notas</a>
+    <div class="teacher-hero__actions">
+      <a class="btn-secondary" [routerLink]="['/docente/notas']">Registrar notas</a>
+      <a class="btn-primary" [routerLink]="['/docente/importar-notas']">Importar Excel</a>
+    </div>
   </div>
 
-  <div class="metric-grid">
+  <div class="metric-grid teacher-metric-grid">
     @for (metric of metrics(); track metric.label) {
       <article class="metric-card tone-{{ metric.tone }}">
         <p class="metric-card__label">{{ metric.label }}</p>
@@ -24,13 +27,14 @@
     <p class="read-only-note">{{ error() }}</p>
   }
 
-  <section class="surface">
+  <section class="surface teacher-courses">
     <div class="surface-header">
       <div>
-        <h3>Asignaciones activas</h3>
-        <p>Relaciones de docente, curso y periodo que habilitan el registro de notas.</p>
+        <p class="section-kicker">Cursos disponibles</p>
+        <h3>Mis asignaciones activas</h3>
+        <p>Seleccione un curso para registrar sus notas.</p>
       </div>
-      <span class="status-pill is-good">Acceso restringido por rol</span>
+      <span class="status-pill is-good">Solo sus cursos asignados</span>
     </div>
 
     <div class="quiet-table-wrap">
@@ -66,7 +70,7 @@
                   [routerLink]="['/docente/notas']"
                   [queryParams]="{ assignmentId: course.assignmentId }"
                 >
-                  Gestionar
+                  Registrar notas
                 </a>
               </td>
             </tr>
