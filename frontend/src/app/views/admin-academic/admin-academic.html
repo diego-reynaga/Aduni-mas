@@ -287,7 +287,9 @@
                                 @for (grado of grupo.paralelos; track grado.id) {
                                   <tr>
                                     <td><strong>{{ grado.paralelo }}</strong></td>
-                                    <td>{{ grado.capacidad }}</td>
+                                    <td>
+                                      <strong>{{ grado.inscritos || 0 }}</strong> / {{ grado.capacidad }}
+                                    </td>
                                     <td>
                                       <span class="status-pill-premium" [class.is-active]="grado.activo" [class.is-inactive]="!grado.activo">
                                         <div class="status-dot"></div>

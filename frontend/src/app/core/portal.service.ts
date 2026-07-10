@@ -501,7 +501,13 @@ export class PortalService {
   deleteNivel(id: EntityId): Observable<void> { return this.deleteOne('niveles', id); }
 
   getGrados(nivelId: EntityId): Observable<Academico.GradoResponse[]> {
-    return this.observe(async () => (dataOf(await supabase.from('grados').select('*,niveles(nombre)').eq('nivel_id', nivelId).order('nombre') as DbResult<any[]>)).map(this.toGrade));
+    return this.observe(async () => {
+      const rows = dataOf(await supabase.from('grados').select('*,niveles(nombre),matriculas(estado)').eq('nivel_id', nivelId).order('nombre') as DbResult<any[]>);
+      return rows.map(row => {
+        row.inscritos = (row.matriculas || []).filter((m: any) => m.estado === 'ACTIVA').length;
+        return this.toGrade(row);
+      });
+    });
   }
   createGrado(req: Academico.GradoRequest): Observable<Academico.GradoResponse> { return this.insertOne('grados', this.gradePayload(req), this.toGrade); }
   updateGrado(id: EntityId, req: Academico.GradoRequest): Observable<Academico.GradoResponse> { return this.updateOne('grados', id, this.gradePayload(req), this.toGrade); }
@@ -566,13 +572,41 @@ export class PortalService {
 
   matricularEstudiante(req: any): Observable<any> {
     return this.observe(async () => {
-      const grade = dataOf(await supabase.from('grados').select('niveles!inner(gestion_id)').eq('id', req.gradoId).single() as DbResult<any>);
+      const grade = dataOf(await supabase.from('grados').select('capacidad, niveles!inner(gestion_id)').eq('id', req.gradoId).single() as DbResult<any>);
       const level = embedded<any>(grade.niveles)!;
+      const capacidad = grade.capacidad || 0;
+
       const duplicate = dataOf(await supabase.from('matriculas').select('id').eq('estudiante_id', req.estudianteId).eq('gestion_id', level.gestion_id).neq('estado', 'ANULADA').maybeSingle() as DbResult<any>);
       if (duplicate) throw new Error('El estudiante ya tiene una matrícula en esta gestión.');
+
+      if (capacidad > 0) {
+        const { count, error } = await supabase.from('matriculas').select('id', { count: 'exact', head: true }).eq('grado_id', req.gradoId).eq('estado', 'ACTIVA');
+        if (error) throw error;
+        if ((count || 0) >= capacidad) {
+          throw new Error(`Este salón ha alcanzado su aforo máximo (${capacidad} alumnos).`);
+        }
+      }
+
       return dataOf(await supabase.from('matriculas').insert({ codigo: `MAT-${Date.now()}`.slice(0, 30), estudiante_id: req.estudianteId, grado_id: req.gradoId, gestion_id: level.gestion_id, estado: 'ACTIVA' }).select().single() as DbResult<any>);
     });
   }
+  trasladarMatricula(matriculaId: EntityId, nuevoGradoId: EntityId): Observable<void> {
+    return this.observe(async () => {
+      const grade = dataOf(await supabase.from('grados').select('capacidad').eq('id', nuevoGradoId).single() as DbResult<any>);
+      const capacidad = grade.capacidad || 0;
+
+      if (capacidad > 0) {
+        const { count, error } = await supabase.from('matriculas').select('id', { count: 'exact', head: true }).eq('grado_id', nuevoGradoId).eq('estado', 'ACTIVA');
+        if (error) throw error;
+        if ((count || 0) >= capacidad) {
+          throw new Error(`Este salón ha alcanzado su aforo máximo (${capacidad} alumnos). No es posible realizar el traslado.`);
+        }
+      }
+
+      dataOf(await supabase.from('matriculas').update({ grado_id: nuevoGradoId }).eq('id', matriculaId) as DbResult);
+    });
+  }
+
   cambiarEstadoMatricula(id: EntityId, estado: string): Observable<void> { return this.observe(async () => { dataOf(await supabase.from('matriculas').update({ estado }).eq('id', id) as DbResult); }); }
 
   getMaterias(): Observable<Academico.MateriaResponse[]> { return this.observe(async () => (dataOf(await supabase.from('materias').select('*').order('nombre') as DbResult<any[]>)).map(this.toSubject)); }
@@ -748,7 +782,7 @@ export class PortalService {
   private periodPayload(req: Academico.PeriodoAcademicoRequest): any { return { gestion_id: req.gestionAcademicaId, nombre: req.nombre, orden: req.orden, fecha_inicio: req.fechaInicio || null, fecha_fin: req.fechaFin || null, cerrado: req.cerrado }; }
   private toLevel = (row: any): Academico.NivelEducativoResponse => ({ id: row.id, nombre: row.nombre, turno: row.turno, descripcion: row.descripcion ?? '', activo: row.activo, gestionAcademicaId: row.gestion_id });
   private levelPayload(req: Academico.NivelEducativoRequest): any { return { gestion_id: req.gestionAcademicaId, nombre: req.nombre, turno: req.turno, descripcion: req.descripcion || null, activo: req.activo }; }
-  private toGrade = (row: any): Academico.GradoResponse => ({ id: row.id, nombre: row.nombre, paralelo: row.paralelo, capacidad: row.capacidad, activo: row.activo, nivelEducativoId: row.nivel_id, nivelEducativoNombre: embedded<any>(row.niveles)?.nombre ?? '' });
+  private toGrade = (row: any): Academico.GradoResponse => ({ id: row.id, nombre: row.nombre, paralelo: row.paralelo, capacidad: row.capacidad, activo: row.activo, nivelEducativoId: row.nivel_id, nivelEducativoNombre: embedded<any>(row.niveles)?.nombre ?? '', inscritos: row.inscritos || 0 });
   private gradePayload(req: Academico.GradoRequest): any { return { nivel_id: req.nivelEducativoId, nombre: req.nombre, paralelo: req.paralelo, capacidad: req.capacidad, activo: req.activo }; }
   private toSubject = (row: any): Academico.MateriaResponse => ({ id: row.id, codigo: row.codigo, nombre: row.nombre, area: row.area ?? '', activa: row.activa });
   private toCourse = (row: any): Academico.CursoResponse => { const grade = embedded<any>(row.grados); const subject = embedded<any>(row.materias); return { id: row.id, gradoId: row.grado_id, gradoNombre: grade?.nombre ?? '', paralelo: grade?.paralelo ?? '', materiaId: row.materia_id, materiaCodigo: subject?.codigo ?? '', materiaNombre: subject?.nombre ?? '', area: subject?.area ?? '', activo: row.activo }; };

@@ -1562,3 +1562,236 @@
   margin-top: 4px;
   opacity: 0.8;
 }
+
+/* ─── SPLIT VIEW LAYOUT ─── */
+.split-view-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  height: calc(100vh - 160px);
+  min-height: 600px;
+}
+
+.split-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.split-panel .panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.split-panel .panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.split-panel .search-wrapper {
+  width: 100%;
+}
+.split-panel .search-input {
+  width: 100%;
+}
+
+.panel-list {
+  flex: 1;
+  overflow-y: auto;
+  background: #fafafa;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.list-item:hover {
+  border-color: var(--forest);
+  box-shadow: 0 4px 12px rgba(31, 111, 91, 0.08);
+}
+
+.list-item.is-active {
+  border-color: var(--forest);
+  background: var(--forest-soft);
+  box-shadow: 0 4px 12px rgba(31, 111, 91, 0.15);
+}
+
+.item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+}
+.parent-avatar {
+  background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+  color: #db2777;
+}
+
+.item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.item-content strong {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.item-content span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.item-actions {
+  flex-shrink: 0;
+}
+
+/* ─── INLINE VÍNCULOS ─── */
+.inline-vinculos {
+  margin: 4px 0 12px 16px;
+  padding: 12px;
+  border-left: 2px solid var(--forest);
+  background: white;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.vinculo-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.vinculo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.vinculo-info strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.vinculo-tags {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #e2e8f0;
+  color: #475569;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.badge-principal {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #fef3c7;
+  color: #b45309;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* ─── Botones ─── */
+.btn-primary.small {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+.btn-secondary.small {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.icon-btn.danger {
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.icon-btn.danger:hover {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+.empty-state, .empty-state-large {
+  text-align: center;
+  color: var(--muted);
+  padding: 24px;
+  font-size: 13px;
+}
+.empty-state-large {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.empty-state-large span {
+  font-size: 13px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* ─── MODAL FIXES ─── */
+.modal-body form {
+  display: flex;
+  flex-direction: column;
+}

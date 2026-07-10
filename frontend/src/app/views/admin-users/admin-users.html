@@ -573,7 +573,7 @@
 
 <!-- MODAL DE CREACIÓN / EDICIÓN DE USUARIO -->
 @if (showUserModal()) {
-  <div class="modal-overlay">
+  <div class="modal-overlay" [@fadeIn]>
     <div class="modal-card" [@scaleInModal]>
       <div class="modal-header">
         <h3>{{ isEditingUser() ? 'Editar Cuenta de Usuario' : 'Agregar Nueva Cuenta' }}</h3>

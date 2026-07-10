@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal, computed, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { EntityId, EstudianteApoderadoResponse, PersonaResponse, PersonaRequest } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
@@ -22,7 +22,6 @@ export class AdminFamilyLinks {
   readonly padres = signal<PersonaResponse[]>([]);
   readonly vinculos = signal<EstudianteApoderadoResponse[]>([]);
   readonly selectedStudent = signal<PersonaResponse | null>(null);
-  readonly editingId = signal<EntityId | null>(null);
 
   // --- UI State ---
   readonly loading = signal(true);
@@ -31,18 +30,14 @@ export class AdminFamilyLinks {
   readonly showQuickCreate = signal(false);
   readonly savingQuick = signal(false);
   readonly confirmDelete = signal<EstudianteApoderadoResponse | null>(null);
-  readonly searchVinculos = signal('');
+  readonly confirmAssign = signal<PersonaResponse | null>(null);
+  
   readonly studentSearch = signal('');
   readonly parentSearch = signal('');
 
   // --- Toasts ---
   readonly toasts = signal<{id: number, msg: string, type: 'success' | 'error'}[]>([]);
   private toastIdCounter = 0;
-
-  // --- KPIs ---
-  readonly totalEstudiantes = computed(() => this.estudiantes().length);
-  readonly totalPadres = computed(() => this.padres().length);
-  readonly totalVinculos = computed(() => this.vinculos().length);
 
   // --- Filtered lists ---
   readonly filteredEstudiantes = computed(() => {
@@ -68,34 +63,12 @@ export class AdminFamilyLinks {
     );
   });
 
-  readonly filteredVinculos = computed(() => {
-    const q = this.searchVinculos().toLowerCase();
-    if (!q) return this.vinculos();
-    return this.vinculos().filter(v =>
-      v.padreNombreCompleto.toLowerCase().includes(q) ||
-      v.parentesco.toLowerCase().includes(q) ||
-      (v.padreDocumento || '').toLowerCase().includes(q) ||
-      (v.padreTelefono || '').toLowerCase().includes(q) ||
-      (v.padreCorreo || '').toLowerCase().includes(q)
-    );
-  });
-
-  // --- Student info for display ---
-  readonly selectedStudentInfo = computed(() => {
-    const s = this.selectedStudent();
-    if (!s) return null;
-    return {
-      id: s.id,
-      nombre: `${s.apellidos}, ${s.nombres}`,
-      codigo: s.codigo || '—',
-      documento: s.documentoIdentidad,
-      vinculosCount: this.vinculos().length,
-    };
+  readonly assignedParentIds = computed(() => {
+    return this.vinculos().map(v => v.padreFamiliaId);
   });
 
   // --- Forms ---
-  readonly form = new FormGroup({
-    padreFamiliaId: new FormControl<EntityId | null>(null, Validators.required),
+  readonly assignForm = new FormGroup({
     parentesco: new FormControl('MADRE', { nonNullable: true, validators: [Validators.required] }),
     principal: new FormControl(false, { nonNullable: true }),
   });
@@ -109,20 +82,6 @@ export class AdminFamilyLinks {
     ocupacion: new FormControl(''),
   });
 
-  // --- Dropdown state ---
-  readonly showStudentDropdown = signal(false);
-  readonly showParentDropdown = signal(false);
-  readonly studentHighlightIndex = signal(0);
-  readonly parentHighlightIndex = signal(0);
-
-  delayHideStudentDropdown() {
-    setTimeout(() => this.showStudentDropdown.set(false), 200);
-  }
-
-  delayHideParentDropdown() {
-    setTimeout(() => this.showParentDropdown.set(false), 200);
-  }
-
   constructor() {
     this.loadPersonas();
   }
@@ -134,9 +93,6 @@ export class AdminFamilyLinks {
         this.estudiantes.set(people.filter(p => p.tipoPersona === 'ESTUDIANTE'));
         this.padres.set(people.filter(p => p.tipoPersona === 'PADRE_FAMILIA'));
         this.loading.set(false);
-        if (this.estudiantes().length > 0) {
-          this.selectStudent(this.estudiantes()[0]);
-        }
       },
       error: () => {
         this.showToast('No se pudo cargar el directorio.', 'error');
@@ -146,61 +102,13 @@ export class AdminFamilyLinks {
   }
 
   // --- Student selection ---
-  selectStudent(student: PersonaResponse | null) {
+  selectStudent(student: PersonaResponse) {
+    if (this.selectedStudent()?.id === student.id) return;
     this.selectedStudent.set(student);
     this.vinculos.set([]);
-    this.cancelEdit();
-    this.showStudentDropdown.set(false);
-    this.studentSearch.set('');
-    if (student) this.loadVinculos(student.id);
-  }
-
-  selectStudentById(id: EntityId) {
-    const student = this.estudiantes().find(e => e.id === id);
-    if (student) this.selectStudent(student);
-  }
-
-  studentKeydown(event: KeyboardEvent) {
-    const list = this.filteredEstudiantes();
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      this.studentHighlightIndex.set(Math.min(this.studentHighlightIndex() + 1, list.length - 1));
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      this.studentHighlightIndex.set(Math.max(this.studentHighlightIndex() - 1, 0));
-    } else if (event.key === 'Enter' && list.length > 0) {
-      event.preventDefault();
-      this.selectStudent(list[this.studentHighlightIndex()]);
-    } else if (event.key === 'Escape') {
-      this.showStudentDropdown.set(false);
+    if (student.subtypeId) {
+      this.loadVinculos(student.subtypeId);
     }
-  }
-
-  parentKeydown(event: KeyboardEvent) {
-    const list = this.filteredPadres();
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      this.parentHighlightIndex.set(Math.min(this.parentHighlightIndex() + 1, list.length - 1));
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      this.parentHighlightIndex.set(Math.max(this.parentHighlightIndex() - 1, 0));
-    } else if (event.key === 'Enter' && list.length > 0) {
-      event.preventDefault();
-      this.selectParent(list[this.parentHighlightIndex()]);
-    } else if (event.key === 'Escape') {
-      this.showParentDropdown.set(false);
-    }
-  }
-
-  selectParent(parent: PersonaResponse) {
-    this.form.patchValue({ padreFamiliaId: parent.id });
-    this.showParentDropdown.set(false);
-    this.parentSearch.set(`${parent.apellidos}, ${parent.nombres} (${parent.documentoIdentidad})`);
-  }
-
-  clearParent() {
-    this.form.patchValue({ padreFamiliaId: null });
-    this.parentSearch.set('');
   }
 
   private loadVinculos(studentId: EntityId) {
@@ -213,6 +121,67 @@ export class AdminFamilyLinks {
       error: () => {
         this.showToast('No se pudieron cargar los vínculos.', 'error');
         this.loadingVinculos.set(false);
+      },
+    });
+  }
+
+  // --- Assignment ---
+  openAssignModal(parent: PersonaResponse) {
+    this.confirmAssign.set(parent);
+    this.assignForm.reset({ parentesco: 'MADRE', principal: false });
+  }
+
+  closeAssignModal() {
+    this.confirmAssign.set(null);
+  }
+
+  executeAssign() {
+    const studentSubtypeId = this.selectedStudent()?.subtypeId;
+    const parent = this.confirmAssign();
+    if (!studentSubtypeId || !parent?.subtypeId || this.assignForm.invalid) return;
+
+    this.saving.set(true);
+    const request = { 
+      padreFamiliaId: parent.subtypeId, 
+      parentesco: this.assignForm.value.parentesco!, 
+      principal: this.assignForm.value.principal! 
+    };
+
+    this.portal.asignarApoderado(studentSubtypeId, request).subscribe({
+      next: () => {
+        this.showToast('Apoderado vinculado con éxito.', 'success');
+        this.loadVinculos(studentSubtypeId);
+        this.closeAssignModal();
+        this.saving.set(false);
+      },
+      error: err => {
+        this.showToast(err?.message || err?.error?.message || 'Error al vincular.', 'error');
+        this.saving.set(false);
+      },
+    });
+  }
+
+  // --- Remove Link ---
+  confirmRemove(row: EstudianteApoderadoResponse) {
+    this.confirmDelete.set(row);
+  }
+
+  executeRemove() {
+    const row = this.confirmDelete();
+    const studentSubtypeId = this.selectedStudent()?.subtypeId;
+    if (!row || !studentSubtypeId) return;
+    
+    this.saving.set(true);
+    this.portal.removerApoderado(studentSubtypeId, row.id).subscribe({
+      next: () => {
+        this.showToast('Vínculo eliminado.', 'success');
+        this.loadVinculos(studentSubtypeId);
+        this.confirmDelete.set(null);
+        this.saving.set(false);
+      },
+      error: err => {
+        this.showToast(err?.message || err?.error?.message || 'Error al eliminar.', 'error');
+        this.saving.set(false);
       },
     });
   }
@@ -241,13 +210,17 @@ export class AdminFamilyLinks {
       correo: val.correo || undefined,
       ocupacion: val.ocupacion || undefined,
     };
+    
     this.portal.createPersona(req).subscribe({
       next: (created) => {
         this.padres.update(list => [...list, created].sort((a, b) => a.apellidos.localeCompare(b.apellidos)));
-        this.selectParent(created);
         this.showQuickCreate.set(false);
         this.quickForm.reset({ nombres: '', apellidos: '', documentoIdentidad: '', telefono: '', correo: '', ocupacion: '' });
-        this.showToast('Apoderado creado y vinculado.', 'success');
+        this.showToast('Apoderado creado. Ahora puede vincularlo.', 'success');
+        
+        if (this.selectedStudent()) {
+          this.openAssignModal(created);
+        }
         this.savingQuick.set(false);
       },
       error: (err) => {
@@ -255,67 +228,6 @@ export class AdminFamilyLinks {
         this.savingQuick.set(false);
       },
     });
-  }
-
-  // --- CRUD vínculos ---
-  save() {
-    const studentId = this.selectedStudent()?.id;
-    if (!studentId || this.form.invalid) return;
-    this.saving.set(true);
-    const request = { padreFamiliaId: this.form.value.padreFamiliaId!, parentesco: this.form.value.parentesco!, principal: this.form.value.principal! };
-    const editId = this.editingId();
-    const action = editId
-      ? this.portal.actualizarApoderado(studentId, editId, request)
-      : this.portal.asignarApoderado(studentId, request);
-    action.subscribe({
-      next: () => {
-        this.showToast(editId ? 'Vínculo actualizado.' : 'Apoderado vinculado.', 'success');
-        this.cancelEdit();
-        this.loadVinculos(studentId);
-        this.saving.set(false);
-      },
-      error: err => {
-        this.showToast(err?.message || err?.error?.message || 'Error al guardar.', 'error');
-        this.saving.set(false);
-      },
-    });
-  }
-
-  edit(row: EstudianteApoderadoResponse) {
-    this.editingId.set(row.id);
-    this.form.setValue({ padreFamiliaId: row.padreFamiliaId, parentesco: row.parentesco, principal: row.principal });
-    const parent = this.padres().find(p => p.id === row.padreFamiliaId);
-    if (parent) this.parentSearch.set(`${parent.apellidos}, ${parent.nombres} (${parent.documentoIdentidad})`);
-    this.showQuickCreate.set(false);
-  }
-
-  confirmRemove(row: EstudianteApoderadoResponse) {
-    this.confirmDelete.set(row);
-  }
-
-  executeRemove() {
-    const row = this.confirmDelete();
-    const studentId = this.selectedStudent()?.id;
-    if (!row || !studentId) return;
-    this.saving.set(true);
-    this.portal.removerApoderado(studentId, row.id).subscribe({
-      next: () => {
-        this.showToast('Vínculo eliminado.', 'success');
-        this.loadVinculos(studentId);
-        this.confirmDelete.set(null);
-        this.saving.set(false);
-      },
-      error: err => {
-        this.showToast(err?.message || err?.error?.message || 'Error al eliminar.', 'error');
-        this.saving.set(false);
-      },
-    });
-  }
-
-  cancelEdit() {
-    this.editingId.set(null);
-    this.form.reset({ padreFamiliaId: null, parentesco: 'MADRE', principal: false });
-    this.parentSearch.set('');
   }
 
   // --- Toast ---

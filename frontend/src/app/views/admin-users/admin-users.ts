@@ -162,6 +162,17 @@ export class AdminUsers {
         this.setTab(tab);
       }
     });
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'new-user') {
+        setTimeout(() => {
+          this.openAddUserModal();
+          if (params['role']) {
+            this.selectedRoles.set([params['role']]);
+            this.userForm.controls.roles.setValue([params['role']]);
+          }
+        }, 150);
+      }
+    });
     this.loadData();
   }
 

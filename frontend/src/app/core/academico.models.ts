@@ -25,6 +25,7 @@ export interface GradoResponse {
   activo: boolean;
   nivelEducativoId: EntityId;
   nivelEducativoNombre: string;
+  inscritos?: number;
 }
 
 export interface GradoRequest {

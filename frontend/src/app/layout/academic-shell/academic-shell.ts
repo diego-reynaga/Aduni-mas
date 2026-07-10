@@ -19,6 +19,9 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
   ADMINISTRADOR: [
     { label: 'Resumen institucional', route: '/admin', eyebrow: 'Panel Principal' },
 
+    // Módulo Gestión de Alumnos
+    { label: 'Matrículas y Alumnos', route: '/admin/alumnos', eyebrow: 'Gestión de Alumnos' },
+
     // Módulo Personas y usuarios
     { label: 'Cuenta de usuarios', route: '/admin/usuarios', eyebrow: 'Personas y usuarios' },
     { label: 'Roles', route: '/admin/roles', eyebrow: 'Personas y usuarios' },
@@ -32,9 +35,6 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Estructura académica', route: '/admin/academico', eyebrow: 'Gestión Académica' },
     { label: 'Gestiones y Periodos', route: '/admin/periodos', eyebrow: 'Gestión Académica' },
     { label: 'Asignaciones Docentes', route: '/admin/asignaciones', eyebrow: 'Gestión Académica' },
-
-    // Módulo Gestión de Alumnos
-    { label: 'Matrículas y Alumnos', route: '/admin/alumnos', eyebrow: 'Gestión de Alumnos' },
 
     // Módulo Notas
     { label: 'Supervisión docente', route: '/admin/supervision', eyebrow: 'Calificaciones' },
