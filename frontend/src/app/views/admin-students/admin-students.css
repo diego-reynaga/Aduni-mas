@@ -903,3 +903,25 @@
   flex-shrink: 0;
 }
 
+
+/* Blue Buttons for Actions */
+.btn-blue {
+  background-color: #2563eb !important;
+  color: white !important;
+  border: 1px solid #2563eb !important;
+}
+
+.btn-blue:hover {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+}
+
+.btn-outline-blue {
+  background-color: white !important;
+  color: #2563eb !important;
+  border: 1px solid #2563eb !important;
+}
+
+.btn-outline-blue:hover {
+  background-color: #eff6ff !important;
+}

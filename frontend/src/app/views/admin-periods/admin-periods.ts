@@ -160,8 +160,30 @@ export class AdminPeriods {
         this.showSuccess(id ? 'Gestión actualizada.' : 'Gestión creada.'); 
         this.closeGestionModal(); 
         this.loadGestiones(); 
+        window.dispatchEvent(new CustomEvent('gestionChanged'));
       },
       error: err => this.showError(err),
+    });
+  }
+
+  activarGestion(row: Academico.GestionAcademicaResponse): void {
+    if (!confirm(`¿Activar la gestión ${row.nombre}? Esto desactivará cualquier otra gestión activa.`)) return;
+    
+    // Primero, desactivar todas las demás gestiones
+    this.gestiones().forEach(g => {
+      if (g.id !== row.id && g.activa) {
+        this.portal.patchGestion(g.id, { activa: false }).subscribe();
+      }
+    });
+
+    // Luego activar esta
+    this.portal.patchGestion(row.id, { activa: true }).subscribe({
+      next: () => {
+        this.loadGestiones();
+        this.showSuccess('Gestión activada.');
+        window.dispatchEvent(new CustomEvent('gestionChanged'));
+      },
+      error: err => this.showError(err)
     });
   }
 
@@ -171,6 +193,7 @@ export class AdminPeriods {
       next: () => {
         this.loadGestiones();
         this.showSuccess('Gestión desactivada.');
+        window.dispatchEvent(new CustomEvent('gestionChanged'));
       },
       error: err => this.showError(err)
     });
@@ -204,7 +227,12 @@ export class AdminPeriods {
     const id = this.editingPeriodoId();
     const action = id ? this.portal.updatePeriodo(id, request) : this.portal.createPeriodo(request);
     action.subscribe({
-      next: () => { this.showSuccess(id ? 'Periodo actualizado.' : 'Periodo creado.'); this.closePeriodoModal(); this.loadPeriodos(gestionId); },
+      next: () => { 
+        this.showSuccess(id ? 'Periodo actualizado.' : 'Periodo creado.'); 
+        this.closePeriodoModal(); 
+        this.loadPeriodos(gestionId); 
+        window.dispatchEvent(new CustomEvent('gestionChanged'));
+      },
       error: err => this.showError(err),
     });
   }
@@ -215,6 +243,7 @@ export class AdminPeriods {
       next: () => {
         if (this.selectedGestionId()) this.loadPeriodos(this.selectedGestionId()!);
         this.showSuccess('Periodo cerrado.');
+        window.dispatchEvent(new CustomEvent('gestionChanged'));
       },
       error: err => this.showError(err)
     });

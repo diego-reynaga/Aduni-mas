@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { PortalService } from '../../core/portal.service';
 import { ROLE_HOME, ROLE_LABELS, RoleName } from '../../core/models';
 import { expandCollapse, routeAnimations, staggerNav } from '../../core/animations';
 
@@ -64,9 +65,10 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
   animations: [routeAnimations, staggerNav, expandCollapse],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AcademicShell {
+export class AcademicShell implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly portal = inject(PortalService);
 
   prepareRoute(outlet: RouterOutlet): string {
     return outlet?.isActivated ? outlet.activatedRoute?.snapshot?.url?.join('/') ?? '' : '';
@@ -77,6 +79,47 @@ export class AcademicShell {
   readonly roleLabels = ROLE_LABELS;
   readonly availableRoles = computed(() => this.auth.availableRoles());
   readonly navItems = computed(() => NAV_BY_ROLE[this.activeRole() ?? 'ADMINISTRADOR']);
+
+  // Reactive state for current period
+  readonly activeGestionName = signal('Cargando...');
+  readonly activePeriodName = signal('...');
+
+  ngOnInit() {
+    this.loadActivePeriod();
+    window.addEventListener('gestionChanged', () => {
+      this.loadActivePeriod();
+    });
+  }
+
+  readonly isSidebarCollapsed = signal(false);
+
+  toggleSidebarCollapse(): void {
+    this.isSidebarCollapsed.update(v => !v);
+  }
+
+  private loadActivePeriod() {
+    this.portal.getGestiones().subscribe({
+      next: (gestiones) => {
+        const activa = gestiones.find(g => g.activa) || gestiones[0];
+        if (activa) {
+          this.activeGestionName.set(activa.nombre || activa.anio.toString());
+          this.portal.getPeriodos(activa.id).subscribe({
+            next: (periodos) => {
+              const per = periodos.find(p => !p.cerrado) || periodos[0];
+              this.activePeriodName.set(per ? per.nombre : 'Sin periodo abierto');
+            }
+          });
+        } else {
+          this.activeGestionName.set('Sin Gestión');
+          this.activePeriodName.set('-');
+        }
+      },
+      error: () => {
+        this.activeGestionName.set('Error');
+        this.activePeriodName.set('No se pudo cargar');
+      }
+    });
+  }
 
   readonly navGroups = computed<NavGroup[]>(() => {
     const items = this.navItems();
@@ -95,8 +138,20 @@ export class AcademicShell {
   });
 
   readonly expandedModules = signal<Record<string, boolean>>({});
+  readonly isMobileMenuOpen = signal(false);
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen.update(v => !v);
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen.set(false);
+  }
 
   toggleModule(module: string): void {
+    if (this.isSidebarCollapsed()) {
+      this.isSidebarCollapsed.set(false);
+    }
     this.expandedModules.update(state => ({
       ...state,
       [module]: !state[module]
