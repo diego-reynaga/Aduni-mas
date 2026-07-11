@@ -1,6 +1,6 @@
-<section class="page-stack" [@fadeIn]>
+<section class="page-stack teacher-page teacher-grades-page" [@fadeIn]>
   @if (selectedCourse()) {
-    <div class="page-heading">
+    <div class="page-heading teacher-course-heading">
       <div>
         <p class="section-kicker">Acta de evaluacion</p>
         <h2>{{ selectedCourse()!.curso }}</h2>
@@ -15,7 +15,7 @@
       </div>
     </div>
   } @else {
-    <div class="page-heading">
+    <div class="page-heading teacher-course-heading">
       <div>
         <p class="section-kicker">Acta de evaluacion</p>
         <h2>Sin asignacion activa</h2>
@@ -24,7 +24,7 @@
     </div>
   }
 
-  <p class="read-only-note">
+  <p class="read-only-note teacher-context-note">
     Los estudiantes y padres de familia solo consultan notas publicadas; la edicion queda reservada al docente asignado.
   </p>
 
@@ -40,19 +40,20 @@
     <p class="read-only-note">Cargando acta...</p>
   }
 
-  <section class="surface">
+  <section class="surface teacher-grades-surface">
     <div class="surface-header">
       <div>
-        <h3>Registro manual de notas</h3>
-        <p>Calificaciones por evaluacion con promedio calculado en la interfaz.</p>
+        <p class="section-kicker">Registro manual</p>
+        <h3>Ingrese las notas del curso</h3>
+        <p>El promedio se actualiza al cambiar una calificacion.</p>
       </div>
       <button class="btn-primary" type="button" [disabled]="saving() || loading() || !assignmentId()" (click)="save()">
-        {{ saving() ? 'Guardando...' : 'Guardar acta' }}
+        {{ saving() ? 'Guardando...' : 'Guardar notas' }}
       </button>
     </div>
 
     <div class="quiet-table-wrap">
-      <table class="quiet-table">
+      <table class="quiet-table teacher-grades-table">
         <thead>
           <tr>
             <th>Codigo</th>
@@ -71,18 +72,18 @@
               <td><strong>{{ row.codigo }}</strong></td>
               <td>{{ row.estudiante }}</td>
               <td class="score-cell">
-                <input class="score-input" type="number" min="0" max="20" [(ngModel)]="row.practica" (input)="updateAverage(row)">
+                <input class="score-input" [class.score-input--invalid]="isGradeInvalid(row.practica)" type="number" min="0" max="20" step="0.01" [attr.aria-invalid]="isGradeInvalid(row.practica) ? 'true' : null" [attr.aria-label]="'Practica de ' + row.estudiante" [(ngModel)]="row.practica" (ngModelChange)="updateAverage(row)">
               </td>
               <td class="score-cell">
-                <input class="score-input" type="number" min="0" max="20" [(ngModel)]="row.examen" (input)="updateAverage(row)">
+                <input class="score-input" [class.score-input--invalid]="isGradeInvalid(row.examen)" type="number" min="0" max="20" step="0.01" [attr.aria-invalid]="isGradeInvalid(row.examen) ? 'true' : null" [attr.aria-label]="'Examen de ' + row.estudiante" [(ngModel)]="row.examen" (ngModelChange)="updateAverage(row)">
               </td>
               <td class="score-cell">
-                <input class="score-input" type="number" min="0" max="20" [(ngModel)]="row.tarea" (input)="updateAverage(row)">
+                <input class="score-input" [class.score-input--invalid]="isGradeInvalid(row.tarea)" type="number" min="0" max="20" step="0.01" [attr.aria-invalid]="isGradeInvalid(row.tarea) ? 'true' : null" [attr.aria-label]="'Tarea de ' + row.estudiante" [(ngModel)]="row.tarea" (ngModelChange)="updateAverage(row)">
               </td>
               <td class="score-cell">
-                <input class="score-input" type="number" min="0" max="20" [(ngModel)]="row.participacion" (input)="updateAverage(row)">
+                <input class="score-input" [class.score-input--invalid]="isGradeInvalid(row.participacion)" type="number" min="0" max="20" step="0.01" [attr.aria-invalid]="isGradeInvalid(row.participacion) ? 'true' : null" [attr.aria-label]="'Participacion de ' + row.estudiante" [(ngModel)]="row.participacion" (ngModelChange)="updateAverage(row)">
               </td>
-              <td class="score-strong">{{ row.promedio | number: '1.2-2' }}</td>
+              <td class="score-strong">{{ row.promedio === null ? '-' : (row.promedio | number: '1.0-4') }}</td>
               <td>{{ row.observacion }}</td>
             </tr>
           }

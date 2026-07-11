@@ -25,10 +25,12 @@ const COMPETENCES = [
   { number: 3, nameCol: 19, noteCols: [19, 20, 21, 22, 23, 24], averageCol: 25 },
   { number: 4, nameCol: 26, noteCols: [26, 27, 28, 29, 30, 31], averageCol: 32 },
 ] as const;
+const FINAL_AVERAGE_COLUMN = 37;
 
 const USEFUL_COLUMNS = new Set([
   0, 1,
   ...COMPETENCES.flatMap((item) => [...item.noteCols, item.averageCol]),
+  FINAL_AVERAGE_COLUMN,
 ]);
 
 type AppRole = "ADMINISTRADOR" | "DOCENTE" | "ESTUDIANTE" | "PADRE_FAMILIA";
@@ -92,7 +94,14 @@ function round2(value: number): number {
 }
 
 function average(values: number[]): number | null {
-  return values.length ? round2(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+}
+
+function gradeValue(raw: unknown): number | null {
+  const text = clean(raw);
+  if (!text) return null;
+  const parsed = Number(text.replace(",", "."));
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 20 ? parsed : null;
 }
 
 function achievement(value: number | null): string | null {
@@ -353,22 +362,14 @@ Deno.serve(async (req: Request) => {
             } else if (parsed < 0 || parsed > 20) {
               errors.push(rowError(row + 1, rawName, excelColumn(column), "La nota debe estar entre 0 y 20."));
             } else {
-              value = round2(parsed);
+              value = parsed;
               validValues.push(value);
             }
           }
           notes.push({ columnaExcel: excelColumn(column), nombreNota: noteName, valor: value });
         }
-        let competenceAverage = average(validValues);
-        if (competenceAverage === null) {
-          const rawAverage = readCell(trimesterSheet, row, definition.averageCol);
-          if (rawAverage !== null && clean(rawAverage) !== "") {
-            const parsedAverage = Number(clean(rawAverage).replace(",", "."));
-            if (Number.isFinite(parsedAverage) && parsedAverage >= 0 && parsedAverage <= 20) {
-              competenceAverage = round2(parsedAverage);
-            }
-          }
-        }
+        const competenceAverage = gradeValue(readCell(trimesterSheet, row, definition.averageCol))
+          ?? average(validValues);
         if (notes.length === 0 && competenceAverage === null) continue;
         competencies.push({
           numero: definition.number,
@@ -378,7 +379,8 @@ Deno.serve(async (req: Request) => {
           logroLiteral: achievement(competenceAverage),
         });
       }
-      const finalAverage = average(competencies.map((item) => item.promedioCompetencia).filter((value): value is number => value !== null));
+      const finalAverage = gradeValue(readCell(trimesterSheet, row, FINAL_AVERAGE_COLUMN))
+        ?? average(competencies.map((item) => item.promedioCompetencia).filter((value): value is number => value !== null));
       if (finalAverage === null) errors.push(rowError(row + 1, rawName, "notas", "El estudiante no contiene notas válidas."));
       students.push({
         filaExcel: row + 1,

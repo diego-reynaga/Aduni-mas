@@ -1,17 +1,33 @@
 <section class="page-stack" [@fadeIn]>
   <div class="page-heading import-heading">
     <div>
-      <p class="section-kicker">Importacion de notas</p>
-      <h2>Notas individuales por trimestre</h2>
-      <p>Seleccione un trimestre y un curso. El sistema leerá solo esa hoja y guardará cada nota individual.</p>
-    </div>
-    <div class="action-row">
-      <button class="btn-secondary import-action" type="button" (click)="previewExcel()" [disabled]="!canPreview()">
-        {{ loadingPreview() ? 'Previsualizando...' : 'Previsualizar' }}
-      </button>
-      <button class="btn-primary import-action" type="button" (click)="confirmarImportacion()" [disabled]="!canConfirm()">
-        {{ confirming() ? 'Guardando...' : 'Confirmar importacion' }}
-      </button>
+      <p class="section-kicker">Carga asistida de notas</p>
+      <h2>Importar notas desde Excel</h2>
+      <p>Seleccione el curso, el trimestre y el archivo. Primero revisara los datos y solo se guardaran al confirmar.</p>
+
+      <div class="import-steps" aria-label="Proceso de importacion">
+        <div class="import-step import-step--current">
+          <span>1</span>
+          <div>
+            <strong>Preparar archivo</strong>
+            <small>Curso, trimestre y Excel</small>
+          </div>
+        </div>
+        <div class="import-step">
+          <span>2</span>
+          <div>
+            <strong>Revisar datos</strong>
+            <small>Notas y observaciones</small>
+          </div>
+        </div>
+        <div class="import-step">
+          <span>3</span>
+          <div>
+            <strong>Confirmar guardado</strong>
+            <small>Registro final del trimestre</small>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -19,31 +35,18 @@
     <p class="import-alert is-error">{{ error() }}</p>
   }
 
-  <section class="surface">
-    <div class="surface-header"><div><p class="section-kicker">Guía rápida</p><h3>Importe en cinco pasos</h3></div></div>
-    <div class="surface-body">
-      <ol class="help-steps">
-        <li><strong>Paso 1:</strong> seleccionar curso</li>
-        <li><strong>Paso 2:</strong> seleccionar trimestre</li>
-        <li><strong>Paso 3:</strong> subir Excel .xlsx</li>
-        <li><strong>Paso 4:</strong> previsualizar y corregir observaciones</li>
-        <li><strong>Paso 5:</strong> confirmar la importación</li>
-      </ol>
-    </div>
-  </section>
-
-  <section class="surface">
+  <section class="surface import-setup">
     <div class="surface-header">
       <div>
-        <p class="section-kicker">Configuracion</p>
-        <h3>Archivo, trimestre y curso</h3>
-        <p>No se usa resumen anual ni se importan otros trimestres.</p>
+        <p class="section-kicker">Paso 1 de 3</p>
+        <h3>Indique donde se guardaran las notas</h3>
+        <p>El archivo se registrara solo en el curso y trimestre que seleccione aqui.</p>
       </div>
     </div>
     <div class="surface-body import-file-panel" [formGroup]="form">
       <div class="selector-grid">
         <label class="field">
-          <span>Trimestre</span>
+          <span><b>1</b> Trimestre</span>
           <select formControlName="trimestre" (change)="onTrimestreChanged()">
             @for (item of trimestres; track item.value) {
               <option [value]="item.value">{{ item.label }}</option>
@@ -52,7 +55,7 @@
         </label>
 
         <label class="field">
-          <span>Curso asignado</span>
+          <span><b>2</b> Curso asignado</span>
           <select formControlName="assignmentId" (change)="onAssignmentChanged()">
             @for (course of courses(); track course.assignmentId) {
               <option [ngValue]="course.assignmentId">
@@ -65,48 +68,70 @@
 
       <label class="file-picker file-picker--wide">
         <input type="file" accept=".xlsx" (change)="onFileSelected($event)">
+        <span class="file-picker__step">3. Archivo de notas</span>
         <span class="file-picker__title">{{ form.value.fileName || 'Seleccionar NOTAS.xlsx' }}</span>
         <span class="file-picker__detail">
-          {{ form.value.fileName ? 'Listo para previsualizar el trimestre' : 'Haz clic para elegir el archivo Excel' }}
+          {{ form.value.fileName ? 'Archivo listo para revisar' : 'Haga clic aqui para elegir el archivo Excel' }}
         </span>
       </label>
 
       @if (selectedCourse(); as course) {
-        <dl class="destination-summary destination-summary--wide">
-          <div>
-            <dt>Curso</dt>
-            <dd>{{ course.curso }}</dd>
+        <div class="destination-block">
+          <div class="destination-block__heading">
+            <strong>Destino seleccionado</strong>
+            <span>Revise estos datos antes de continuar.</span>
           </div>
-          <div>
-            <dt>Grado</dt>
-            <dd>{{ course.grado }} {{ course.seccion }}</dd>
-          </div>
-          <div>
-            <dt>Periodo asignado</dt>
-            <dd>{{ course.periodo }}</dd>
-          </div>
-          <div>
-            <dt>Estudiantes</dt>
-            <dd>{{ course.estudiantes }}</dd>
-          </div>
-        </dl>
+          <dl class="destination-summary destination-summary--wide">
+            <div>
+              <dt>Curso</dt>
+              <dd>{{ course.curso }}</dd>
+            </div>
+            <div>
+              <dt>Grado</dt>
+              <dd>{{ course.grado }} {{ course.seccion }}</dd>
+            </div>
+            <div>
+              <dt>Periodo asignado</dt>
+              <dd>{{ course.periodo }}</dd>
+            </div>
+            <div>
+              <dt>Estudiantes</dt>
+              <dd>{{ course.estudiantes }}</dd>
+            </div>
+          </dl>
+        </div>
       } @else {
         <p class="empty-state">{{ loadingContext() ? 'Cargando asignaciones...' : 'No hay asignaciones disponibles.' }}</p>
       }
+
+      <div class="import-setup__action">
+        <div>
+          <strong>Cuando termine de seleccionar los datos</strong>
+          <p>Revise el archivo antes de guardar cualquier nota.</p>
+        </div>
+        <button class="btn-primary import-action" type="button" (click)="previewExcel()" [disabled]="!canPreview()">
+          {{ loadingPreview() ? 'Previsualizando...' : 'Previsualizar archivo' }}
+        </button>
+      </div>
     </div>
   </section>
 
   @if (preview(); as data) {
-    <section class="surface">
+    <section class="surface import-review">
       <div class="surface-header">
         <div>
           <p class="section-kicker">Datos detectados</p>
           <h3>{{ data.metadata.areaCurricular }} · {{ data.metadata.grado }} {{ data.metadata.seccion }}</h3>
           <p>{{ data.metadata.trimestre }} · {{ data.metadata.institucion }} · {{ data.metadata.docente }}</p>
         </div>
-        <span class="status-pill" [class.is-good]="!data.bloqueante" [class.is-danger]="data.bloqueante">
-          {{ data.bloqueante ? 'Bloqueada' : 'Lista para confirmar' }}
-        </span>
+        <div class="import-review__actions">
+          <span class="status-pill" [class.is-good]="!data.bloqueante" [class.is-danger]="data.bloqueante">
+            {{ data.bloqueante ? 'Bloqueada' : 'Lista para confirmar' }}
+          </span>
+          <button class="btn-primary import-action" type="button" (click)="confirmarImportacion()" [disabled]="!canConfirm()">
+            {{ confirming() ? 'Guardando...' : 'Confirmar y guardar' }}
+          </button>
+        </div>
       </div>
 
       <div class="surface-body">
@@ -171,27 +196,32 @@
     </section>
 
     @if (previewErrors().length > 0) {
-      <section class="surface">
-        <div class="surface-header">
+        <details class="surface import-observations">
+          <summary class="import-observations__summary">
           <div>
             <p class="section-kicker">Observaciones</p>
             <h3>Errores detectados</h3>
             <p>Los errores críticos bloquean la confirmación. Las notas inválidas no se guardan.</p>
           </div>
-          <button class="btn-secondary" type="button" (click)="downloadErrors()">Descargar CSV</button>
-        </div>
-        <div class="error-list">
-          @for (item of previewErrors(); track $index) {
-            <div class="error-line" [class.error-line--critical]="item.critico">
-              <strong>{{ item.critico ? 'Crítico' : 'Fila ' + (item.filaExcel || '-') }}</strong>
-              <span>{{ item.campo }} · {{ item.descripcionError }}</span>
-              @if (item.estudianteTexto) {
-                <small>{{ item.estudianteTexto }}</small>
+            <span class="status-pill is-warning">{{ previewErrors().length }}</span>
+          </summary>
+          <div class="import-observations__body">
+            <div class="import-observations__actions">
+              <button class="btn-secondary" type="button" (click)="downloadErrors()">Descargar CSV</button>
+            </div>
+            <div class="error-list">
+              @for (item of previewErrors(); track $index) {
+                <div class="error-line" [class.error-line--critical]="item.critico">
+                  <strong>{{ item.critico ? 'Crítico' : 'Fila ' + (item.filaExcel || '-') }}</strong>
+                  <span>{{ item.campo }} · {{ item.descripcionError }}</span>
+                  @if (item.estudianteTexto) {
+                    <small>{{ item.estudianteTexto }}</small>
+                  }
+                </div>
               }
             </div>
-          }
         </div>
-      </section>
+        </details>
     }
 
     <section class="surface">
