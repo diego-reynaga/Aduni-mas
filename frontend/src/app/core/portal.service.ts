@@ -7,13 +7,14 @@ import {
   AdminDashboardPayload,
   AdminInstitutionPayload,
   AuditoriaResponse,
+  CompetencyConfig,
+  CompetencyNumber,
   CourseAssignment,
   EntityId,
   EstudianteApoderadoRequest,
   EstudianteApoderadoResponse,
   FamilyPortalPayload,
   GradeEntry,
-  GradeEntryInput,
   InstitutionConfig,
   MessagePayload,
   PersonaDropdown,
@@ -27,8 +28,10 @@ import {
   StudentPortalPayload,
   TeacherDashboardPayload,
   TeacherGradesPayload,
+  TeacherGradesSaveInput,
   TeacherImportContextPayload,
   TeacherProgress,
+  TrimestreImportacion,
   UsuarioRequest,
   UsuarioResponse,
   UserRow,
@@ -37,7 +40,7 @@ import {
   AuditPageResponse,
 } from './models';
 import { supabase } from './supabase.client';
-import { excelAchievement, excelAverage, hasInvalidGrade } from './grade-calculation';
+import { hasInvalidGrade } from './grade-calculation';
 
 type DbResult<T = any> = { data: T; error: { message: string; details?: string } | null };
 
@@ -52,6 +55,36 @@ function embedded<T>(value: T | T[] | null | undefined): T | null {
 
 function dateText(value: string | null | undefined): string {
   return value ? new Date(value).toLocaleString('es-PE') : '-';
+}
+
+function isMissingSchemaError(error: { message?: string; details?: string } | null): boolean {
+  const text = `${error?.message ?? ''} ${error?.details ?? ''}`.toLowerCase();
+  return text.includes('schema cache')
+    || text.includes('does not exist')
+    || text.includes('no existe');
+}
+
+const COMPETENCY_NUMBERS: CompetencyNumber[] = [1, 2, 3, 4];
+const DEFAULT_CAPACITY_NAMES = ['PRACTICA', 'EXAMEN', 'CUADERNO'] as const;
+const DEFAULT_COMPETENCY_NAMES: Record<CompetencyNumber, string> = {
+  1: 'Resuelve problemas de cantidad',
+  2: 'Resuelve problemas de regularidad, equivalencia y cambio',
+  3: 'Resuelve problemas de forma, movimiento y localización',
+  4: 'Resuelve problemas de gestión de datos e incertidumbre',
+};
+const EXCEL_CAPACITY_COLUMNS: Record<CompetencyNumber, string[]> = {
+  1: ['F', 'G', 'H', 'I', 'J', 'K'],
+  2: ['M', 'N', 'O', 'P', 'Q', 'R'],
+  3: ['T', 'U', 'V', 'W', 'X', 'Y'],
+  4: ['AA', 'AB', 'AC', 'AD', 'AE', 'AF'],
+};
+
+function defaultCompetencies(): CompetencyConfig[] {
+  return COMPETENCY_NUMBERS.map((numero) => ({
+    numero,
+    nombre: DEFAULT_COMPETENCY_NAMES[numero],
+    capacidades: DEFAULT_CAPACITY_NAMES.map((nombre, index) => ({ numero: index + 1, nombre })),
+  }));
 }
 
 @Injectable({ providedIn: 'root' })
@@ -315,66 +348,153 @@ export class PortalService {
     return this.observe(async () => {
       const courses = await this.fetchTeacherCourses();
       const selected = courses.find((item) => item.assignmentId === assignmentId) ?? courses[0] ?? null;
-      if (!selected) return { assignmentId: null, selectedCourse: null, rows: [] };
+      if (!selected) {
+        return {
+          assignmentId: null,
+          selectedCourse: null,
+          trimestre: 'I_TRIMESTRE',
+          competencias: defaultCompetencies(),
+          rows: [],
+        };
+      }
       const details = dataOf(await supabase.from('asignaciones_docente').select('id,cursos!inner(grado_id),periodos!inner(gestion_id,nombre)').eq('id', selected.assignmentId).single() as DbResult<any>);
       const course = embedded<any>(details.cursos)!;
       const period = embedded<any>(details.periodos)!;
+      const trimestre = this.trimesterFrom(period.nombre ?? '');
       const enrollments = dataOf(await supabase.from('matriculas').select('estudiantes!inner(id,codigo,personas!inner(nombres,apellidos))').eq('grado_id', course.grado_id).eq('gestion_id', period.gestion_id).eq('estado', 'ACTIVA') as DbResult<any[]>);
-      const notes = dataOf(await supabase.from('notas').select('*').eq('asignacion_docente_id', selected.assignmentId) as DbResult<any[]>);
-      const noteMap = new Map(notes.map((note) => [`${note.estudiante_id}|${note.tipo}`, note]));
+      const [storedConfigs, storedDetails] = await Promise.all([
+        supabase
+          .from('configuracion_competencias_docente')
+          .select('numero_competencia,nombre_competencia,nombres_capacidades')
+          .eq('asignacion_docente_id', selected.assignmentId)
+          .eq('trimestre', trimestre),
+        supabase
+          .from('calificacion_detalle_trimestre')
+          .select('estudiante_id,numero_competencia,numero_capacidad,nombre_competencia,nombre_nota,valor_nota')
+          .eq('asignacion_docente_id', selected.assignmentId)
+          .eq('trimestre', trimestre),
+      ]);
+      let configRows: any[] = [];
+      if (storedConfigs.error) {
+        if (!isMissingSchemaError(storedConfigs.error)) {
+          throw new Error(storedConfigs.error.details || storedConfigs.error.message);
+        }
+      } else {
+        configRows = storedConfigs.data ?? [];
+      }
+
+      let detailRows: any[] = [];
+      if (storedDetails.error && isMissingSchemaError(storedDetails.error)) {
+        const legacyDetails = dataOf(await supabase
+          .from('calificacion_detalle_trimestre')
+          .select('estudiante_id,numero_competencia,columna_excel,nombre_competencia,nombre_nota,valor_nota')
+          .eq('asignacion_docente_id', selected.assignmentId)
+          .eq('trimestre', trimestre) as DbResult<any[]>);
+        detailRows = legacyDetails.map((item) => {
+          const competencyNumber = Number(item.numero_competencia) as CompetencyNumber;
+          return {
+            ...item,
+            numero_capacidad: EXCEL_CAPACITY_COLUMNS[competencyNumber]?.indexOf(item.columna_excel) + 1 || 0,
+          };
+        }).filter((item) => item.numero_capacidad > 0);
+      } else {
+        detailRows = dataOf(storedDetails as DbResult<any[]>);
+      }
+
+      const competencias: CompetencyConfig[] = COMPETENCY_NUMBERS.map((numero) => {
+        const stored = configRows.find((item) => Number(item.numero_competencia) === numero);
+        const competencyDetails = detailRows.filter((item) => Number(item.numero_competencia) === numero);
+        const highestRecordedCapacity = competencyDetails.reduce(
+          (highest, item) => Math.max(highest, Number(item.numero_capacidad) || 0),
+          0,
+        );
+        const configuredNames = Array.isArray(stored?.nombres_capacidades)
+          ? stored.nombres_capacidades.map((item: unknown) => String(item).trim()).filter(Boolean).slice(0, 6)
+          : [];
+        const capacityCount = Math.min(6, Math.max(3, configuredNames.length, highestRecordedCapacity));
+        const capacidades = Array.from({ length: capacityCount }, (_, index) => {
+          const detailName = competencyDetails.find((item) => Number(item.numero_capacidad) === index + 1)?.nombre_nota;
+          return {
+            numero: index + 1,
+            nombre: configuredNames[index]
+              || String(detailName ?? '').trim()
+              || DEFAULT_CAPACITY_NAMES[index]
+              || `CAPACIDAD ${index + 1}`,
+          };
+        });
+        return {
+          numero,
+          nombre: String(stored?.nombre_competencia
+            || competencyDetails[0]?.nombre_competencia
+            || DEFAULT_COMPETENCY_NAMES[numero]).trim(),
+          capacidades,
+        };
+      });
+
+      const gradeMap = new Map(detailRows.map((item) => [
+        `${item.estudiante_id}|${item.numero_competencia}|${item.numero_capacidad}`,
+        Number(item.valor_nota),
+      ]));
       const rows: GradeEntry[] = enrollments.map((item) => {
         const student = embedded<any>(item.estudiantes)!;
         const person = embedded<any>(student.personas)!;
-        const value = (type: string): number | null => {
-          const note = noteMap.get(`${student.id}|${type}`);
-          return note ? Number(note.valor) : null;
-        };
-        const practica = value('PRACTICA');
-        const examen = value('EXAMEN');
-        const tarea = value('TAREA');
-        const participacion = value('PARTICIPACION');
         return {
+          estudianteId: student.id,
           codigo: student.codigo,
           estudiante: `${person.apellidos}, ${person.nombres}`,
-          practica, examen, tarea, participacion,
-          promedio: value('PROMEDIO_FINAL') ?? excelAverage([practica, examen, tarea, participacion]),
-          observacion: noteMap.get(`${student.id}|PROMEDIO_FINAL`)?.observacion ?? '',
+          competencias: competencias.map((competencia) => ({
+            numero: competencia.numero,
+            notas: competencia.capacidades.map((capacidad) => (
+              gradeMap.get(`${student.id}|${competencia.numero}|${capacidad.numero}`) ?? null
+            )),
+          })),
         };
-      });
-      return { assignmentId: selected.assignmentId, selectedCourse: selected, rows };
+      }).sort((a, b) => a.estudiante.localeCompare(b.estudiante, 'es'));
+      return {
+        assignmentId: selected.assignmentId,
+        selectedCourse: selected,
+        trimestre,
+        competencias,
+        rows,
+      };
     });
   }
 
-  saveTeacherGrades(assignmentId: EntityId, rows: GradeEntryInput[]): Observable<MessagePayload> {
+  saveTeacherGrades(assignmentId: EntityId, input: TeacherGradesSaveInput): Observable<MessagePayload> {
     return this.observe(async () => {
-      const session = this.auth.session();
-      if (!session) throw new Error('Sesión expirada.');
-      const assignment = dataOf(await supabase.from('asignaciones_docente').select('periodos(nombre)').eq('id', assignmentId).single() as DbResult<any>);
-      const trimester = this.trimesterFrom(embedded<any>(assignment.periodos)?.nombre ?? '');
-      const students = dataOf(await supabase.from('estudiantes').select('id,codigo').in('codigo', rows.map((row) => row.codigo)) as DbResult<any[]>);
-      const studentByCode = new Map(students.map((student) => [student.codigo, student.id]));
-      if (rows.some((row) => [row.practica, row.examen, row.tarea, row.participacion].some(hasInvalidGrade))) {
+      if (input.competencias.length !== 4
+        || input.competencias.some((item) => item.capacidades.length < 3 || item.capacidades.length > 6)) {
+        throw new Error('Cada curso debe conservar 4 competencias y entre 3 y 6 capacidades por competencia.');
+      }
+      const duplicateOrBlankName = input.competencias.some((item) => {
+        const names = item.capacidades.map((capacity) => capacity.nombre.trim().toLocaleUpperCase('es'));
+        return names.some((name) => !name) || new Set(names).size !== names.length;
+      });
+      if (duplicateOrBlankName) {
+        throw new Error('Los nombres de capacidades no pueden estar vacíos ni repetidos dentro de una competencia.');
+      }
+      if (input.estudiantes.some((student) => student.competencias
+        .some((competency) => competency.notas.some(hasInvalidGrade)))) {
         throw new Error('Cada nota debe ser un número entre 0 y 20.');
       }
-      const rowsWithGrades = rows.filter((row) => [row.practica, row.examen, row.tarea, row.participacion].some((value) => value !== null));
-      if (rowsWithGrades.length === 0) {
-        throw new Error('Ingrese al menos una nota antes de guardar.');
-      }
-      const noteRows = rowsWithGrades.flatMap((row) => {
-        const studentId = studentByCode.get(row.codigo);
-        if (!studentId) return [];
-        const grades = [
-          ['PRACTICA', row.practica], ['EXAMEN', row.examen], ['TAREA', row.tarea], ['PARTICIPACION', row.participacion],
-        ] as const;
-        const final = excelAverage(grades.map(([, value]) => value));
-        if (final === null) return [];
-        return [
-          ...grades.flatMap(([tipo, valor]) => valor === null ? [] : [{ estudiante_id: studentId, asignacion_docente_id: assignmentId, trimestre: trimester, tipo, valor, publicado: true, registrado_por: session.userId }]),
-          { estudiante_id: studentId, asignacion_docente_id: assignmentId, trimestre: trimester, tipo: 'PROMEDIO_FINAL', valor: final, logro_literal: excelAchievement(final), publicado: true, observacion: row.observacion || null, registrado_por: session.userId },
-        ];
-      });
-      dataOf(await supabase.from('notas').upsert(noteRows, { onConflict: 'estudiante_id,asignacion_docente_id,trimestre,tipo' }) as DbResult);
-      return { message: 'Notas guardadas y publicadas correctamente.' };
+
+      const result = dataOf(await supabase.rpc('guardar_notas_competencias', {
+        p_asignacion_id: assignmentId,
+        p_trimestre: input.trimestre,
+        p_competencias: input.competencias.map((item) => ({
+          numero_competencia: item.numero,
+          nombre_competencia: item.nombre,
+          nombres_capacidades: item.capacidades.map((capacity) => capacity.nombre.trim()),
+        })),
+        p_estudiantes: input.estudiantes.map((student) => ({
+          estudiante_id: student.estudianteId,
+          competencias: student.competencias.map((item) => ({
+            numero_competencia: item.numero,
+            notas: item.notas,
+          })),
+        })),
+      }) as unknown as DbResult<{ message?: string }>);
+      return { message: result?.message || 'Notas y capacidades guardadas correctamente.' };
     });
   }
 

@@ -384,7 +384,7 @@
   }
 
   .institution-logo {
-    width: min(150px, 46vw);
+    width: min(300px, 92vw);
   }
 
   /* El diseño móvil de referencia no incluye el párrafo institucional ni la tarjeta de periodo */

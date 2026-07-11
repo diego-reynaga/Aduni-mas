@@ -289,11 +289,13 @@
                           <h4>{{ competence.numero }}. {{ competence.nombre }}</h4>
                           <div class="mini-note-list">
                             @for (note of competence.notas; track note.columnaExcel) {
-                              <span>
-                                <strong>{{ note.columnaExcel }}</strong>
-                                {{ note.nombreNota }}:
-                                <b>{{ note.valor ?? '-' }}</b>
-                              </span>
+                              @if (note.activa !== false) {
+                                <span>
+                                  <strong>{{ note.columnaExcel }}</strong>
+                                  {{ note.nombreNota }}:
+                                  <b>{{ note.valor ?? '-' }}</b>
+                                </span>
+                              }
                             }
                           </div>
                         </article>

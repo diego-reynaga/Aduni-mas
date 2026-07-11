@@ -18,19 +18,18 @@ const MAX_USEFUL_COLUMNS = 40;
 const MAX_PROCESSED_CELLS = 5000;
 const MAX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
 const FIRST_STUDENT_ROW = 16;
+const DEFAULT_CAPACITY_NAMES = ["PRACTICA", "EXAMEN", "CUADERNO"] as const;
 
 const COMPETENCES = [
-  { number: 1, nameCol: 5, noteCols: [5, 6, 7, 8, 9, 10], averageCol: 11 },
-  { number: 2, nameCol: 12, noteCols: [12, 13, 14, 15, 16, 17], averageCol: 18 },
-  { number: 3, nameCol: 19, noteCols: [19, 20, 21, 22, 23, 24], averageCol: 25 },
-  { number: 4, nameCol: 26, noteCols: [26, 27, 28, 29, 30, 31], averageCol: 32 },
+  { number: 1, nameCol: 5, noteCols: [5, 6, 7, 8, 9, 10] },
+  { number: 2, nameCol: 12, noteCols: [12, 13, 14, 15, 16, 17] },
+  { number: 3, nameCol: 19, noteCols: [19, 20, 21, 22, 23, 24] },
+  { number: 4, nameCol: 26, noteCols: [26, 27, 28, 29, 30, 31] },
 ] as const;
-const FINAL_AVERAGE_COLUMN = 37;
 
 const USEFUL_COLUMNS = new Set([
   0, 1,
-  ...COMPETENCES.flatMap((item) => [...item.noteCols, item.averageCol]),
-  FINAL_AVERAGE_COLUMN,
+  ...COMPETENCES.flatMap((item) => item.noteCols),
 ]);
 
 type AppRole = "ADMINISTRADOR" | "DOCENTE" | "ESTUDIANTE" | "PADRE_FAMILIA";
@@ -43,7 +42,13 @@ type ImportError = {
   critico: boolean;
 };
 
-type ParsedNote = { columnaExcel: string; nombreNota: string; valor: number | null };
+type ParsedNote = {
+  numeroCapacidad: number;
+  columnaExcel: string;
+  nombreNota: string;
+  valor: number | null;
+  activa: boolean;
+};
 type ParsedCompetence = {
   numero: number;
   nombre: string;
@@ -62,6 +67,20 @@ type ParsedStudent = {
   promedioFinalTrimestre: number | null;
   logroFinalTrimestre: string | null;
   errores: ImportError[];
+};
+type ParsedCapacityDefinition = {
+  numero: number;
+  columna: number;
+  columnaExcel: string;
+  nombre: string;
+  encabezadoSignificativo: boolean;
+  tieneValor: boolean;
+  activa: boolean;
+};
+type ParsedCompetenceDefinition = {
+  numero: number;
+  nombre: string;
+  capacidades: ParsedCapacityDefinition[];
 };
 
 function response(body: unknown, status = 200): Response {
@@ -97,13 +116,6 @@ function average(values: number[]): number | null {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 }
 
-function gradeValue(raw: unknown): number | null {
-  const text = clean(raw);
-  if (!text) return null;
-  const parsed = Number(text.replace(",", "."));
-  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 20 ? parsed : null;
-}
-
 function achievement(value: number | null): string | null {
   if (value === null) return null;
   if (value <= 10) return "C";
@@ -121,6 +133,16 @@ function excelColumn(zeroBased: number): string {
     current = Math.floor((current - 1) / 26);
   }
   return result;
+}
+
+function isCapacityPlaceholder(value: string): boolean {
+  const normalized = normalizeName(value);
+  return /^CAPACIDAD\s*\d+$/.test(normalized) || /^NOTA\s*(?:[A-Z]{1,3}|\d{1,2})$/.test(normalized);
+}
+
+function capacityName(header: string, number: number): string {
+  if (header && !isCapacityPlaceholder(header)) return header;
+  return DEFAULT_CAPACITY_NAMES[number - 1] ?? `CAPACIDAD ${number}`;
 }
 
 function validateZipEnvelope(bytes: Uint8Array): void {

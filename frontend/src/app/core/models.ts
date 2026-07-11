@@ -72,15 +72,29 @@ export interface CourseAssignment {
   estado: 'ACTIVA' | 'CERRADA';
 }
 
+export type CompetencyNumber = 1 | 2 | 3 | 4;
+
+export interface CompetencyCapacity {
+  numero: number;
+  nombre: string;
+}
+
+export interface CompetencyConfig {
+  numero: CompetencyNumber;
+  nombre: string;
+  capacidades: CompetencyCapacity[];
+}
+
+export interface StudentCompetencyGrades {
+  numero: CompetencyNumber;
+  notas: Array<number | null>;
+}
+
 export interface GradeEntry {
+  estudianteId: EntityId;
   codigo: string;
   estudiante: string;
-  practica: number | null;
-  examen: number | null;
-  tarea: number | null;
-  participacion: number | null;
-  promedio: number | null;
-  observacion: string;
+  competencias: StudentCompetencyGrades[];
 }
 
 export interface StudentCourseReport {
@@ -138,16 +152,18 @@ export interface TeacherDashboardPayload {
 export interface TeacherGradesPayload {
   assignmentId: EntityId | null;
   selectedCourse: CourseAssignment | null;
+  trimestre: TrimestreImportacion;
+  competencias: CompetencyConfig[];
   rows: GradeEntry[];
 }
 
-export interface GradeEntryInput {
-  codigo: string;
-  practica: number | null;
-  examen: number | null;
-  tarea: number | null;
-  participacion: number | null;
-  observacion: string;
+export interface TeacherGradesSaveInput {
+  trimestre: TrimestreImportacion;
+  competencias: CompetencyConfig[];
+  estudiantes: Array<{
+    estudianteId: EntityId;
+    competencias: StudentCompetencyGrades[];
+  }>;
 }
 
 export interface ImportBatch {
@@ -213,8 +229,10 @@ export interface ErrorImportacionNotas {
 
 export interface NotaIndividualTrimestre {
   columnaExcel: string;
+  numeroCapacidad?: number;
   nombreNota: string;
   valor: number | null;
+  activa?: boolean;
 }
 
 export interface CompetenciaTrimestre {

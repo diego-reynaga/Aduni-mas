@@ -1,3 +1,5 @@
+drop policy if exists auditoria_insert_own on public.auditoria;
+
 create policy auditoria_insert_own on public.auditoria
   for insert to authenticated
   with check (usuario_id = auth.uid());
