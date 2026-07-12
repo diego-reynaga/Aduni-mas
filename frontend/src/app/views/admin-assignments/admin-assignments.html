@@ -23,35 +23,47 @@
   @if (error()) { <p class="form-error-note">{{ error() }}</p> }
   @if (success()) { <p class="read-only-note">{{ success() }}</p> }
 
-  <!-- Main Grid of Classrooms -->
-  <div class="content-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; padding-bottom: 40px;" [@staggerList]="aulas().length">
-    @for (aula of aulas(); track aula.nombreAula) {
-      <div class="classroom-card">
-        <div class="classroom-header">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-          <h3 style="margin:0; font-size: 16px; font-weight: 700;">{{ aula.nombreAula }}</h3>
-        </div>
-        <div class="classroom-body">
-          @for (curso of aula.materias; track curso.id) {
-            <div class="subject-row">
-              <div class="subject-info">
-                <span class="subject-name">{{ curso.materiaNombre }}</span>
-                <span class="subject-code">{{ curso.materiaCodigo }}</span>
+  <!-- Main Grid of Classrooms Grouped by Level -->
+  <div class="content-grid" style="display: flex; flex-direction: column; gap: 40px; padding-bottom: 40px;">
+    @for (nivel of niveles(); track nivel.nivelNombre) {
+      <div class="level-section">
+        <h2 style="font-size: 18px; color: var(--ink); margin-bottom: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          Nivel: {{ nivel.nivelNombre }}
+          <span style="font-size: 12px; font-weight: 600; padding: 2px 8px; background: var(--surface-hover); color: var(--steel); border-radius: 4px; border: 1px solid var(--line);">
+            Turno {{ nivel.nivelTurno }}
+          </span>
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px;" [@staggerList]="nivel.aulas.length">
+          @for (aula of nivel.aulas; track aula.nombreAula) {
+            <div class="classroom-card">
+              <div class="classroom-header">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <h3 style="margin:0; font-size: 16px; font-weight: 700;">{{ aula.nombreAula }}</h3>
               </div>
-              <div class="subject-assignment">
-                @if (asignacionesActivas().has(curso.id)) {
-                  <div class="assigned-wrapper">
-                    <button class="assigned-pill" (click)="openDrawer(curso)">
-                      <div class="avatar-micro">{{ asignacionesActivas().get(curso.id)!.docenteNombre.charAt(0) }}</div>
-                      <span class="teacher-name">{{ asignacionesActivas().get(curso.id)!.docenteNombre }}</span>
-                    </button>
-                    <button class="remove-assignment-btn" title="Quitar profesor" (click)="removeAsignacion(curso, $event)">×</button>
+              <div class="classroom-body">
+                @for (curso of aula.materias; track curso.id) {
+                  <div class="subject-row">
+                    <div class="subject-info">
+                      <span class="subject-name">{{ curso.materiaNombre }}</span>
+                      <span class="subject-code">{{ curso.materiaCodigo }}</span>
+                    </div>
+                    <div class="subject-assignment">
+                      @if (asignacionesActivas().has(curso.id)) {
+                        <div class="assigned-wrapper">
+                          <button class="assigned-pill" (click)="openDrawer(curso)">
+                            <div class="avatar-micro">{{ asignacionesActivas().get(curso.id)!.docenteNombre.charAt(0) }}</div>
+                            <span class="teacher-name">{{ asignacionesActivas().get(curso.id)!.docenteNombre }}</span>
+                          </button>
+                          <button class="remove-assignment-btn" title="Quitar profesor" (click)="removeAsignacion(curso, $event)">×</button>
+                        </div>
+                      } @else {
+                        <button class="unassigned-pill" (click)="openDrawer(curso)">
+                          <div class="status-dot"></div>
+                          Sin Asignar
+                        </button>
+                      }
+                    </div>
                   </div>
-                } @else {
-                  <button class="unassigned-pill" (click)="openDrawer(curso)">
-                    <div class="status-dot"></div>
-                    Sin Asignar
-                  </button>
                 }
               </div>
             </div>
@@ -60,8 +72,8 @@
       </div>
     }
     
-    @if (aulas().length === 0) {
-      <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px; border: 1px dashed var(--line); border-radius: 12px;">
+    @if (niveles().length === 0) {
+      <div class="empty-state" style="text-align: center; padding: 48px; border: 1px dashed var(--line); border-radius: 12px;">
         <p style="color: var(--steel);">No hay materias registradas para la gestión activa.</p>
       </div>
     }

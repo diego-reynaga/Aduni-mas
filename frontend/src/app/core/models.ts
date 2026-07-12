@@ -572,3 +572,73 @@ export interface ClonarEstructuraRequest {
   gestionOrigenId: EntityId;
   gestionDestinoId: EntityId;
 }
+
+export interface StudentCompetencyDetail {
+  numeroCompetencia: number;
+  nombreCompetencia: string;
+  capacidades: Array<{ numero: number; nombre: string; nota: number | null }>;
+  promedioCompetencia: number | null;
+}
+
+export interface StudentCourseCompetencyReport {
+  curso: string;
+  periodo: string;
+  trimestre: string;
+  competencias: StudentCompetencyDetail[];
+  promedioFinal: number | null;
+}
+
+export interface StudentProfileData {
+  personaId: EntityId;
+  estudianteId: EntityId;
+  codigo: string;
+  nombres: string;
+  apellidos: string;
+  tipoDocumento: string;
+  documentoIdentidad: string;
+  fechaNacimiento?: string;
+  genero?: string;
+  direccion?: string;
+  telefono?: string;
+  correo?: string;
+}
+
+export interface StudentEnrollment {
+  id: EntityId;
+  codigoMatricula: string;
+  gestion: string;
+  nivel: string;
+  grado: string;
+  seccion: string;
+  fechaMatricula: string;
+  estado: string;
+}
+
+export interface HorarioEntry {
+  id: EntityId;
+  gradoId: EntityId;
+  cursoId: EntityId;
+  diaSemana: number;
+  diaNombre: string;
+  horaInicio: string;
+  horaFin: string;
+  curso: string;
+  materia: string;
+  aula: string;
+  docente?: string;
+}
+
+export interface GradoRecesoResponse {
+  gradoId: EntityId;
+  recesoInicio: string | null;
+  recesoFin: string | null;
+}
+
+export interface HorarioRequest {
+  gradoId: EntityId;
+  cursoId: EntityId;
+  diaSemana: number;
+  horaInicio: string;
+  horaFin: string;
+  aula?: string;
+}

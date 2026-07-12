@@ -38,6 +38,13 @@ import {
   ALL_ROLES,
   AuditFilters,
   AuditPageResponse,
+  StudentCompetencyDetail,
+  StudentCourseCompetencyReport,
+  StudentProfileData,
+  StudentEnrollment,
+  HorarioEntry,
+  HorarioRequest,
+  GradoRecesoResponse
 } from './models';
 import { supabase } from './supabase.client';
 import { hasInvalidGrade } from './grade-calculation';
@@ -523,6 +530,138 @@ export class PortalService {
     });
   }
 
+  studentCompetencyGrades(): Observable<StudentCourseCompetencyReport[]> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id').single() as DbResult<any>);
+      const details = dataOf(await supabase
+        .from('calificacion_detalle_trimestre')
+        .select('*,asignaciones_docente!inner(cursos!inner(materias(nombre)),periodos(nombre))')
+        .eq('estudiante_id', student.id) as DbResult<any[]>);
+      const averages = dataOf(await supabase
+        .from('calificacion_competencia_trimestre')
+        .select('*')
+        .eq('estudiante_id', student.id) as DbResult<any[]>);
+
+      const groups = new Map<string, any[]>();
+      for (const d of details) {
+        const key = `${d.asignacion_docente_id}|${d.trimestre}`;
+        groups.set(key, [...(groups.get(key) ?? []), d]);
+      }
+
+      const result: StudentCourseCompetencyReport[] = [];
+      for (const [key, rows] of groups) {
+        const [assignmentId, trimestre] = key.split('|');
+        const first = rows[0];
+        const assignment = embedded<any>(first.asignaciones_docente);
+        const course = embedded<any>(assignment?.cursos);
+        const subject = embedded<any>(course?.materias);
+        const period = embedded<any>(assignment?.periodos);
+
+        const compMap = new Map<number, any[]>();
+        for (const r of rows) {
+          const cn = Number(r.numero_competencia);
+          if (!compMap.has(cn)) compMap.set(cn, []);
+          compMap.get(cn)!.push(r);
+        }
+
+        const competencias: StudentCompetencyDetail[] = [];
+        for (const [num, items] of compMap) {
+          const capacidades = items.map((i: any) => ({
+            numero: Number(i.numero_capacidad),
+            nombre: i.nombre_nota,
+            nota: i.valor_nota !== null ? Number(i.valor_nota) : null,
+          })).sort((a: any, b: any) => a.numero - b.numero);
+
+          const avgRow = averages.find(a => 
+            a.asignacion_docente_id === assignmentId && 
+            a.trimestre === trimestre && 
+            Number(a.numero_competencia) === num
+          );
+
+          competencias.push({
+            numeroCompetencia: num,
+            nombreCompetencia: items[0].nombre_competencia,
+            capacidades,
+            promedioCompetencia: avgRow && avgRow.promedio_competencia !== null ? Number(avgRow.promedio_competencia) : null,
+          });
+        }
+        
+        const validPromedios = competencias.map(c => c.promedioCompetencia).filter(p => p !== null) as number[];
+        const promedioFinal = validPromedios.length ? validPromedios.reduce((a,b)=>a+b,0)/validPromedios.length : null;
+
+        result.push({
+          curso: subject?.nombre ?? 'Curso',
+          periodo: period?.nombre ?? 'Periodo',
+          trimestre,
+          competencias,
+          promedioFinal,
+        });
+      }
+      return result;
+    });
+  }
+
+  studentProfile(): Observable<StudentProfileData> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id,codigo,persona_id,personas(*)').single() as DbResult<any>);
+      const person = embedded<any>(student.personas);
+      return {
+        personaId: student.persona_id,
+        estudianteId: student.id,
+        codigo: student.codigo,
+        nombres: person.nombres,
+        apellidos: person.apellidos,
+        tipoDocumento: person.tipo_documento,
+        documentoIdentidad: person.numero_documento,
+        fechaNacimiento: person.fecha_nacimiento,
+        genero: person.genero,
+        direccion: person.direccion,
+        telefono: person.telefono,
+        correo: person.correo,
+      };
+    });
+  }
+
+  updateStudentProfile(req: Partial<StudentProfileData>): Observable<StudentProfileData> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('persona_id').single() as DbResult<any>);
+      dataOf(await supabase.from('personas').update({
+        nombres: req.nombres,
+        apellidos: req.apellidos,
+        telefono: req.telefono || null,
+        direccion: req.direccion || null,
+        correo: req.correo || null,
+      }).eq('id', student.persona_id) as DbResult);
+      return await this.studentProfile().toPromise() as StudentProfileData;
+    });
+  }
+
+  studentEnrollments(): Observable<StudentEnrollment[]> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id').single() as DbResult<any>);
+      const rows = dataOf(await supabase
+        .from('matriculas')
+        .select('*,grados(nombre,paralelo,niveles(nombre)),gestiones(nombre)')
+        .eq('estudiante_id', student.id)
+        .order('created_at', { ascending: false }) as DbResult<any[]>);
+      return rows.map(row => {
+        const grade = embedded<any>(row.grados);
+        const level = embedded<any>(grade?.niveles);
+        const gestion = embedded<any>(row.gestiones);
+        return {
+          id: row.id,
+          codigoMatricula: row.codigo,
+          gestion: gestion?.nombre ?? '',
+          nivel: level?.nombre ?? '',
+          grado: grade?.nombre ?? '',
+          seccion: grade?.paralelo ?? '',
+          fechaMatricula: row.fecha_matricula,
+          estado: row.estado,
+        };
+      });
+    });
+  }
+
   familyPortal(): Observable<FamilyPortalPayload> {
     return this.observe(async () => {
       const links = dataOf(await supabase.from('estudiante_apoderados').select('parentesco,estudiantes!inner(id,codigo,personas!inner(nombres,apellidos),matriculas(grados(nombre,paralelo)))').eq('activo', true) as DbResult<any[]>);
@@ -752,7 +891,7 @@ export class PortalService {
   deleteMateria(id: EntityId): Observable<void> { return this.deleteOne('materias', id); }
 
   getCursos(gradoId: EntityId): Observable<Academico.CursoResponse[]> {
-    return this.observe(async () => (dataOf(await supabase.from('cursos').select('*,grados(nombre,paralelo),materias(codigo,nombre,area)').eq('grado_id', gradoId).order('created_at') as DbResult<any[]>)).map(this.toCourse));
+    return this.observe(async () => (dataOf(await supabase.from('cursos').select('*,grados(nombre,paralelo,niveles(nombre,turno)),materias(codigo,nombre,area)').eq('grado_id', gradoId).order('created_at') as DbResult<any[]>)).map(this.toCourse));
   }
   asignarCursosMasivo(req: Academico.CursoAsignacionMasivaRequest): Observable<void> { return this.observe(async () => { dataOf(await supabase.from('cursos').upsert(req.materiasIds.map((materiaId) => ({ grado_id: req.gradoId, materia_id: materiaId, activo: true })), { onConflict: 'grado_id,materia_id' }) as DbResult); }); }
   removerCurso(id: EntityId): Observable<void> { return this.deleteOne('cursos', id); }
@@ -772,6 +911,198 @@ export class PortalService {
   asignarApoderado(estudianteId: EntityId, req: EstudianteApoderadoRequest): Observable<EstudianteApoderadoResponse> { return this.observe(async () => { const row = dataOf(await supabase.from('estudiante_apoderados').insert({ estudiante_id: estudianteId, padre_familia_id: req.padreFamiliaId, parentesco: req.parentesco, principal: req.principal }).select('*,padres_familia!inner(id,personas!inner(nombres,apellidos,numero_documento,telefono,correo))').single() as DbResult<any>); return this.toGuardianLink(row); }); }
   actualizarApoderado(_estudianteId: EntityId, id: EntityId, req: EstudianteApoderadoRequest): Observable<EstudianteApoderadoResponse> { return this.observe(async () => { const row = dataOf(await supabase.from('estudiante_apoderados').update({ padre_familia_id: req.padreFamiliaId, parentesco: req.parentesco, principal: req.principal }).eq('id', id).select('*,padres_familia!inner(id,personas!inner(nombres,apellidos,numero_documento,telefono,correo))').single() as DbResult<any>); return this.toGuardianLink(row); }); }
   removerApoderado(_estudianteId: EntityId, id: EntityId): Observable<void> { return this.observe(async () => { dataOf(await supabase.from('estudiante_apoderados').update({ activo: false }).eq('id', id) as DbResult); }); }
+
+  // --- Módulo de Horarios ---
+  getGradoReceso(gradoId: EntityId): Observable<GradoRecesoResponse> {
+    return this.observe(async () => {
+      const row = dataOf(await supabase.from('grados').select('receso_inicio, receso_fin').eq('id', gradoId).single() as DbResult<any>);
+      return {
+        gradoId,
+        recesoInicio: row.receso_inicio ? row.receso_inicio.slice(0, 5) : null,
+        recesoFin: row.receso_fin ? row.receso_fin.slice(0, 5) : null
+      };
+    });
+  }
+
+  updateGradoReceso(gradoId: EntityId, recesoInicio: string | null, recesoFin: string | null): Observable<void> {
+    return this.observe(async () => {
+      dataOf(await supabase.from('grados').update({
+        receso_inicio: recesoInicio,
+        receso_fin: recesoFin
+      }).eq('id', gradoId) as DbResult);
+    });
+  }
+  getHorariosPorGrado(gradoId: EntityId): Observable<HorarioEntry[]> {
+    return this.observe(async () => {
+      const rows = dataOf(await supabase
+        .from('horarios')
+        .select('*,cursos(materias(nombre),asignaciones_docente(docentes(personas(nombres,apellidos))))')
+        .eq('grado_id', gradoId)
+        .order('dia_semana')
+        .order('hora_inicio') as DbResult<any[]>);
+      const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      return rows.map((row: any) => {
+        const course = embedded<any>(row.cursos);
+        const subject = embedded<any>(course?.materias);
+        
+        let docente = '';
+        if (course?.asignaciones_docente && course.asignaciones_docente.length > 0) {
+          const assignment = course.asignaciones_docente[0];
+          const teacher = embedded<any>(assignment?.docentes);
+          const person = embedded<any>(teacher?.personas);
+          if (person) {
+            docente = `${person.nombres} ${person.apellidos}`;
+          }
+        }
+
+        return {
+          id: row.id,
+          gradoId: row.grado_id,
+          cursoId: row.curso_id,
+          diaSemana: row.dia_semana,
+          diaNombre: DIAS[row.dia_semana] ?? '',
+          horaInicio: row.hora_inicio.slice(0, 5),
+          horaFin: row.hora_fin.slice(0, 5),
+          curso: subject?.nombre ?? '',
+          materia: subject?.nombre ?? '',
+          aula: row.aula ?? '',
+          docente
+        };
+      });
+    });
+  }
+
+  crearHorario(req: HorarioRequest): Observable<HorarioEntry> {
+    return this.observe(async () => {
+      const row = dataOf(await supabase.from('horarios').insert({
+        grado_id: req.gradoId,
+        curso_id: req.cursoId,
+        dia_semana: req.diaSemana,
+        hora_inicio: req.horaInicio,
+        hora_fin: req.horaFin,
+        aula: req.aula || null,
+      }).select('*,cursos(materias(nombre))').single() as DbResult<any>);
+      
+      const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      const course = embedded<any>(row.cursos);
+      const subject = embedded<any>(course?.materias);
+      
+      return {
+        id: row.id,
+        gradoId: row.grado_id,
+        cursoId: row.curso_id,
+        diaSemana: row.dia_semana,
+        diaNombre: DIAS[row.dia_semana] ?? '',
+        horaInicio: row.hora_inicio.slice(0, 5),
+        horaFin: row.hora_fin.slice(0, 5),
+        curso: subject?.nombre ?? '',
+        materia: subject?.nombre ?? '',
+        aula: row.aula ?? '',
+      };
+    });
+  }
+
+  actualizarHorario(id: EntityId, req: Partial<HorarioRequest>): Observable<HorarioEntry> {
+    return this.observe(async () => {
+      const payload: any = {};
+      if (req.diaSemana !== undefined) payload.dia_semana = req.diaSemana;
+      if (req.horaInicio !== undefined) payload.hora_inicio = req.horaInicio;
+      if (req.horaFin !== undefined) payload.hora_fin = req.horaFin;
+      if (req.aula !== undefined) payload.aula = req.aula || null;
+
+      const row = dataOf(await supabase.from('horarios').update(payload).eq('id', id).select('*,cursos(materias(nombre))').single() as DbResult<any>);
+      
+      const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      const course = embedded<any>(row.cursos);
+      const subject = embedded<any>(course?.materias);
+      
+      return {
+        id: row.id,
+        gradoId: row.grado_id,
+        cursoId: row.curso_id,
+        diaSemana: row.dia_semana,
+        diaNombre: DIAS[row.dia_semana] ?? '',
+        horaInicio: row.hora_inicio.slice(0, 5),
+        horaFin: row.hora_fin.slice(0, 5),
+        curso: subject?.nombre ?? '',
+        materia: subject?.nombre ?? '',
+        aula: row.aula ?? '',
+      };
+    });
+  }
+
+  eliminarHorario(id: EntityId): Observable<void> {
+    return this.observe(async () => {
+      dataOf(await supabase.from('horarios').delete().eq('id', id) as DbResult);
+    });
+  }
+
+  getMiReceso(): Observable<GradoRecesoResponse> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id').single() as DbResult<any>);
+      const matricula = dataOf(await supabase
+        .from('matriculas')
+        .select('grado_id')
+        .eq('estudiante_id', student.id)
+        .eq('estado', 'ACTIVA')
+        .limit(1)
+        .single() as DbResult<any>);
+      const row = dataOf(await supabase.from('grados').select('receso_inicio, receso_fin').eq('id', matricula.grado_id).single() as DbResult<any>);
+      return {
+        gradoId: matricula.grado_id,
+        recesoInicio: row.receso_inicio ? row.receso_inicio.slice(0, 5) : null,
+        recesoFin: row.receso_fin ? row.receso_fin.slice(0, 5) : null
+      };
+    });
+  }
+
+  getMiHorario(): Observable<HorarioEntry[]> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id').single() as DbResult<any>);
+      const matricula = dataOf(await supabase
+        .from('matriculas')
+        .select('grado_id')
+        .eq('estudiante_id', student.id)
+        .eq('estado', 'ACTIVA')
+        .limit(1)
+        .single() as DbResult<any>);
+      const rows = dataOf(await supabase
+        .from('horarios')
+        .select('*,cursos(materias(nombre),asignaciones_docente(docentes(personas(nombres,apellidos))))')
+        .eq('grado_id', matricula.grado_id)
+        .order('dia_semana')
+        .order('hora_inicio') as DbResult<any[]>);
+      const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      return rows.map((row: any) => {
+        const course = embedded<any>(row.cursos);
+        const subject = embedded<any>(course?.materias);
+
+        let docente = '';
+        if (course?.asignaciones_docente && course.asignaciones_docente.length > 0) {
+          const assignment = course.asignaciones_docente[0];
+          const teacher = embedded<any>(assignment?.docentes);
+          const person = embedded<any>(teacher?.personas);
+          if (person) {
+            docente = `${person.nombres} ${person.apellidos}`;
+          }
+        }
+
+        return {
+          id: row.id,
+          gradoId: row.grado_id,
+          cursoId: row.curso_id,
+          diaSemana: row.dia_semana,
+          diaNombre: DIAS[row.dia_semana] ?? '',
+          horaInicio: row.hora_inicio.slice(0, 5),
+          horaFin: row.hora_fin.slice(0, 5),
+          curso: subject?.nombre ?? '',
+          materia: subject?.nombre ?? '',
+          aula: row.aula ?? '',
+          docente
+        };
+      });
+    });
+  }
 
   private observe<T>(factory: () => Promise<T>): Observable<T> { return defer(() => from(factory())); }
   private insertOne<T>(table: string, payload: any, mapper: (row: any) => T): Observable<T> { return this.observe(async () => mapper(dataOf(await supabase.from(table).insert(payload).select().single() as DbResult<any>))); }
@@ -922,7 +1253,7 @@ export class PortalService {
   private toGrade = (row: any): Academico.GradoResponse => ({ id: row.id, nombre: row.nombre, paralelo: row.paralelo, capacidad: row.capacidad, activo: row.activo, nivelEducativoId: row.nivel_id, nivelEducativoNombre: embedded<any>(row.niveles)?.nombre ?? '', inscritos: row.inscritos || 0 });
   private gradePayload(req: Academico.GradoRequest): any { return { nivel_id: req.nivelEducativoId, nombre: req.nombre, paralelo: req.paralelo, capacidad: req.capacidad, activo: req.activo }; }
   private toSubject = (row: any): Academico.MateriaResponse => ({ id: row.id, codigo: row.codigo, nombre: row.nombre, area: row.area ?? '', activa: row.activa });
-  private toCourse = (row: any): Academico.CursoResponse => { const grade = embedded<any>(row.grados); const subject = embedded<any>(row.materias); return { id: row.id, gradoId: row.grado_id, gradoNombre: grade?.nombre ?? '', paralelo: grade?.paralelo ?? '', materiaId: row.materia_id, materiaCodigo: subject?.codigo ?? '', materiaNombre: subject?.nombre ?? '', area: subject?.area ?? '', activo: row.activo }; };
+  private toCourse = (row: any): Academico.CursoResponse => { const grade = embedded<any>(row.grados); const level = embedded<any>(grade?.niveles); const subject = embedded<any>(row.materias); return { id: row.id, gradoId: row.grado_id, gradoNombre: grade?.nombre ?? '', paralelo: grade?.paralelo ?? '', nivelNombre: level?.nombre ?? '', nivelTurno: level?.turno ?? '', materiaId: row.materia_id, materiaCodigo: subject?.codigo ?? '', materiaNombre: subject?.nombre ?? '', area: subject?.area ?? '', activo: row.activo }; };
   private toInstitution(row: any): InstitutionConfig { return { nombre: row.nombre, ruc: row.ruc ?? '', telefono: row.telefono ?? '', direccion: row.direccion ?? '', correoInstitucional: row.correo_institucional ?? '', sitioWeb: row.sitio_web ?? '', logoUrl: row.logo_url ?? '' }; }
   private toGuardianLink(row: any): EstudianteApoderadoResponse { const parent = embedded<any>(row.padres_familia); const person = embedded<any>(parent?.personas); return { id: row.id, estudianteId: row.estudiante_id, padreFamiliaId: row.padre_familia_id, padreNombreCompleto: `${person?.apellidos ?? ''}, ${person?.nombres ?? ''}`, padreDocumento: person?.numero_documento ?? '', padreTelefono: person?.telefono ?? '', padreCorreo: person?.correo ?? '', parentesco: row.parentesco, principal: row.principal }; }
   private trimesterFrom(value: string): 'I_TRIMESTRE' | 'II_TRIMESTRE' | 'III_TRIMESTRE' { const normalized = value.toUpperCase(); if (normalized.includes('III') || normalized.includes('3')) return 'III_TRIMESTRE'; if (normalized.includes('II') || normalized.includes('2')) return 'II_TRIMESTRE'; return 'I_TRIMESTRE'; }

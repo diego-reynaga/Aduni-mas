@@ -36,6 +36,7 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Estructura académica', route: '/admin/academico', eyebrow: 'Gestión Académica' },
     { label: 'Gestiones y Periodos', route: '/admin/periodos', eyebrow: 'Gestión Académica' },
     { label: 'Asignaciones Docentes', route: '/admin/asignaciones', eyebrow: 'Gestión Académica' },
+    { label: 'Horarios', route: '/admin/horarios', eyebrow: 'Gestión Académica' },
 
     // Módulo Notas
     { label: 'Supervisión docente', route: '/admin/supervision', eyebrow: 'Calificaciones' },
@@ -50,7 +51,11 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Importacion Excel', route: '/docente/importar-notas', eyebrow: 'Carga' },
   ],
   ESTUDIANTE: [
-    { label: 'Consulta academica', route: '/estudiante', eyebrow: 'Lectura' },
+    { label: 'Dashboard', route: '/estudiante', eyebrow: 'Inicio' },
+    { label: 'Mi Horario', route: '/estudiante/horario', eyebrow: 'Clases' },
+    { label: 'Notas por Competencia', route: '/estudiante/notas-competencia', eyebrow: 'Rendimiento' },
+    { label: 'Mis Apoderados', route: '/estudiante/apoderados', eyebrow: 'Familia' },
+    { label: 'Mis Matrículas', route: '/estudiante/matriculas', eyebrow: 'Historial' },
   ],
   PADRE_FAMILIA: [
     { label: 'Seguimiento familiar', route: '/familia', eyebrow: 'Lectura' },
@@ -180,6 +185,12 @@ export class AcademicShell implements OnInit {
   switchRole(role: RoleName): void {
     this.auth.switchRole(role);
     void this.router.navigate([ROLE_HOME[role]]);
+  }
+
+  goToProfile(): void {
+    if (this.activeRole() === 'ESTUDIANTE') {
+      void this.router.navigate(['/estudiante/perfil']);
+    }
   }
 
   logout(): void {

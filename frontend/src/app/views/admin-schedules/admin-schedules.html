@@ -1,0 +1,409 @@
+<section class="page-stack" [@fadeIn]>
+
+  <!-- ====== TOP BAR ====== -->
+  <div class="schedule-topbar">
+    <div class="schedule-topbar__left">
+      <p class="section-kicker">Gestión Académica</p>
+      <h2>Administración de Horarios</h2>
+      <p class="schedule-topbar__subtitle">Arrastra los cursos al horario para asignarlos. Los cambios se guardan en bloque.</p>
+    </div>
+    <div class="schedule-topbar__right">
+      @if (hasUnsavedChanges()) {
+        <button class="btn-save-pulse" (click)="guardarTodo()" [disabled]="saving()">
+          <span class="btn-save-pulse__icon">
+            @if (saving()) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="animation: spin 1s linear infinite;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            }
+          </span>
+          {{ saving() ? 'Guardando...' : 'Publicar Cambios' }}
+        </button>
+      }
+      <div class="custom-grado-selector" style="position: relative; z-index: 50;">
+        <button class="grado-selector-btn" (click)="toggleGradoSelector()" [class.is-open]="isGradoSelectorOpen()">
+          <span>{{ selectedGradoName() }}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="chevron" [style.transform]="isGradoSelectorOpen() ? 'rotate(180deg)' : 'rotate(0)'"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+
+        @if (isGradoSelectorOpen()) {
+          <div class="grado-dropdown" [@slideUp]>
+            <div class="grado-dropdown__search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" placeholder="Buscar grado..." [value]="gradoSearchQuery()" (input)="gradoSearchQuery.set($any($event.target).value)" (click)="$event.stopPropagation()">
+            </div>
+            <div class="grado-dropdown__list">
+              @for (group of groupedGrados(); track group.nivel) {
+                <div class="grado-dropdown__group-title">{{ group.nivel }}</div>
+                @for (g of group.grados; track g.id) {
+                  <button class="grado-dropdown__item" (click)="selectGrado(g.id)" [class.is-selected]="selectedGradoId() === g.id">
+                    <span class="grado-dropdown__item-text">{{ g.nombreGrado }}</span>
+                    @if (selectedGradoId() === g.id) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    }
+                  </button>
+                }
+              }
+              @if (groupedGrados().length === 0) {
+                <div class="grado-dropdown__empty">No se encontraron grados.</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <button class="btn-config" (click)="toggleConfig()" [class.is-active]="showConfig()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Configurar
+      </button>
+    </div>
+  </div>
+
+  <!-- ====== CONFIG PANEL ====== -->
+  @if (showConfig()) {
+    <div class="config-panel" [@slideInRight]>
+      <div class="config-panel__title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="margin-right:4px; vertical-align:text-bottom"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Estructura del Horario
+      </div>
+
+      <div class="config-row">
+        <div class="config-field">
+          <label>Hora de Inicio</label>
+          <select [value]="calendarStartHour()" (change)="setStartHour($any($event.target).value)">
+            @for (h of [6,7,8,9,10]; track h) {
+              <option [value]="h">{{ h < 10 ? '0'+h : h }}:00</option>
+            }
+          </select>
+        </div>
+
+        <div class="config-field">
+          <label>Hora de Fin</label>
+          <select [value]="calendarEndHour()" (change)="setEndHour($any($event.target).value)">
+            @for (h of [13,14,15,16,17,18,19,20]; track h) {
+              <option [value]="h">{{ h }}:00</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="config-row">
+        <div class="config-field">
+          <label>Intervalo de la cuadrícula</label>
+          <div class="interval-pills">
+            <button class="interval-pill" [class.is-active]="intervalMinutes() === 15" (click)="setInterval(15)">15 min</button>
+            <button class="interval-pill" [class.is-active]="intervalMinutes() === 30" (click)="setInterval(30)">30 min</button>
+            <button class="interval-pill" [class.is-active]="intervalMinutes() === 60" (click)="setInterval(60)">1 hora</button>
+          </div>
+        </div>
+
+        <div class="config-field" style="margin-left: auto;">
+          <label>Receso General</label>
+          <div class="interval-pills">
+            <button class="interval-pill" [class.is-active]="hasReceso()" (click)="toggleReceso()">Activo</button>
+            <button class="interval-pill" [class.is-active]="!hasReceso()" (click)="toggleReceso()">Oculto</button>
+          </div>
+        </div>
+      </div>
+
+      @if (hasReceso()) {
+        <div class="config-row" style="margin-top: 10px; background: rgba(0,0,0,0.02); padding: 12px; border-radius: 10px; border: 1px dashed var(--line);">
+          <div class="config-field">
+            <label>Inicio Receso</label>
+            <input type="time" [value]="recesoStart()" (change)="setRecesoStart($any($event.target).value)" style="padding: 6px 10px; border-radius: 6px; border: 1.5px solid rgba(31, 111, 91, 0.25); font-family: inherit; font-size: 13px;">
+          </div>
+          <div class="config-field">
+            <label>Fin Receso</label>
+            <input type="time" [value]="recesoEnd()" (change)="setRecesoEnd($any($event.target).value)" style="padding: 6px 10px; border-radius: 6px; border: 1.5px solid rgba(31, 111, 91, 0.25); font-family: inherit; font-size: 13px;">
+          </div>
+        </div>
+      }
+
+      <div class="config-summary" style="margin-top: 14px;">
+        Mostrando de <strong>{{ calendarStartHour() }}:00</strong> a <strong>{{ calendarEndHour() }}:00</strong>
+        · intervalo <strong>{{ intervalMinutes() === 60 ? '1h' : intervalMinutes() + 'min' }}</strong>
+        · <strong>{{ (calendarEndHour() - calendarStartHour()) * 60 / intervalMinutes() }}</strong> franjas
+      </div>
+    </div>
+  }
+
+  <!-- ====== MAIN CONTENT ====== -->
+  @if (!selectedGradoId()) {
+    <!-- Estado vacío: sin grado seleccionado -->
+    <div class="schedule-empty-state">
+      <div class="schedule-empty-state__icon">📅</div>
+      <h3>Selecciona un grado para comenzar</h3>
+      <p>Elige una sección del selector de arriba para ver y configurar su horario semanal.</p>
+    </div>
+  } @else {
+
+    <div class="schedule-workspace">
+
+      <!-- ===== PANEL IZQUIERDO: Calendario ===== -->
+      <div class="schedule-panel schedule-panel--calendar">
+        <div class="schedule-panel__header">
+          <div class="schedule-panel__header-info">
+            <div class="schedule-panel__header-dot"></div>
+            <div>
+              <h3>Horario Semanal</h3>
+              <p>Arrastra y suelta cursos. Redimensiona desde el borde inferior.</p>
+            </div>
+          </div>
+          @if (hasUnsavedChanges()) {
+            <span class="draft-badge">BORRADOR</span>
+          }
+        </div>
+
+        <div class="advanced-calendar">
+          <!-- Header -->
+          <div class="calendar-header">
+            <div class="time-col-header"></div>
+            @for (dia of dias; track dia.value) {
+              <div class="day-col-header">{{ dia.label }}</div>
+            }
+          </div>
+
+          <!-- Body -->
+          <div class="calendar-body" [style.height]="calendarBodyHeight">
+            <!-- Background Grid Lines -->
+            <div class="bg-grid">
+              @for (row of getGridRows(); track row) {
+                <div class="bg-row">
+                  <div class="time-label">{{ row }}</div>
+                  <div class="line"></div>
+                </div>
+              }
+            </div>
+
+            <!-- RECESO (Break) Overlay -->
+            @if (hasReceso()) {
+              <div class="receso-overlay"
+                   [style.top]="getTop(recesoStart())"
+                   [style.height]="getHeight(recesoStart(), recesoEnd())">
+                <div class="receso-overlay__content">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                  <span>RECESO</span>
+                </div>
+              </div>
+            }
+
+            <!-- Day Columns (Drop Zones) -->
+            <div class="day-columns">
+              <div class="time-col"></div>
+              @for (dia of dias; track dia.value) {
+                <div class="day-col"
+                     (dragover)="onDragOver($event)"
+                     (dragleave)="onDragLeave($event)"
+                     (drop)="onDrop($event, dia.value)">
+
+                  <!-- Clases de este día -->
+                  @for (h of horarios(); track h.id) {
+                    @if (h.diaSemana === dia.value) {
+                      <div class="floating-class"
+                           [ngClass]="getMateriaColorClass(h.materia)"
+                           [style.top]="getTop(h.horaInicio)"
+                           [style.height]="getHeight(h.horaInicio, h.horaFin)"
+                           [class.is-resizing]="isResizing() && resizeState()?.id === h.id"
+                           draggable="true"
+                           (dragstart)="onDragStartExisting($event, h)"
+                           (dragend)="onDragEnd($event)">
+                        
+                        <div class="floating-class-actions" style="position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; z-index: 5;">
+                          <button class="action-btn-micro" style="pointer-events: auto; background: rgba(0,0,0,0.15); border-radius: 4px; padding: 4px;" (click)="verDetalle(h); $event.stopPropagation()" title="Ver Detalles">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                          </button>
+                          <button class="action-btn-micro" style="pointer-events: auto; background: rgba(0,0,0,0.15); border-radius: 4px; padding: 4px;" (click)="abrirModalEditar(h); $event.stopPropagation()" title="Editar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                          </button>
+                        </div>
+
+                        <div class="class-content">
+                          <strong>{{ h.materia }}</strong>
+                          <small>{{ h.horaInicio }} - {{ h.horaFin }}</small>
+                          @if (h.aula) {
+                            <span class="class-aula">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" style="vertical-align: middle; margin-top:-2px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                              {{ h.aula }}
+                            </span>
+                          }
+                        </div>
+
+                        <!-- Resize Handle -->
+                        <div class="resize-handle" draggable="false" (mousedown)="startResize($event, h)">
+                          <div class="handle-bar"></div>
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        @if (horarios().length === 0) {
+          <div class="calendar-empty-hint">
+            <p>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="vertical-align: text-bottom"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+              Arrastra un curso desde la lista de la derecha para empezar a armar el horario.
+            </p>
+          </div>
+        }
+      </div>
+
+      <!-- ===== PANEL DERECHO: Cursos / Formulario ===== -->
+      <div class="schedule-panel schedule-panel--sidebar">
+        <div class="schedule-panel__header">
+          <div class="schedule-panel__header-info">
+            <div class="schedule-panel__header-dot schedule-panel__header-dot--accent"></div>
+            <div>
+              <h3>Cursos de la Sección</h3>
+              <p>Arrastra al horario o haz clic para configurar.</p>
+            </div>
+          </div>
+          <div class="sidebar-search" style="margin-top: 16px;">
+            <div class="premium-field" style="margin-bottom: 0;">
+              <div style="position: relative;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" class="premium-input" placeholder="Buscar curso por nombre..." [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" style="padding-left: 36px;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-panel__body">
+            <!-- LISTA DE CURSOS ARRASTRABLES -->
+            <div class="course-list" [@staggerList]="filteredCursos().length">
+              @for (c of filteredCursos(); track c.id) {
+                <div class="course-chip"
+                     draggable="true"
+                     (dragstart)="onDragStart($event, c.id)"
+                     (dragend)="onDragEnd($event)"
+                     (click)="abrirPanelParaCurso(c.id)"
+                     [ngClass]="getMateriaColorClass(c.materiaNombre)"
+                     [style.height]="chipHeight"
+                     [style.transition]="'height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)'">
+                  <div class="course-chip__inner">
+                    <div class="course-chip__hours">{{ contarHoras(c.id) }}h</div>
+                    <div class="course-chip__info">
+                      <strong class="course-chip__name">{{ c.materiaNombre }}</strong>
+                      <span class="course-chip__interval">{{ intervalMinutes() === 60 ? '1 hora' : intervalMinutes() + ' min' }}</span>
+                    </div>
+                  </div>
+                  <span class="course-chip__drag-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
+                  </span>
+                </div>
+              }
+              @if (filteredCursos().length === 0) {
+                <div class="courses-empty">
+                  <p>No hay cursos que coincidan con la búsqueda.</p>
+                </div>
+              }
+            </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</section>
+
+<!-- ====== MODAL DE EDICIÓN DE HORARIO ====== -->
+@if (showEditModal()) {
+  <div class="modal-overlay" (click)="cerrarPanel()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editingId() ? 'Editar Bloque de Horario' : 'Asignar Nuevo Horario' }}</h3>
+        <button class="close-btn" (click)="cerrarPanel()">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="schedule-form">
+          @if (!editingId()) {
+            <div class="premium-field">
+              <label>Curso <span class="required">*</span></label>
+              <select formControlName="cursoId" class="premium-select">
+                <option value="">-- Seleccione un curso --</option>
+                @for (c of cursos(); track c.id) {
+                  <option [value]="c.id">{{ c.materiaNombre }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="premium-field">
+            <label>Día <span class="required">*</span></label>
+            <select formControlName="diaSemana" class="premium-select">
+              @for (dia of dias; track dia.value) {
+                <option [value]="dia.value">{{ dia.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="premium-field">
+            <label>Aula</label>
+            <input type="text" formControlName="aula" class="premium-input" placeholder="Ej. A-101">
+          </div>
+
+          <div class="form-grid">
+            <div class="premium-field">
+              <label>Inicio <span class="required">*</span></label>
+              <input type="time" formControlName="horaInicio" class="premium-input">
+            </div>
+            <div class="premium-field">
+              <label>Fin <span class="required">*</span></label>
+              <input type="time" formControlName="horaFin" class="premium-input">
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-danger-subtle" style="background: #f1f5f9; color: var(--muted); border-color: transparent;" (click)="cerrarPanel()">
+          Cancelar
+        </button>
+        @if (editingId()) {
+          <button type="button" class="btn-danger-subtle" (click)="eliminar(editingId()!)">
+            Remover
+          </button>
+        }
+        <button type="button" class="btn-success-subtle" [disabled]="saving() || form.invalid" (click)="guardar()">
+          {{ saving() ? 'Aplicando...' : 'Aplicar al Borrador' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ====== MODAL DE DETALLE DEL CURSO ====== -->
+@if (selectedHorarioDetail()) {
+  <div class="modal-overlay" (click)="cerrarDetalle()">
+    <div class="modal-card" style="max-width: 450px;" (click)="$event.stopPropagation()" [@scaleInModal]>
+      <div class="modal-header">
+        <h3>Detalles del Curso</h3>
+        <button class="close-btn" (click)="cerrarDetalle()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-summary" style="background: var(--app-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--line);">
+          <p><strong>Materia:</strong> <span style="color: var(--forest); font-weight: 700;">{{ selectedHorarioDetail()?.materia }}</span></p>
+          <p><strong>Docente:</strong> {{ selectedHorarioDetail()?.docente || 'Sin docente asignado' }}</p>
+          <p><strong>Día:</strong> {{ selectedHorarioDetail()?.diaNombre }}</p>
+          <p><strong>Horario:</strong> {{ selectedHorarioDetail()?.horaInicio }} - {{ selectedHorarioDetail()?.horaFin }}</p>
+          <p><strong>Aula:</strong> {{ selectedHorarioDetail()?.aula || 'No especificada' }}</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" (click)="cerrarDetalle()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<div class="toast-container">
+  @for (toast of toasts(); track toast.id) {
+    <div class="toast" [class.toast--error]="toast.type === 'error'">
+      {{ toast.message }}
+    </div>
+  }
+</div>

@@ -2,21 +2,25 @@
   <div class="page-heading">
     <div>
       <p class="section-kicker">Portal del estudiante</p>
-      <h2>Consulta de rendimiento academico</h2>
-      <p>
-        Vista de solo lectura para revisar notas publicadas, detalle de evaluaciones y promedio final por curso.
-      </p>
+      <h2>Mi Espacio Académico</h2>
+      <p>Vista general de tu rendimiento actual e información relevante.</p>
     </div>
-    <span class="status-pill is-good">Solo lectura</span>
   </div>
 
-  <div class="metric-grid">
+  <div class="kpi-grid">
     @for (metric of metrics(); track metric.label) {
-      <article class="metric-card tone-{{ metric.tone }}">
-        <p class="metric-card__label">{{ metric.label }}</p>
-        <strong class="metric-card__value">{{ metric.value }}</strong>
-        <p class="metric-card__detail">{{ metric.detail }}</p>
-      </article>
+      <div class="kpi-card">
+        <div class="kpi-icon tone-{{ metric.tone }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+          </svg>
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">{{ metric.label }}</span>
+          <span class="kpi-value"><strong>{{ metric.value }}</strong></span>
+          <span class="kpi-subtext">{{ metric.detail }}</span>
+        </div>
+      </div>
     }
   </div>
 
@@ -28,7 +32,7 @@
     <div class="surface-header">
       <div>
         <h3>Detalle de notas publicadas</h3>
-        <p>Las calificaciones se actualizan tras el registro docente y la publicacion administrativa.</p>
+        <p>Las calificaciones se actualizan tras el registro docente y la publicación administrativa.</p>
       </div>
     </div>
 
@@ -38,7 +42,7 @@
           <tr>
             <th>Curso</th>
             <th>Periodo</th>
-            <th>Practica</th>
+            <th>Práctica</th>
             <th>Examen</th>
             <th>Tarea</th>
             <th>Promedio</th>

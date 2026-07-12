@@ -8,6 +8,7 @@ import { fadeIn } from '../../core/animations';
   selector: 'app-student-portal',
   imports: [DecimalPipe],
   templateUrl: './student-portal.html',
+  styleUrl: './student-portal.css',
   animations: [fadeIn],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

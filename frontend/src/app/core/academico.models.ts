@@ -56,6 +56,8 @@ export interface CursoResponse {
   gradoId: EntityId;
   gradoNombre: string;
   paralelo: string;
+  nivelNombre?: string;
+  nivelTurno?: string;
   materiaId: EntityId;
   materiaCodigo: string;
   materiaNombre: string;

@@ -1,0 +1,63 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Rendimiento</p>
+      <h2>Notas por Competencia</h2>
+      <p>Detalle de calificaciones por curso, competencias y capacidades según el modelo de evaluación.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="read-only-note">{{ error() }}</p>
+  }
+
+  @for (report of reports(); track report.curso + report.periodo) {
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>{{ report.curso }}</h3>
+          <p>{{ report.periodo }} - {{ report.trimestre.replace('_', ' ') }}</p>
+        </div>
+        <div class="metric-card tone-forest" style="padding: 0.5rem 1rem;">
+          <p class="metric-card__label" style="font-size: 0.75rem;">Promedio Final</p>
+          <strong class="metric-card__value" style="font-size: 1.5rem;">
+            {{ report.promedioFinal !== null ? (report.promedioFinal | number: '1.2-2') : '-' }}
+          </strong>
+        </div>
+      </div>
+      
+      <div class="quiet-table-wrap">
+        <table class="quiet-table">
+          <thead>
+            <tr>
+              <th>Competencia / Capacidad</th>
+              <th style="width: 120px; text-align: right;">Nota</th>
+            </tr>
+          </thead>
+          <tbody [@staggerRows]="report.competencias.length">
+            @for (comp of report.competencias; track comp.numeroCompetencia) {
+              <tr style="background-color: var(--field-bg);">
+                <td><strong>{{ comp.numeroCompetencia }}. {{ comp.nombreCompetencia }}</strong></td>
+                <td style="text-align: right;"><strong class="score-strong">{{ comp.promedioCompetencia !== null ? (comp.promedioCompetencia | number: '1.2-2') : '-' }}</strong></td>
+              </tr>
+              @for (cap of comp.capacidades; track cap.numero) {
+                <tr>
+                  <td style="padding-left: 2rem; color: var(--muted);">{{ cap.nombre }}</td>
+                  <td style="text-align: right;">{{ cap.nota !== null ? cap.nota : '-' }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (reports().length === 0 && !error()) {
+    <div class="empty-state-enhanced" style="display: grid; place-items: center; gap: 8px; padding: 40px 20px; text-align: center;">
+      <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--muted)" stroke-width="1" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      <p style="margin: 0; color: var(--muted); font-size: 15px; font-weight: 700;">No hay notas registradas</p>
+      <span style="color: var(--muted); font-size: 13px; opacity: 0.75;">Aún no se han evaluado competencias para este estudiante.</span>
+    </div>
+  }
+</section>

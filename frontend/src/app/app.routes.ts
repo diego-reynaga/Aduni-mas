@@ -99,6 +99,11 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
+        path: 'admin/horarios',
+        loadComponent: () => import('./views/admin-schedules/admin-schedules').then(m => m.AdminSchedules),
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
         path: 'admin/familias',
         component: AdminFamilyLinks,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
@@ -125,6 +130,31 @@ export const routes: Routes = [
       {
         path: 'estudiante',
         component: StudentPortal,
+        canActivate: [roleGuard(['ESTUDIANTE'])],
+      },
+      {
+        path: 'estudiante/notas-competencia',
+        loadComponent: () => import('./views/student-competency-grades/student-competency-grades').then(m => m.StudentCompetencyGrades),
+        canActivate: [roleGuard(['ESTUDIANTE'])],
+      },
+      {
+        path: 'estudiante/perfil',
+        loadComponent: () => import('./views/student-profile/student-profile').then(m => m.StudentProfile),
+        canActivate: [roleGuard(['ESTUDIANTE'])],
+      },
+      {
+        path: 'estudiante/apoderados',
+        loadComponent: () => import('./views/student-guardians/student-guardians').then(m => m.StudentGuardians),
+        canActivate: [roleGuard(['ESTUDIANTE'])],
+      },
+      {
+        path: 'estudiante/matriculas',
+        loadComponent: () => import('./views/student-enrollments/student-enrollments').then(m => m.StudentEnrollments),
+        canActivate: [roleGuard(['ESTUDIANTE'])],
+      },
+      {
+        path: 'estudiante/horario',
+        loadComponent: () => import('./views/student-schedule/student-schedule').then(m => m.StudentSchedule),
         canActivate: [roleGuard(['ESTUDIANTE'])],
       },
       {

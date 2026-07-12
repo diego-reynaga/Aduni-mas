@@ -12,6 +12,12 @@ export interface AulaGroup {
   materias: Academico.CursoResponse[];
 }
 
+export interface LevelGroup {
+  nivelNombre: string;
+  nivelTurno: string;
+  aulas: AulaGroup[];
+}
+
 @Component({
   selector: 'app-admin-assignments',
   standalone: true,
@@ -40,22 +46,36 @@ export class AdminAssignments {
   readonly isDrawerOpen = signal(false);
   readonly selectedCursoForDrawer = signal<Academico.CursoResponse | null>(null);
 
-  // Grouping Aulas
-  readonly aulas = computed<AulaGroup[]>(() => {
+  // Grouping Aulas by Nivel
+  readonly niveles = computed<LevelGroup[]>(() => {
     const list = this.cursos();
-    const map = new Map<string, Academico.CursoResponse[]>();
+    const mapNivel = new Map<string, Academico.CursoResponse[]>();
+    
     for (const curso of list) {
       if (!curso.activo) continue;
-      const key = `${curso.gradoNombre} ${curso.paralelo}`;
-      const group = map.get(key) || [];
+      const nivel = curso.nivelNombre || 'Sin Nivel';
+      const turno = curso.nivelTurno || 'MAÑANA';
+      const group = mapNivel.get(`${nivel}|${turno}`) || [];
       group.push(curso);
-      map.set(key, group);
+      mapNivel.set(`${nivel}|${turno}`, group);
     }
-    
-    return Array.from(map.entries()).map(([nombreAula, materias]) => ({
-      nombreAula,
-      materias: materias.sort((a, b) => a.materiaNombre.localeCompare(b.materiaNombre))
-    })).sort((a, b) => a.nombreAula.localeCompare(b.nombreAula));
+
+    return Array.from(mapNivel.entries()).map(([key, cursosDelNivel]) => {
+      const [nivelNombre, nivelTurno] = key.split('|');
+      const mapAula = new Map<string, Academico.CursoResponse[]>();
+      for (const curso of cursosDelNivel) {
+        const aula = `${curso.gradoNombre} ${curso.paralelo}`;
+        const group = mapAula.get(aula) || [];
+        group.push(curso);
+        mapAula.set(aula, group);
+      }
+      const aulas = Array.from(mapAula.entries()).map(([nombreAula, materias]) => ({
+        nombreAula,
+        materias: materias.sort((a, b) => a.materiaNombre.localeCompare(b.materiaNombre))
+      })).sort((a, b) => a.nombreAula.localeCompare(b.nombreAula));
+
+      return { nivelNombre, nivelTurno, aulas };
+    }).sort((a, b) => a.nivelNombre.localeCompare(b.nivelNombre));
   });
 
   // Map of cursoId -> asignacion for quick lookup in UI
