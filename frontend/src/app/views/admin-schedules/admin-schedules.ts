@@ -246,6 +246,9 @@ export class AdminSchedules implements OnInit {
           pending--;
           if (pending === 0) {
             this.grados.set(gradosCargados.sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto)));
+            if (this.groupedGrados().length > 0) {
+              this.selectedNivelTab.set(this.groupedGrados()[0].nivel);
+            }
             this.loading.set(false);
           }
         },
@@ -253,6 +256,9 @@ export class AdminSchedules implements OnInit {
           pending--;
           if (pending === 0) {
             this.grados.set(gradosCargados);
+            if (this.groupedGrados().length > 0) {
+              this.selectedNivelTab.set(this.groupedGrados()[0].nivel);
+            }
             this.loading.set(false);
           }
         }
@@ -283,6 +289,8 @@ export class AdminSchedules implements OnInit {
       grados
     }));
   });
+
+  readonly selectedNivelTab = signal<string | null>(null);
 
   readonly selectedGradoName = computed(() => {
     const id = this.selectedGradoId();

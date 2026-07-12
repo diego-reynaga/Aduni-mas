@@ -20,43 +20,35 @@
           {{ saving() ? 'Guardando...' : 'Publicar Cambios' }}
         </button>
       }
-      <div class="custom-grado-selector" style="position: relative; z-index: 50;">
-        <button class="grado-selector-btn" (click)="toggleGradoSelector()" [class.is-open]="isGradoSelectorOpen()">
-          <span>{{ selectedGradoName() }}</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="chevron" [style.transform]="isGradoSelectorOpen() ? 'rotate(180deg)' : 'rotate(0)'"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
+    </div>
+  </div>
 
-        @if (isGradoSelectorOpen()) {
-          <div class="grado-dropdown" [@slideUp]>
-            <div class="grado-dropdown__search">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" placeholder="Buscar grado..." [value]="gradoSearchQuery()" (input)="gradoSearchQuery.set($any($event.target).value)" (click)="$event.stopPropagation()">
-            </div>
-            <div class="grado-dropdown__list">
-              @for (group of groupedGrados(); track group.nivel) {
-                <div class="grado-dropdown__group-title">{{ group.nivel }}</div>
-                @for (g of group.grados; track g.id) {
-                  <button class="grado-dropdown__item" (click)="selectGrado(g.id)" [class.is-selected]="selectedGradoId() === g.id">
-                    <span class="grado-dropdown__item-text">{{ g.nombreGrado }}</span>
-                    @if (selectedGradoId() === g.id) {
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    }
-                  </button>
-                }
-              }
-              @if (groupedGrados().length === 0) {
-                <div class="grado-dropdown__empty">No se encontraron grados.</div>
-              }
-            </div>
-          </div>
+  <div class="grade-tabs-container">
+    <div class="grade-tabs">
+      @for (group of groupedGrados(); track group.nivel) {
+        <button class="grade-tab" 
+                [class.is-active]="selectedNivelTab() === group.nivel"
+                (click)="selectedNivelTab.set(group.nivel)">
+          {{ group.nivel }}
+        </button>
+      }
+    </div>
+    
+    @if (selectedNivelTab()) {
+      <div class="grade-chips">
+        @for (group of groupedGrados(); track group.nivel) {
+          @if (selectedNivelTab() === group.nivel) {
+            @for (g of group.grados; track g.id) {
+              <button class="grade-chip"
+                      [class.is-active]="selectedGradoId() === g.id"
+                      (click)="selectGrado(g.id)">
+                {{ g.nombreGrado }}
+              </button>
+            }
+          }
         }
       </div>
-
-      <button class="btn-config" (click)="toggleConfig()" [class.is-active]="showConfig()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        Configurar
-      </button>
-    </div>
+    }
   </div>
 
   <!-- ====== CONFIG PANEL ====== -->
@@ -149,9 +141,15 @@
               <p>Arrastra y suelta cursos. Redimensiona desde el borde inferior.</p>
             </div>
           </div>
-          @if (hasUnsavedChanges()) {
-            <span class="draft-badge">BORRADOR</span>
-          }
+          <div style="display: flex; gap: 12px; align-items: center;">
+            @if (hasUnsavedChanges()) {
+              <span class="draft-badge">BORRADOR</span>
+            }
+            <button class="btn-config" (click)="toggleConfig()" [class.is-active]="showConfig()" style="height: 32px; padding: 0 12px; font-size: 13px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Configurar
+            </button>
+          </div>
         </div>
 
         <div class="advanced-calendar">
