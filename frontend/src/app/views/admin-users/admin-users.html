@@ -1,0 +1,709 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Mantenimiento de Sistema</p>
+      <h2>
+        @if (activeTab() === 'usuarios') { Gestión de Cuentas de Usuario }
+        @else if (activeTab() === 'roles') { Catálogo de Roles }
+        @else { Auditorías y Seguridad }
+      </h2>
+      <p>
+        @if (activeTab() === 'usuarios') { Administre las cuentas de usuarios asociadas a personas. }
+        @else if (activeTab() === 'roles') { Gestione los roles institucionales del sistema. }
+        @else { Trazabilidad completa de operaciones y accesos críticos. }
+      </p>
+    </div>
+  </div>
+
+
+  @if (successMessage()) {
+    <div class="success-alert" [@slideAlert]>
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="form-error-note" style="margin-bottom: 20px; padding: 13px 14px;" [@slideAlert]>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- TAB DE USUARIOS -->
+  @if (activeTab() === 'usuarios') {
+    <div [@tabTransition]>
+      <!-- KPI Cards (Métricas Superiores) -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon is-good">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Cuentas Activas</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalActive()">{{ totalActive() }}</strong></span>
+            <span class="kpi-subtext">de {{ users().length }} usuarios registrados</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon is-admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Administradores</span>
+            <span class="kpi-value"><strong [@counterAnimate]="roleTotals().ADMINISTRADOR">{{ roleTotals().ADMINISTRADOR }}</strong></span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon is-teacher">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Docentes</span>
+            <span class="kpi-value"><strong [@counterAnimate]="roleTotals().DOCENTE">{{ roleTotals().DOCENTE }}</strong></span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon is-student">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Estudiantes</span>
+            <span class="kpi-value"><strong [@counterAnimate]="roleTotals().ESTUDIANTE">{{ roleTotals().ESTUDIANTE }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modern Glassmorphism Toolbar -->
+      <div class="modern-toolbar" [@slideInRight]>
+        <div class="toolbar-search">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text"
+                 placeholder="Buscar usuario..."
+                 [value]="searchQuery()"
+                 (input)="onSearchInput($any($event.target).value)">
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-filters">
+          <div class="segmented-control">
+            <button class="segment-btn" [class.is-active]="filterEstado() === 'TODOS'" (click)="filterEstado.set('TODOS')">Todos</button>
+            <button class="segment-btn" [class.is-active]="filterEstado() === 'Activo'" (click)="filterEstado.set('Activo')">Activo</button>
+            <button class="segment-btn" [class.is-active]="filterEstado() === 'Inactivo'" (click)="filterEstado.set('Inactivo')">Inactivo</button>
+          </div>
+
+          <div class="toolbar-select-wrap">
+            <span class="select-label">Rol:</span>
+            <select class="toolbar-select" [value]="filterRol()" (change)="filterRol.set($any($event.target).value)">
+              <option value="TODOS">Todos</option>
+              <option value="ADMINISTRADOR">Administrador</option>
+              <option value="DOCENTE">Docente</option>
+              <option value="ESTUDIANTE">Estudiante</option>
+              <option value="PADRE_FAMILIA">Familia</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="toolbar-actions">
+          <button class="btn-primary pill-btn" (click)="openAddUserModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="margin-right: 6px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Agregar
+          </button>
+        </div>
+      </div>
+
+    <div class="table-container-full">
+      @if (loading()) {
+        <section class="surface">
+          <div class="surface-header"><div><h3>Directorio de accesos</h3></div></div>
+          <div class="quiet-table-wrap">
+            <table class="quiet-table"><thead><tr>
+              <th>Código</th><th>Persona</th><th>Rol Primario</th><th>Correo</th><th>Estado</th><th>Acciones</th>
+            </tr></thead><tbody>
+              @for (_ of [1,2,3,4]; track _) {
+                <tr><td colspan="6"><div class="skeleton-row"><div class="skeleton-line w-20"></div><div class="skeleton-line w-40"></div><div class="skeleton-line w-24"></div><div class="skeleton-line w-36"></div><div class="skeleton-line w-16"></div><div class="skeleton-line w-24"></div></div></td></tr>
+              }
+            </tbody></table>
+          </div>
+        </section>
+      } @else {
+        <section class="surface">
+        <div class="surface-header">
+          <div>
+            <h3>Directorio de Accesos ({{ filteredUsers().length }} resultados)</h3>
+            <p>Lista detallada de las cuentas registradas y filtradas en el sistema.</p>
+          </div>
+        </div>
+
+        <div class="quiet-table-wrap">
+          <table class="quiet-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Persona</th>
+                <th>Rol Primario</th>
+                <th>Correo</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody [@staggerRows]="filteredUsers().length">
+              @for (user of filteredUsers(); track user.codigo) {
+                <tr>
+                  <td><strong>{{ user.codigo }}</strong></td>
+                  <td>
+                    <div class="user-profile-cell">
+                      <div class="user-avatar">{{ user.persona.substring(0, 2) }}</div>
+                      <div>
+                        <strong style="color: var(--ink); font-size: 14px; line-height: 1.2; display: block;">{{ user.persona }}</strong>
+                        <span style="color: var(--muted); font-size: 12px; font-weight: 600;">DNI {{ user.documento }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ roleLabels[user.rol] || user.rol }}</td>
+                  <td>{{ user.correo }}</td>
+                  <td>
+                    <span [class]="statusClass(user.estado)">
+                      <div class="status-dot"></div>
+                      {{ user.estado }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-row-btns">
+                      <button class="action-icon-btn edit" title="Editar" (click)="openEditUserModal(user)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                      </button>
+                      @if (user.estado === 'Activo') {
+                        <button class="action-icon-btn deactivate" title="Desactivar" (click)="deactivateUser(user)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                      } @else if (user.estado === 'Inactivo') {
+                        <button class="action-icon-btn activate" title="Reactivar" (click)="activateUser(user)">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"></circle><path d="M8 12l2 2 4-4"></path></svg>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state-enhanced">
+                      <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--muted)" stroke-width="1" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                      <p>No se encontraron usuarios</p>
+                      <span>Intenta ajustar los filtros o agrega un nuevo usuario.</span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- TAB DE ROLES -->
+  @if (activeTab() === 'roles') {
+    <div [@tabTransition]>
+      
+      <!-- KPI Cards (Roles) -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon is-admin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Roles Totales</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalRoles()">{{ totalRoles() }}</strong></span>
+            <span class="kpi-subtext">Registrados en base de datos</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon is-good">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="kpi-data">
+            <span class="kpi-label">Roles de Sistema</span>
+            <span class="kpi-value"><strong [@counterAnimate]="totalSystemRoles()">{{ totalSystemRoles() }}</strong></span>
+            <span class="kpi-subtext">Críticos y no modificables</span>
+          </div>
+        </div>
+
+      </div>
+
+
+
+    <div class="table-container-full">
+      @if (loading()) {
+        <section class="surface">
+          <div class="surface-header"><div><h3>Catálogo en BD</h3></div></div>
+          <div class="quiet-table-wrap">
+            <table class="quiet-table" style="min-width: 100%;"><thead><tr>
+              <th>ID</th><th>Nombre del Rol</th><th>Fecha de Creación</th><th>Acción</th>
+            </tr></thead><tbody>
+              @for (_ of [1,2,3]; track _) {
+                <tr><td colspan="4"><div class="skeleton-row"><div class="skeleton-line w-16"></div><div class="skeleton-line w-36"></div><div class="skeleton-line w-24"></div><div class="skeleton-line w-20"></div></div></td></tr>
+              }
+            </tbody></table>
+          </div>
+        </section>
+      } @else {
+        <section class="surface">
+          <div class="surface-header">
+            <div>
+              <h3>Catálogo de Roles en DB ({{ rolesList().length }})</h3>
+              <p>Lista de accesos registrados en el sistema mapeados a RolNombre enum.</p>
+            </div>
+          </div>
+
+          <div class="quiet-table-wrap">
+            <table class="quiet-table" style="min-width: 100%;">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre del Rol</th>
+                  <th>Fecha de Creación</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody [@staggerRows]="rolesList().length">
+                @for (role of rolesList(); track role.id) {
+                  <tr [class.system-role-row]="isSystemRole(role.nombre)">
+                    <td><strong># {{ role.id }}</strong></td>
+                    <td>
+                      {{ getRoleLabel(role.nombre) }}
+                      @if (isSystemRole(role.nombre)) {
+                        <span class="system-badge">Rol del sistema</span>
+                      }
+                    </td>
+                    <td>{{ role.creadoEn === '-' ? '—' : (role.creadoEn | date:'dd/MM/yyyy HH:mm') }}</td>
+                    <td>
+                      @if (!isSystemRole(role.nombre)) {
+                        <button class="btn-danger-subtle" (click)="deleteRole(role)">
+                          Eliminar
+                        </button>
+                      } @else {
+                        <span class="protected-label" style="display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 13px; font-weight: 500;">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                          </svg>
+                          Protegido
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4">
+                      <div class="empty-state-enhanced">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--muted)" stroke-width="1" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <p>No hay roles registrados</p>
+                        <span>Crea un nuevo rol para comenzar.</span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    </div>
+    </div>
+  }
+
+  <!-- TAB DE AUDITORÍA -->
+  @if (activeTab() === 'auditoria') {
+    <div [@tabTransition]>
+      <!-- AUDIT TOOLBAR -->
+<div class="audit-toolbar surface" style="margin-bottom: 24px; padding: 20px; border-radius: 12px; border: 1px solid var(--line); background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+  <div class="audit-toolbar-row">
+    <div class="audit-search-field">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text"
+             placeholder="Buscar por responsable…"
+             [value]="auditUserQuery()"
+             (input)="auditUserQuery.set($any($event.target).value); triggerAuditSearch()">
+    </div>
+
+    <div class="audit-select-wrap">
+      <span class="audit-select-label">Acción</span>
+      <select class="audit-select" [value]="auditActionFilter()" (change)="auditActionFilter.set($any($event.target).value); triggerAuditSearch()">
+        <option value="TODAS">Todas las acciones</option>
+        <optgroup label="CRUD">
+          <option value="INSERT">INSERT (Creación)</option>
+          <option value="UPDATE">UPDATE (Actualización)</option>
+          <option value="DELETE">DELETE (Eliminación)</option>
+        </optgroup>
+        <optgroup label="Autenticación">
+          <option value="LOGIN_SUCCESS">LOGIN (Éxito)</option>
+          <option value="LOGIN_FAIL">LOGIN (Fallido)</option>
+          <option value="LOGOUT">LOGOUT (Cierre)</option>
+        </optgroup>
+        <optgroup label="Gestión de Usuarios">
+          <option value="CREAR_USUARIO">Crear usuario</option>
+          <option value="ACTUALIZAR_USUARIO">Actualizar usuario</option>
+          <option value="ACTIVAR_USUARIO">Activar usuario</option>
+          <option value="DESACTIVAR_USUARIO">Desactivar usuario</option>
+        </optgroup>
+        <optgroup label="Gestión de Estudiantes">
+          <option value="CREAR_ESTUDIANTE">Crear estudiante</option>
+          <option value="ACTUALIZAR_ESTUDIANTE">Actualizar estudiante</option>
+          <option value="ACTIVAR_ESTUDIANTE">Activar estudiante</option>
+          <option value="DESACTIVAR_ESTUDIANTE">Desactivar estudiante</option>
+        </optgroup>
+        <optgroup label="Gestión de Personas">
+          <option value="CREAR_PERSONA">Crear persona</option>
+          <option value="ACTUALIZAR_PERSONA">Actualizar persona</option>
+        </optgroup>
+        <optgroup label="Sistema">
+          <option value="IMPORTAR_NOTAS_TRIMESTRE">Importar notas</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="audit-select-wrap">
+      <span class="audit-select-label">Entidad</span>
+      <select class="audit-select" [value]="auditEntityFilter()" (change)="auditEntityFilter.set($any($event.target).value); triggerAuditSearch()">
+        <option value="TODAS">Todas las entidades</option>
+        <option value="profiles">Usuarios / Cuentas</option>
+        <option value="personas">Personas</option>
+        <option value="estudiantes">Estudiantes</option>
+        <option value="docentes">Docentes</option>
+        <option value="notas">Notas</option>
+        <option value="matriculas">Matrículas</option>
+        <option value="cursos">Cursos</option>
+        <option value="importaciones_notas">Importaciones</option>
+        <option value="configuracion_institucional">Configuración</option>
+      </select>
+    </div>
+
+    <button class="btn-secondary audit-clear-btn" (click)="clearAuditFilters()" title="Limpiar filtros">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <button class="btn-primary audit-search-btn" (click)="loadAudits()">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 6px;">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Buscar
+    </button>
+  </div>
+
+  <!-- Date presets row -->
+  <div class="audit-date-row">
+    <div class="audit-presets">
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === 'hoy'" (click)="setDatePreset('hoy')">Hoy</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === '7d'" (click)="setDatePreset('7d')">Últ. 7 días</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === '30d'" (click)="setDatePreset('30d')">Últ. 30 días</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === 'mes'" (click)="setDatePreset('mes')">Este mes</button>
+      <button class="audit-preset-btn" [class.is-active]="auditDatePreset() === 'personalizado'" (click)="setDatePreset('personalizado')">Personalizado</button>
+    </div>
+
+    @if (auditDatePreset() === 'personalizado' || auditDateInicio() || auditDateFin()) {
+      <div class="audit-date-range">
+        <span class="audit-date-label">Desde:</span>
+        <input type="date" class="audit-date-input"
+               [value]="auditDateInicio()"
+               (change)="auditDateInicio.set($any($event.target).value); triggerAuditSearch()">
+        <span class="audit-date-label">Hasta:</span>
+        <input type="date" class="audit-date-input"
+               [value]="auditDateFin()"
+               (change)="auditDateFin.set($any($event.target).value); triggerAuditSearch()">
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Active filter chips -->
+@if (activeAuditChips().length > 0) {
+  <div class="audit-chips-bar">
+    @for (chip of activeAuditChips(); track chip.key) {
+      <span class="audit-chip">
+        {{ chip.label }}
+        <button class="audit-chip-remove" (click)="removeAuditChip(chip.key)">×</button>
+      </span>
+    }
+    <button class="audit-chip-clear-all" (click)="clearAuditFilters()">Limpiar todo</button>
+  </div>
+}
+
+    @if (auditLoading()) {
+      <section class="surface">
+        <div class="surface-header"><div><h3>Historial de Auditoría Forense</h3></div></div>
+        <div class="quiet-table-wrap">
+          <table class="quiet-table" style="min-width: 100%;">
+            <thead><tr>
+              <th>ID</th><th>Fecha y Hora</th><th>Responsable</th><th>Acción</th><th>Entidad</th><th>ID Afectado</th><th>Detalles</th>
+            </tr></thead>
+            <tbody>
+              @for (_ of [1,2,3,4]; track _) {
+                <tr><td colspan="7"><div class="skeleton-row"><div class="skeleton-line w-20"></div><div class="skeleton-line w-40"></div><div class="skeleton-line w-24"></div><div class="skeleton-line w-16"></div><div class="skeleton-line w-24"></div><div class="skeleton-line w-20"></div><div class="skeleton-line w-12"></div></div></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    } @else {
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Historial de Auditoría Forense <span class="audit-count-badge">{{ auditTotal() }} registros</span></h3>
+          <p>Trazabilidad completa de operaciones y accesos críticos en el sistema.</p>
+        </div>
+      </div>
+
+      <div class="quiet-table-wrap">
+        <table class="quiet-table" style="min-width: 100%;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha y Hora</th>
+              <th>Responsable</th>
+              <th>Acción</th>
+              <th>Entidad</th>
+              <th>ID Afectado</th>
+              <th>Detalles</th>
+            </tr>
+          </thead>
+          <tbody [@staggerRows]="auditoriasList().length">
+            @for (a of auditoriasList(); track a.id) {
+              <tr>
+                <td><strong style="color: var(--ink);"># {{ a.id }}</strong></td>
+                <td><span style="color: var(--muted); font-size: 13px;">{{ a.creadoEn | date:'dd/MM/yyyy HH:mm:ss' }}</span></td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="user-avatar-initials" style="width: 24px; height: 24px; font-size: 10px;">{{ a.usuarioResponsable | slice:0:1 | uppercase }}</div>
+                    <span class="text-slate-700 font-semibold">{{ a.usuarioResponsable }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-pill-premium"
+                        [class.is-active]="a.accion === 'CREATE' || a.accion === 'LOGIN_SUCCESS'"
+                        [class.is-warning]="a.accion === 'UPDATE'"
+                        [class.is-inactive]="a.accion === 'DELETE' || a.accion === 'LOGIN_FAIL' || a.accion === 'REVOCATION'">
+                    @if(a.accion === 'CREATE' || a.accion === 'LOGIN_SUCCESS') { <div class="pulse-dot"></div> }
+                    {{ a.accion }}
+                  </span>
+                </td>
+                <td><code style="font-size: 11px; color: var(--forest); background: var(--forest-soft); padding: 4px 8px; border-radius: 6px; font-weight: 700;">{{ a.entidad }}</code></td>
+                <td><span style="font-weight: 600; color: var(--steel);">{{ a.entidadId || '-' }}</span></td>
+                <td>
+                  @if (a.detalle) {
+                    <button class="action-icon-btn is-edit" (click)="openAuditDetailModal(a)" title="Ver Cambios">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  } @else {
+                    <span style="color: var(--line-strong);">-</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-state">No se encontraron registros de auditoría que coincidan con los filtros.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (auditPages() > 1) {
+        <div class="audit-pagination">
+          <span class="audit-pagination-info">
+            Página {{ auditPage() }} de {{ auditPages() }} ({{ auditTotal() }} resultados)
+          </span>
+          <div class="audit-pagination-controls">
+            <button class="audit-page-btn" [disabled]="auditPage() <= 1" (click)="goToAuditPage(auditPage() - 1)">
+              « Anterior
+            </button>
+            @for (p of [].constructor(auditPages()); track $index) {
+              @if ($index + 1 === auditPage() || $index + 1 === 1 || $index + 1 === auditPages() || Math.abs($index + 1 - auditPage()) <= 1) {
+                <button class="audit-page-btn" [class.is-current]="$index + 1 === auditPage()" (click)="goToAuditPage($index + 1)">
+                  {{ $index + 1 }}
+                </button>
+              } @else if ($index + 1 === auditPage() - 2 || $index + 1 === auditPage() + 2) {
+                <span class="audit-page-ellipsis">…</span>
+              }
+            }
+            <button class="audit-page-btn" [disabled]="auditPage() >= auditPages()" (click)="goToAuditPage(auditPage() + 1)">
+              Siguiente »
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+    }
+    </div>
+  }
+</section>
+
+
+<!-- MODAL DE CREACIÓN / EDICIÓN DE USUARIO -->
+@if (showUserModal()) {
+  <div class="modal-overlay" [@fadeIn]>
+    <div class="modal-card" [@scaleInModal]>
+      <div class="modal-header">
+        <h3>{{ isEditingUser() ? 'Editar Cuenta de Usuario' : 'Agregar Nueva Cuenta' }}</h3>
+        <button class="close-btn" (click)="showUserModal.set(false)">&times;</button>
+      </div>
+      <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+        <div class="modal-body premium-form-group">
+          <!-- Username -->
+          <div class="premium-field">
+            <span>Correo de acceso</span>
+            <input type="email" class="premium-input" formControlName="username" placeholder="Se completa al seleccionar la persona" [readonly]="!isEditingUser()">
+            @if (userForm.controls.username.touched && userForm.controls.username.invalid) {
+              <span class="field-error">Indique un correo válido o seleccione una persona con correo.</span>
+            }
+          </div>
+
+          @if (isEditingUser()) {
+          <div class="premium-field">
+            <span>Contraseña (dejar en blanco para no cambiar)</span>
+            <input type="password" class="premium-input" formControlName="password" placeholder="Nueva contraseña"
+                   (input)="onPasswordInput($event)">
+          </div>
+          } @else {
+          <p class="quiet-note">La contraseña inicial será el DNI de la persona seleccionada.</p>
+          }
+
+          <!-- Persona -->
+          <div class="premium-field">
+            <span>Vincular a persona</span>
+            <select class="premium-select" formControlName="personaId" (change)="onPersonaSelected($event)" [disabled]="isEditingUser()">
+              <option [ngValue]="null" disabled>Seleccione una persona existente...</option>
+              @for (p of personas(); track p.id) {
+                <option [value]="p.id">{{ p.nombreCompleto }} — {{ p.documentoIdentidad }} — {{ p.correo || 'sin correo' }}</option>
+              }
+            </select>
+            @if (userForm.controls.personaId.touched && userForm.controls.personaId.invalid) {
+              <span class="field-error">Debe seleccionar una persona.</span>
+            }
+            <span class="quiet-note">Las personas se registran primero en Personal o Gestión de alumnos. Para crear la cuenta deben tener correo y DNI.</span>
+          </div>
+
+          <!-- Roles -->
+          <div class="premium-field">
+            <span>Roles asignados</span>
+            <div class="premium-checkbox-grid">
+              @for (r of allRoles; track r) {
+                <label class="premium-chip" [class.is-active]="isRoleSelected(r)">
+                  <input type="radio" name="user-role"
+                         [checked]="isRoleSelected(r)"
+                         (change)="onRoleToggle(r, $event)">
+                  <div class="custom-check"></div>
+                  {{ roleLabels[r] }}
+                </label>
+              }
+            </div>
+            @if (userForm.controls.roles.touched && userForm.controls.roles.invalid) {
+              <span class="field-error">Debe asignar al menos un rol.</span>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="showUserModal.set(false)">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="userForm.invalid || saving()">{{ saving() ? 'Guardando…' : 'Guardar cambios' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+
+<!-- MODAL DE DETALLE DE AUDITORÍA (JSON DIFF) -->
+@if (showAuditDetailModal()) {
+  <div class="modal-overlay">
+    <div class="modal-card" style="max-width: 760px; max-height: 90vh; overflow-y: auto;" [@scaleInModal]>
+      <div class="modal-header">
+        <h3>Detalle de Auditoría #{{ selectedAudit()?.id }}</h3>
+        <button class="close-btn" (click)="showAuditDetailModal.set(false)">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: var(--field-bg); padding: 12px; border-radius: 6px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
+          <div>
+            <strong>Usuario Responsable:</strong> <span style="color: var(--slate-800); font-weight: 500;">{{ selectedAudit()?.usuarioResponsable }}</span>
+          </div>
+          <div>
+            <strong>Fecha de Evento:</strong> <span style="color: var(--slate-800); font-weight: 500;">{{ selectedAudit()?.creadoEn | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+          </div>
+          <div>
+            <strong>Acción Realizada:</strong> <span style="color: var(--slate-800); font-weight: 600;">{{ selectedAudit()?.accion }}</span>
+          </div>
+          <div>
+            <strong>Entidad / ID Afectado:</strong> <span style="color: var(--slate-800); font-weight: 500;">{{ selectedAudit()?.entidad }} #{{ selectedAudit()?.entidadId || '-' }}</span>
+          </div>
+        </div>
+
+        <h4 style="margin-bottom: 10px;">Timeline de Cambios (JSON Diff)</h4>
+        @if (parsedDetail() && !parsedDetail().raw) {
+          <div class="diff-container" style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; margin-top: 10px;">
+            <table class="diff-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+              <thead>
+                <tr style="background: var(--field-bg); border-bottom: 1px solid var(--border-color);">
+                  <th style="padding: 10px; font-weight: 600;">Propiedad</th>
+                  <th style="padding: 10px; font-weight: 600; color: #a22;">Antes</th>
+                  <th style="padding: 10px; font-weight: 600; color: #282;">Después</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (key of getDiffKeys(); track key) {
+                  <tr [class.is-changed]="isKeyChanged(key)" style="border-bottom: 1px solid var(--border-color); transition: background-color 0.2s;">
+                    <td style="padding: 10px; font-weight: 500;">{{ key }}</td>
+                    <td class="diff-old-val" style="padding: 10px; white-space: pre-wrap; font-family: monospace;">{{ getBeforeVal(key) }}</td>
+                    <td class="diff-new-val" style="padding: 10px; white-space: pre-wrap; font-family: monospace;">{{ getAfterVal(key) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else if (selectedAudit()?.detalle) {
+          <div style="background: var(--field-bg); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; white-space: pre-wrap;">
+            {{ selectedAudit()?.detalle }}
+          </div>
+        } @else {
+          <p class="empty-state">No se registraron cambios adicionales para este evento.</p>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" (click)="showAuditDetailModal.set(false)">Cerrar Detalle</button>
+      </div>
+    </div>
+  </div>
+}

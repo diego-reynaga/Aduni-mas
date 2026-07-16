@@ -1,0 +1,65 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Historial</p>
+      <h2>Mis Matrículas</h2>
+      <p>Registro histórico de los grados y niveles cursados en la institución.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="read-only-note">{{ error() }}</p>
+  }
+
+  <section class="surface">
+    <div class="surface-header">
+      <div>
+        <h3>Matrículas</h3>
+      </div>
+    </div>
+    
+    <div class="quiet-table-wrap">
+      <table class="quiet-table">
+        <thead>
+          <tr>
+            <th>Matrícula</th>
+            <th>Nivel Académico</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody [@staggerRows]="enrollments().length">
+          @for (e of enrollments(); track e.id) {
+            <tr>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <strong style="color: var(--ink); font-size: 14px;">{{ e.codigoMatricula }}</strong>
+                  <span style="color: var(--muted); font-size: 12px; font-weight: 600;">Gestión {{ e.gestion }}</span>
+                </div>
+              </td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <span style="font-weight: 600; color: var(--steel); font-size: 14px;">{{ e.nivel }}</span>
+                  <span style="color: var(--muted); font-size: 12px;">{{ e.grado }} - {{ e.seccion }}</span>
+                </div>
+              </td>
+              <td><span style="font-size: 13px; color: var(--ink);">{{ e.fechaMatricula ? (e.fechaMatricula | date:'mediumDate') : '-' }}</span></td>
+              <td>
+                <span class="status-pill" [class.is-good]="e.estado === 'ACTIVA'" [class.is-warning]="e.estado !== 'ACTIVA'" style="border-radius: 99px;">
+                  {{ e.estado }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (enrollments().length === 0 && !error()) {
+      <div class="empty-state-enhanced" style="display: grid; place-items: center; gap: 8px; padding: 40px 20px; text-align: center;">
+        <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--muted)" stroke-width="1" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <p style="margin: 0; color: var(--muted); font-size: 15px; font-weight: 700;">No tienes matrículas registradas</p>
+        <span style="color: var(--muted); font-size: 13px; opacity: 0.75;">Aún no se ha generado un historial de matrículas.</span>
+      </div>
+    }
+  </section>
+</section>

@@ -1,0 +1,82 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Familia</p>
+      <h2>Mis Apoderados</h2>
+      <p>Personas autorizadas vinculadas a tu cuenta de estudiante.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="read-only-note">{{ error() }}</p>
+  }
+
+  <section class="surface">
+    <div class="surface-header">
+      <div>
+        <h3>Apoderados Registrados</h3>
+        <p>Solo el administrador puede agregar o modificar apoderados.</p>
+      </div>
+    </div>
+    
+    <div class="quiet-table-wrap">
+      <table class="quiet-table">
+        <thead>
+          <tr>
+            <th>Nombre Completo</th>
+            <th>Parentesco</th>
+            <th>Contacto</th>
+            <th>Tipo</th>
+          </tr>
+        </thead>
+        <tbody [@staggerRows]="guardians().length">
+          @for (g of guardians(); track g.id) {
+            <tr>
+              <td>
+                <div class="user-profile-cell" style="display: flex; align-items: center; gap: 12px;">
+                  <div class="user-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--forest-soft), #d1fae5); color: var(--forest); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; text-transform: uppercase;">
+                    {{ g.padreNombreCompleto.substring(0, 2) }}
+                  </div>
+                  <div>
+                    <strong style="color: var(--ink); font-size: 14px; line-height: 1.2; display: block;">{{ g.padreNombreCompleto }}</strong>
+                    <span style="color: var(--muted); font-size: 12px; font-weight: 600;">Doc. {{ g.padreDocumento }}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-weight: 600; color: var(--steel);">{{ g.parentesco }}</span></td>
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  @if (g.padreTelefono) {
+                    <span style="font-size: 13px; color: var(--ink);">{{ g.padreTelefono }}</span>
+                  }
+                  @if (g.padreCorreo) {
+                    <span style="font-size: 12px; color: var(--muted);">{{ g.padreCorreo }}</span>
+                  }
+                  @if (!g.padreTelefono && !g.padreCorreo) {
+                    <span style="color: var(--muted);">-</span>
+                  }
+                </div>
+              </td>
+              <td>
+                @if (g.principal) {
+                  <span class="status-pill is-good" style="border-radius: 99px;">
+                    Principal
+                  </span>
+                } @else {
+                  <span class="status-pill" style="border-radius: 99px; background-color: var(--line); color: var(--ink);">
+                    Secundario
+                  </span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (guardians().length === 0 && !error()) {
+      <div style="padding: 2rem; text-align: center; color: var(--muted);">
+        <p>No tienes apoderados registrados.</p>
+      </div>
+    }
+  </section>
+</section>

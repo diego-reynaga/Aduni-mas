@@ -1,0 +1,243 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Familias</p>
+      <h2>Vinculación padre–estudiante</h2>
+      <p>Seleccione un estudiante a la izquierda y asigne sus apoderados desde la lista de la derecha.</p>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-container">
+    @for (toast of toasts(); track toast.id) {
+      <div class="toast toast-{{ toast.type }}" [@slideAlert]>
+        {{ toast.msg }}
+      </div>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="surface" style="padding: 3rem; text-align: center; color: var(--muted);">
+      Cargando directorio...
+    </div>
+  } @else {
+    <div class="split-view-container">
+      
+      <!-- LEFT PANEL: ESTUDIANTES -->
+      <div class="split-panel surface">
+        <div class="panel-header">
+          <h3>Estudiantes</h3>
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" class="search-input" placeholder="Buscar estudiante..." [ngModel]="studentSearch()" (ngModelChange)="studentSearch.set($event)">
+          </div>
+        </div>
+        
+        <div class="panel-list">
+          @for (e of filteredEstudiantes(); track e.id) {
+            <div class="list-item" [class.is-active]="selectedStudent()?.id === e.id" (click)="selectStudent(e)">
+              <div class="item-avatar">{{ e.nombres.substring(0,2).toUpperCase() }}</div>
+              <div class="item-content">
+                <strong>{{ e.apellidos }}, {{ e.nombres }}</strong>
+                <span>DNI: {{ e.documentoIdentidad }} • Cód: {{ e.codigo || '-' }}</span>
+              </div>
+            </div>
+            
+            <!-- INLINE VÍNCULOS -->
+            @if (selectedStudent()?.id === e.id) {
+              <div class="inline-vinculos" [@fadeIn]>
+                @if (loadingVinculos()) {
+                  <div class="loading-state">Cargando apoderados...</div>
+                } @else if (vinculos().length === 0) {
+                  <div class="empty-state">
+                    No tiene apoderados vinculados. Busque uno a la derecha y haga clic en "+ Vincular".
+                  </div>
+                } @else {
+                  @for (v of vinculos(); track v.id) {
+                    <div class="vinculo-card">
+                      <div class="vinculo-info">
+                        <strong>{{ v.padreNombreCompleto }}</strong> 
+                        <div class="vinculo-tags">
+                          <span class="badge">{{ v.parentesco }}</span>
+                          @if (v.principal) { <span class="badge-principal">Principal</span> }
+                        </div>
+                      </div>
+                      <button class="icon-btn danger" title="Desvincular" (click)="confirmRemove(v); $event.stopPropagation();">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                      </button>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          }
+          @if (filteredEstudiantes().length === 0) {
+            <div class="empty-state">No se encontraron estudiantes.</div>
+          }
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: APODERADOS -->
+      <div class="split-panel surface">
+        <div class="panel-header">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+            <h3>Apoderados</h3>
+            <button class="btn-secondary small" (click)="toggleQuickCreate()">+ Nuevo Apoderado</button>
+          </div>
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" class="search-input" placeholder="Buscar apoderado..." [ngModel]="parentSearch()" (ngModelChange)="parentSearch.set($event)">
+          </div>
+        </div>
+        
+        <div class="panel-list">
+          @if (!selectedStudent()) {
+            <div class="empty-state-large">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--muted)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <p>Seleccione un estudiante a la izquierda</p>
+              <span>Para vincularlo con un apoderado</span>
+            </div>
+          } @else {
+            @for (p of filteredPadres(); track p.id) {
+              <div class="list-item parent-item">
+                <div class="item-avatar parent-avatar">{{ p.nombres.substring(0,2).toUpperCase() }}</div>
+                <div class="item-content">
+                  <strong>{{ p.apellidos }}, {{ p.nombres }}</strong>
+                  <span>DNI: {{ p.documentoIdentidad }} • Tel: {{ p.telefono || '-' }}</span>
+                </div>
+                <div class="item-actions">
+                  @if (p.subtypeId && assignedParentIds().includes(p.subtypeId)) {
+                    <span class="status-pill is-active">Vinculado</span>
+                  } @else {
+                    <button class="btn-primary small" (click)="openAssignModal(p)">+ Vincular</button>
+                  }
+                </div>
+              </div>
+            }
+            @if (filteredPadres().length === 0) {
+              <div class="empty-state">No se encontraron apoderados.</div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ASSIGN MODAL -->
+  @if (confirmAssign(); as parent) {
+    <div class="modal-overlay" (click)="closeAssignModal()">
+      <div class="modal-card confirm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Vincular Apoderado</h3>
+          <button type="button" class="close-btn" (click)="closeAssignModal()">×</button>
+        </div>
+        <div class="modal-body" style="text-align: left;">
+          <p style="margin-bottom: 16px; font-size: 14px; color: var(--muted);">
+            Se vinculará a <strong>{{ parent.nombres }} {{ parent.apellidos }}</strong> con el estudiante seleccionado.
+          </p>
+          <form [formGroup]="assignForm" (ngSubmit)="executeAssign()">
+            <div class="premium-field" style="margin-bottom: 16px;">
+              <span>Parentesco</span>
+              <select class="premium-select" formControlName="parentesco">
+                <option value="MADRE">Madre</option>
+                <option value="PADRE">Padre</option>
+                <option value="TUTOR">Tutor/a</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--ink); cursor: pointer; margin-bottom: 24px;">
+              <input type="checkbox" formControlName="principal" style="width: 18px; height: 18px; accent-color: var(--forest);">
+              Marcar como apoderado principal
+            </label>
+            <div class="modal-footer" style="padding: 0;">
+              <button type="button" class="btn-secondary" (click)="closeAssignModal()" [disabled]="saving()">Cancelar</button>
+              <button type="submit" class="btn-primary" [disabled]="saving()">
+                {{ saving() ? 'Guardando...' : 'Confirmar Vínculo' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- QUICK CREATE MODAL -->
+  @if (showQuickCreate()) {
+    <div class="modal-overlay" (click)="toggleQuickCreate()">
+      <div class="modal-card" style="max-width: 500px;" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Nuevo Apoderado</h3>
+          <button type="button" class="close-btn" (click)="toggleQuickCreate()">×</button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="quickForm" (ngSubmit)="saveQuickParent()" class="quick-form-grid">
+            <label class="premium-field">
+              <span>Nombres <span class="required">*</span></span>
+              <input type="text" class="premium-input" formControlName="nombres" placeholder="Nombres">
+            </label>
+            <label class="premium-field">
+              <span>Apellidos <span class="required">*</span></span>
+              <input type="text" class="premium-input" formControlName="apellidos" placeholder="Apellidos">
+            </label>
+            <label class="premium-field">
+              <span>DNI <span class="required">*</span></span>
+              <input type="text" class="premium-input" formControlName="documentoIdentidad" placeholder="12345678">
+            </label>
+            <label class="premium-field">
+              <span>Teléfono</span>
+              <input type="tel" class="premium-input" formControlName="telefono" placeholder="999888777">
+            </label>
+            <label class="premium-field">
+              <span>Correo</span>
+              <input type="email" class="premium-input" formControlName="correo" placeholder="correo@ejemplo.com">
+            </label>
+            <label class="premium-field">
+              <span>Ocupación</span>
+              <input type="text" class="premium-input" formControlName="ocupacion" placeholder="Ej. Ingeniero">
+            </label>
+            <div class="quick-form-actions" style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+              <button type="button" class="btn-secondary" (click)="toggleQuickCreate()">Cancelar</button>
+              <button type="submit" class="btn-primary" [disabled]="savingQuick() || quickForm.invalid">
+                {{ savingQuick() ? 'Guardando...' : 'Crear Apoderado' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- CONFIRM DELETE MODAL -->
+  @if (confirmDelete(); as row) {
+    <div class="modal-overlay" (click)="confirmDelete.set(null)">
+      <div class="modal-card confirm-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Desvincular apoderado</h3>
+          <button type="button" class="close-btn" (click)="confirmDelete.set(null)">×</button>
+        </div>
+        <div class="modal-body" style="text-align: center; gap: 8px;">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <p style="font-size: 16px; font-weight: 600; color: var(--ink); margin: 8px 0 4px;">
+            ¿Desvincular a <strong>{{ row.padreNombreCompleto }}</strong>?
+          </p>
+          <p style="font-size: 13px; color: var(--muted); margin: 0;">
+            Esta acción no se puede deshacer. El apoderado dejará de ver las notas del estudiante.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="confirmDelete.set(null)" [disabled]="saving()">Cancelar</button>
+          <button class="btn-danger" (click)="executeRemove()" [disabled]="saving()">
+            {{ saving() ? 'Eliminando...' : 'Sí, desvincular' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>
+

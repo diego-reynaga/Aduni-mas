@@ -1,0 +1,583 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Panel administrativo</p>
+      <h2>Control academico institucional</h2>
+      <p>
+        Supervise el avance de registro de notas, accesos activos y trazabilidad de operaciones criticas de Aduni+.
+      </p>
+    </div>
+    <div style="display: flex; gap: 12px; margin-left: auto;">
+    </div>
+  </div>
+
+  <div class="kpi-grid" [@staggerList]="metrics().length">
+    @for (metric of metrics(); track metric.label) {
+      <div class="kpi-card">
+        <div class="kpi-icon"
+             [class.is-good]="metric.label === 'Usuarios activos'"
+             [class.is-teacher]="metric.label === 'Docentes activos'"
+             [class.is-student]="metric.label === 'Estudiantes'"
+             [class.is-admin]="metric.label === 'Importaciones observadas'">
+          
+          @if (metric.label === 'Usuarios activos') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          } @else if (metric.label === 'Docentes activos') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          } @else if (metric.label === 'Estudiantes') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          } @else if (metric.label === 'Importaciones observadas') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          }
+        </div>
+        <div class="kpi-data">
+          <span class="kpi-label">{{ metric.label }}</span>
+          <span class="kpi-value"><strong>{{ metric.value }}</strong></span>
+          <span class="kpi-subtext">{{ metric.detail }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="modern-toolbar" [@slideInRight]>
+    <div class="toolbar-search">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+        <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      <span style="font-size: 14px; font-weight: 600; color: var(--ink);">Acciones rápidas</span>
+    </div>
+    
+    <div class="toolbar-divider"></div>
+    
+    <div class="toolbar-actions" style="margin-left: auto; display: flex; gap: 12px; align-items: center;">
+      <a class="btn-outline-blue pill-btn" routerLink="/admin/supervision" style="padding: 10px 18px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="margin-right: 6px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        Revisar Avance
+      </a>
+      <button class="btn-blue pill-btn" (click)="openTeacherWizard()" style="padding: 10px 18px; font-weight: 700;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="margin-right: 6px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        Nuevo Docente
+      </button>
+      <button class="btn-blue pill-btn" (click)="openWizard()" style="padding: 10px 18px; font-weight: 700;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="margin-right: 6px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        Nuevo Alumno
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="read-only-note">{{ error() }}</p>
+  }
+
+  <div class="split-grid">
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Avance por docente y curso</h3>
+          <p>Estado operativo de actas por periodo academico.</p>
+        </div>
+      </div>
+
+      <div class="quiet-table-wrap" [@staggerList]="progress().length">
+        <table class="quiet-table">
+          <thead>
+            <tr>
+              <th>Docente</th>
+              <th>Curso</th>
+              <th>Grado</th>
+              <th>Avance</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody [@staggerRows]="progress().length">
+            @for (item of progress(); track item.codigo + item.curso) {
+              <tr>
+                <td>
+                  <strong>{{ item.docente }}</strong><br>
+                  <span class="text-xs text-slate-500">{{ item.codigo }} · {{ item.area }}</span>
+                </td>
+                <td>{{ item.curso }}</td>
+                <td>{{ item.grado }}</td>
+                <td>
+                  <div class="progress-track" aria-label="Avance">
+                    <span [style.width.%]="item.avance"></span>
+                  </div>
+                  <span class="text-xs text-slate-500">{{ item.avance }}%</span>
+                </td>
+                <td>
+                  <span [class]="statusClass(item.estado)">
+                    <div class="status-dot"></div>
+                    {{ item.estado }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Auditoria reciente</h3>
+          <p>Registro de acciones sensibles sobre notas y promedios.</p>
+        </div>
+      </div>
+
+      <div class="surface-body compact-list" [@staggerRows]="audits().length">
+        @for (entry of audits(); track entry.fecha + entry.accion) {
+          <div class="list-line" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line);">
+            <div>
+              <span class="status-pill-premium"
+                    [class.is-active]="entry.accion === 'CREATE' || entry.accion === 'LOGIN_SUCCESS'"
+                    [class.is-warning]="entry.accion === 'UPDATE'"
+                    [class.is-inactive]="entry.accion === 'DELETE' || entry.accion === 'LOGIN_FAIL' || entry.accion === 'REVOCATION'"
+                    style="margin-bottom: 6px; display: inline-flex;">
+                @if(entry.accion === 'CREATE' || entry.accion === 'LOGIN_SUCCESS') { <div class="pulse-dot"></div> }
+                {{ entry.accion }}
+              </span>
+              <div style="font-size: 13px; color: var(--steel);">
+                <code style="font-size: 11px; color: var(--forest); background: var(--forest-soft); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 6px;">{{ entry.entidad }}</code>
+                <strong>{{ entry.responsable }}</strong>: {{ entry.detalle }}
+              </div>
+            </div>
+            <span style="color: var(--muted); font-size: 12px; white-space: nowrap;">{{ entry.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+
+  <!-- WIZARD MODAL -->
+  @if (showWizard()) {
+    <div class="modal-overlay">
+      <div class="modal-card is-wide">
+        <div class="modal-header">
+          <h3>Alta Rápida de Estudiante</h3>
+          <button class="close-btn" (click)="closeWizard()">×</button>
+        </div>
+        <div class="modal-body premium-form-group">
+          
+          @if (wizardError()) {
+            <div class="toast toast-error" style="margin-bottom: 16px; padding: 13px 14px; border-left: 4px solid var(--danger); background: #fff1f2; color: var(--danger); font-weight: 600;">
+              {{ wizardError() }}
+            </div>
+          }
+
+          <div class="wizard-stepper">
+            <span class="step" [class.is-active]="wizardStep() === 1" [class.is-completed]="wizardStep() > 1">1</span>
+            <span class="step-line"></span>
+            <span class="step" [class.is-active]="wizardStep() === 2" [class.is-completed]="wizardStep() > 2">2</span>
+            <span class="step-line"></span>
+            <span class="step" [class.is-active]="wizardStep() === 3" [class.is-completed]="wizardStep() > 3">3</span>
+            <span class="step-line"></span>
+            <span class="step" [class.is-active]="wizardStep() === 4" [class.is-completed]="wizardStep() > 4">4</span>
+            <span class="step-line"></span>
+            <span class="step" [class.is-active]="wizardStep() === 5">5</span>
+          </div>
+
+          <!-- PASO 1: Registrar Estudiante -->
+          @if (wizardStep() === 1) {
+            <h4 style="margin-bottom: 16px;">Paso 1: Datos del Estudiante</h4>
+            <form [formGroup]="formEstudiante" class="form-grid">
+              <div class="premium-field"><span>Nombres *</span><input class="premium-input" formControlName="nombres"></div>
+              <div class="premium-field"><span>Apellidos *</span><input class="premium-input" formControlName="apellidos"></div>
+              <div class="premium-field"><span>Tipo de documento *</span><select class="premium-select" formControlName="tipoDocumento"><option value="DNI">DNI</option><option value="CE">CE</option><option value="PASAPORTE">Pasaporte</option></select></div>
+              <div class="premium-field"><span>Número de documento *</span><input class="premium-input" formControlName="documentoIdentidad" maxlength="30"></div>
+              <div class="premium-field"><span>Código del estudiante</span><input class="premium-input" formControlName="codigoEstudiante" maxlength="30" placeholder="Se genera automático"></div>
+              <div class="premium-field"><span>Nacimiento</span><input class="premium-input" type="date" formControlName="fechaNacimiento"></div>
+              <div class="premium-field"><span>Género</span><select class="premium-select" formControlName="genero"><option value="">Sin especificar</option><option value="MASCULINO">Masculino</option><option value="FEMENINO">Femenino</option><option value="OTRO">Otro</option></select></div>
+              <div class="premium-field"><span>Correo</span><input class="premium-input" type="email" formControlName="correo"></div>
+              <div class="premium-field"><span>Teléfono</span><input class="premium-input" formControlName="telefono"></div>
+              <div class="premium-field form-grid-wide"><span>Dirección</span><input class="premium-input" formControlName="direccion"></div>
+            </form>
+          }
+
+          <!-- PASO 2: Asignar Apoderado -->
+          @if (wizardStep() === 2) {
+            <h4 style="margin-bottom: 16px;">Paso 2: Asignar Apoderado para {{ createdStudentName() }}</h4>
+            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+              <button class="pill-btn" [class.is-active]="!showQuickCreatePadre()" (click)="showQuickCreatePadre.set(false)" style="border: 1px solid var(--line); background: white; color: var(--ink);">Seleccionar existente</button>
+              <button class="pill-btn" [class.is-active]="showQuickCreatePadre()" (click)="showQuickCreatePadre.set(true)" style="border: 1px solid var(--line); background: white; color: var(--ink);">Crear nuevo</button>
+            </div>
+
+            @if (!showQuickCreatePadre()) {
+              <div class="search-box-wizard" style="position: relative;">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 14px; top: 12px; color: var(--muted);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" [ngModel]="padresSearch()" (ngModelChange)="padresSearch.set($event)" class="premium-input" placeholder="Buscar por nombre o DNI..." style="padding-left: 40px; width: 100%;">
+              </div>
+              <div class="student-list-wizard" style="margin-top: 16px; max-height: 200px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px;">
+                @for (p of filteredPadresWizard(); track p.id) {
+                  <div class="student-list-item" 
+                       [class.is-selected]="selectedPadre()?.id === p.id"
+                       (click)="selectedPadre.set(p)">
+                    <div class="student-avatar">{{ p.nombres.charAt(0) }}{{ p.apellidos.charAt(0) }}</div>
+                    <div class="student-info">
+                      <strong>{{ p.apellidos }}, {{ p.nombres }}</strong>
+                      <span>DNI: {{ p.documentoIdentidad }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <form [formGroup]="quickPadreForm" class="form-grid" style="padding: 16px; border: 1px solid var(--line); border-radius: 8px;">
+                <div class="premium-field"><span>Nombres *</span><input class="premium-input" formControlName="nombres"></div>
+                <div class="premium-field"><span>Apellidos *</span><input class="premium-input" formControlName="apellidos"></div>
+                <div class="premium-field"><span>DNI *</span><input class="premium-input" formControlName="documentoIdentidad"></div>
+                <div class="premium-field"><span>Teléfono</span><input class="premium-input" formControlName="telefono"></div>
+                <div class="premium-field"><span>Correo</span><input class="premium-input" type="email" formControlName="correo"></div>
+                <div class="premium-field"><span>Ocupación</span><input class="premium-input" formControlName="ocupacion"></div>
+                <div class="form-grid-wide" style="text-align: right; margin-top: 8px;">
+                  <button type="button" class="btn-primary small" (click)="createQuickPadre()" [disabled]="wizardLoading()">Guardar y seleccionar</button>
+                </div>
+              </form>
+            }
+
+            @if (selectedPadre()) {
+              <div style="margin-top: 16px; padding: 16px; background: var(--surface-soft); border-radius: 8px;">
+                <p style="margin-bottom: 8px;"><strong>Apoderado seleccionado:</strong> {{ selectedPadre()?.nombres }} {{ selectedPadre()?.apellidos }}</p>
+                <div style="display: flex; gap: 16px; align-items: center;">
+                  <div class="premium-field" style="flex: 1; margin: 0;">
+                    <select class="premium-select" [ngModel]="selectedParentesco()" (ngModelChange)="selectedParentesco.set($event)">
+                      <option value="MADRE">Madre</option>
+                      <option value="PADRE">Padre</option>
+                      <option value="TUTOR">Tutor/a</option>
+                      <option value="OTRO">Otro</option>
+                    </select>
+                  </div>
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
+                    <input type="checkbox" [ngModel]="selectedPrincipal()" (ngModelChange)="selectedPrincipal.set($event)" style="width: 18px; height: 18px; accent-color: var(--forest);">
+                    Apoderado principal
+                  </label>
+                </div>
+              </div>
+            }
+          }
+
+          <!-- PASO 3: Matrícula -->
+          @if (wizardStep() === 3) {
+            <h4 style="margin-bottom: 16px;">Paso 3: Matricular a {{ createdStudentName() }}</h4>
+            <div class="selection-section">
+              <span class="selection-label">Nivel Educativo</span>
+              <div class="pills-container">
+                @for (niv of nivelesList(); track niv.id) {
+                  <button type="button" class="selection-pill" 
+                          [class.is-active]="selectedNivelId() === niv.id" 
+                          (click)="onNivelSelectedWizard(niv.id)">
+                    {{ niv.nombre }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (selectedNivelId()) {
+              <div class="selection-section" style="margin-top: 24px;">
+                <span class="selection-label">Grado / Aula *</span>
+                @if (gradosList().length === 0) {
+                  <div class="empty-state-enhanced" style="padding: 16px; min-height: auto; margin-top: 12px;">
+                    <p style="font-size: 13px;">No hay salones disponibles en este nivel.</p>
+                  </div>
+                } @else {
+                  <div class="grade-cards-grid">
+                    @for (gra of gradosList(); track gra.id) {
+                      <div class="grade-card" 
+                           [class.is-selected]="selectedGradoId() === gra.id"
+                           [class.is-full]="(gra.inscritos || 0) >= gra.capacidad"
+                           (click)="(gra.inscritos || 0) < gra.capacidad ? selectGradoWizard(gra.id) : null">
+                        <div class="grade-card-header">
+                          <strong style="font-size: 16px;">{{ gra.nombre }}</strong>
+                          <span class="grade-parallel">{{ gra.paralelo }}</span>
+                        </div>
+                        <div class="grade-card-body">
+                          <div class="capacity-bar-bg">
+                            <div class="capacity-bar-fill" [style.width.%]="(gra.capacidad > 0 ? ((gra.inscritos || 0) / gra.capacidad * 100) : 0)"></div>
+                          </div>
+                          <div class="capacity-text">
+                            <span><strong>{{ gra.inscritos || 0 }}</strong> / {{ gra.capacidad }} inscritos</span>
+                            @if ((gra.inscritos || 0) >= gra.capacidad) {
+                              <span class="full-badge">Lleno</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          <!-- PASO 4: Crear Usuario -->
+          @if (wizardStep() === 4) {
+            <div class="wizard-summary" style="text-align: center; padding: 32px 16px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color: var(--brand); margin-bottom: 16px;">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <h4>Crear Cuenta de Acceso</h4>
+              <p style="margin-top: 8px; color: var(--muted);">
+                Se crearán cuentas de acceso para el estudiante <strong>{{ createdStudentName() }}</strong>
+                @if (selectedPadre()) { y para su apoderado <strong>{{ selectedPadre()?.nombres }} {{ selectedPadre()?.apellidos }}</strong>}.
+              </p>
+              
+              <div style="margin-top: 24px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                <div style="text-align: left; background: var(--surface-soft); padding: 16px 24px; border-radius: 8px; border: 1px solid var(--line); min-width: 250px;">
+                  <h5 style="margin-top: 0; margin-bottom: 12px; color: var(--ink);">Cuenta Estudiante</h5>
+                  <p style="margin-bottom: 8px;"><strong>Usuario propuesto:</strong><br> {{ formEstudiante.value.correo || formEstudiante.value.documentoIdentidad }}</p>
+                  <p><strong>Contraseña inicial:</strong><br> {{ formEstudiante.value.documentoIdentidad }}</p>
+                </div>
+                @if (selectedPadre()) {
+                  <div style="text-align: left; background: var(--surface-soft); padding: 16px 24px; border-radius: 8px; border: 1px solid var(--line); min-width: 250px;">
+                    <h5 style="margin-top: 0; margin-bottom: 12px; color: var(--ink);">Cuenta Apoderado</h5>
+                    <p style="margin-bottom: 8px;"><strong>Usuario propuesto:</strong><br> {{ selectedPadre()?.correo || selectedPadre()?.documentoIdentidad }}</p>
+                    <p><strong>Contraseña inicial:</strong><br> {{ selectedPadre()?.documentoIdentidad }}</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- PASO 5: Confirmación -->
+          @if (wizardStep() === 5) {
+            <div class="wizard-summary" style="text-align: center; padding: 32px 16px;">
+              <div style="width: 64px; height: 64px; background: var(--forest-soft); color: var(--forest); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="32" height="32">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <h4>¡Alta Completada!</h4>
+              <p style="margin-top: 8px; color: var(--muted);">El proceso se ha completado con éxito.</p>
+              
+              <div style="margin-top: 24px; text-align: left; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                <div style="background: #fff; padding: 16px 24px; border-radius: 8px; border: 1px solid var(--line); min-width: 250px;">
+                  <p style="margin-bottom: 12px; font-weight: 600; color: var(--ink);">Credenciales Estudiante:</p>
+                  <p style="margin-bottom: 4px;"><strong>Usuario:</strong> {{ userCredentials()?.username }}</p>
+                  <p><strong>Contraseña:</strong> {{ userCredentials()?.password }}</p>
+                </div>
+                @if (parentCredentials()) {
+                  <div style="background: #fff; padding: 16px 24px; border-radius: 8px; border: 1px solid var(--line); min-width: 250px;">
+                    <p style="margin-bottom: 12px; font-weight: 600; color: var(--ink);">Credenciales Apoderado:</p>
+                    <p style="margin-bottom: 4px;"><strong>Usuario:</strong> {{ parentCredentials()?.username }}</p>
+                    <p><strong>Contraseña:</strong> {{ parentCredentials()?.password }}</p>
+                  </div>
+                }
+              </div>
+              <p style="margin-top: 24px; font-size: 13px; color: var(--muted);">Por favor, entregue estas credenciales a los usuarios correspondientes.</p>
+            </div>
+          }
+
+        </div>
+        <div class="modal-footer">
+          @if (wizardStep() < 5) {
+            <button class="pill-btn" style="background: white; border: 1px solid var(--line-strong); color: var(--ink);" (click)="closeWizard()">Cancelar</button>
+          }
+          
+          @if (wizardStep() === 1) {
+            <button class="pill-btn" (click)="step1CreateStudent()" [disabled]="formEstudiante.invalid || wizardLoading()">{{ wizardLoading() ? 'Guardando...' : 'Guardar y Continuar' }}</button>
+          }
+          @if (wizardStep() === 2) {
+            <button class="pill-btn" (click)="step2AssignGuardian()" [disabled]="!selectedPadre() || wizardLoading()">{{ wizardLoading() ? 'Vinculando...' : 'Vincular y Continuar' }}</button>
+          }
+          @if (wizardStep() === 3) {
+            <button class="pill-btn" (click)="step3Enroll()" [disabled]="!selectedGradoId() || wizardLoading()">{{ wizardLoading() ? 'Matriculando...' : 'Matricular y Continuar' }}</button>
+          }
+          @if (wizardStep() === 4) {
+            <button class="pill-btn" (click)="step4CreateUser()" [disabled]="wizardLoading()">{{ wizardLoading() ? 'Creando...' : 'Crear Usuario y Finalizar' }}</button>
+          }
+          @if (wizardStep() === 5) {
+            <button class="pill-btn" (click)="closeWizard()">Cerrar</button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- WIZARD DOCENTE -->
+  @if (showTeacherWizard()) {
+    <div class="modal-overlay" [@fadeIn]>
+      <div class="modal-card is-wide">
+        <div class="modal-header">
+          <h3>Alta Rápida de Docente</h3>
+          <button class="close-btn" (click)="closeTeacherWizard()">×</button>
+        </div>
+        
+        <div class="modal-body premium-form-group">
+          
+          @if (teacherWizardError()) {
+            <div class="toast toast-error" style="margin-bottom: 16px; padding: 13px 14px; border-left: 4px solid var(--danger); background: #fff1f2; color: var(--danger); font-weight: 600;">
+              {{ teacherWizardError() }}
+            </div>
+          }
+
+          <div class="wizard-stepper">
+            <span class="step" [class.is-active]="teacherWizardStep() === 1" [class.is-completed]="teacherWizardStep() > 1">1</span>
+            <span class="step-line"></span>
+            <span class="step" [class.is-active]="teacherWizardStep() === 2" [class.is-completed]="teacherWizardStep() > 2">2</span>
+            <span class="step-line"></span>
+            <span class="step" [class.is-active]="teacherWizardStep() === 3" [class.is-completed]="teacherWizardStep() > 3">3</span>
+            <span class="step-line"></span>
+            <span class="step" [class.is-active]="teacherWizardStep() === 4">4</span>
+          </div>
+
+          <!-- PASO 1: Datos Docente -->
+          @if (teacherWizardStep() === 1) {
+            <h4 style="margin-bottom: 16px;">Paso 1: Datos del Docente</h4>
+            <form [formGroup]="formDocente" class="form-grid">
+              <div class="premium-field"><span>Nombres *</span><input class="premium-input" formControlName="nombres"></div>
+              <div class="premium-field"><span>Apellidos *</span><input class="premium-input" formControlName="apellidos"></div>
+              
+              <div class="premium-field"><span>Tipo de documento *</span><select class="premium-select" formControlName="tipoDocumento"><option value="DNI">DNI</option><option value="CE">CE</option><option value="PASAPORTE">Pasaporte</option></select></div>
+              <div class="premium-field"><span>Número de documento *</span><input class="premium-input" formControlName="documentoIdentidad" maxlength="30"></div>
+              
+              <div class="premium-field"><span>Nacimiento</span><input class="premium-input" type="date" formControlName="fechaNacimiento"></div>
+              <div class="premium-field"><span>Género</span><select class="premium-select" formControlName="genero"><option value="">Sin especificar</option><option value="MASCULINO">Masculino</option><option value="FEMENINO">Femenino</option><option value="OTRO">Otro</option></select></div>
+              
+              <div class="premium-field"><span>Correo</span><input class="premium-input" type="email" formControlName="correo"></div>
+              <div class="premium-field"><span>Teléfono</span><input class="premium-input" formControlName="telefono"></div>
+              
+              <div class="premium-field form-grid-wide"><span>Dirección</span><input class="premium-input" formControlName="direccion"></div>
+
+              <div class="form-grid-wide" style="margin-top: 8px;">
+                <h4 style="margin: 0; color: var(--steel); font-size: 13px; font-weight: 750;">Datos Específicos</h4>
+              </div>
+
+              <div class="premium-field"><span>Código Interno *</span><input class="premium-input" formControlName="codigo" placeholder="Ej. DOC-001"></div>
+              <div class="premium-field"><span>Especialidad</span><input class="premium-input" formControlName="especialidad"></div>
+              <div class="premium-field"><span>Área Académica</span><input class="premium-input" formControlName="areaAcademica"></div>
+            </form>
+          }
+
+          <!-- PASO 2: Asignar Curso -->
+          @if (teacherWizardStep() === 2) {
+            <h4 style="margin-bottom: 16px;">Paso 2: Asignación Académica Inicial para {{ createdTeacherName() }}</h4>
+            <div class="selection-section">
+              <span class="selection-label">Nivel Educativo</span>
+              <div class="pills-container">
+                @for (niv of nivelesList(); track niv.id) {
+                  <button type="button" class="selection-pill" 
+                          [class.is-active]="selectedTeacherNivelId() === niv.id" 
+                          (click)="onTeacherNivelSelected(niv.id)">
+                    {{ niv.nombre }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (selectedTeacherNivelId()) {
+              <div class="selection-section" style="margin-top: 24px;">
+                <span class="selection-label">Grado / Aula *</span>
+                @if (gradosList().length === 0) {
+                  <div class="empty-state-enhanced" style="padding: 16px; min-height: auto; margin-top: 12px;">
+                    <p style="font-size: 13px;">No hay salones disponibles en este nivel.</p>
+                  </div>
+                } @else {
+                  <div class="grade-cards-grid">
+                    @for (gra of gradosList(); track gra.id) {
+                      <div class="grade-card" 
+                           [class.is-selected]="selectedTeacherGradoId() === gra.id"
+                           (click)="onTeacherGradoSelected(gra.id)">
+                        <div class="grade-card-header">
+                          <strong style="font-size: 16px;">{{ gra.nombre }}</strong>
+                          <span class="grade-parallel">{{ gra.paralelo }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (selectedTeacherGradoId()) {
+              <div class="selection-section" style="margin-top: 24px;">
+                <span class="selection-label">Curso / Materia *</span>
+                @if (teacherCursosList().length === 0) {
+                  <div class="empty-state-enhanced" style="padding: 16px; min-height: auto; margin-top: 12px;">
+                    <p style="font-size: 13px;">No hay cursos disponibles en este grado.</p>
+                  </div>
+                } @else {
+                  <div class="grade-cards-grid">
+                    @for (curso of teacherCursosList(); track curso.id) {
+                      <div class="grade-card" 
+                           [class.is-selected]="selectedTeacherCursoId() === curso.id"
+                           (click)="selectTeacherCurso(curso.id)">
+                        <div class="grade-card-header">
+                          <strong style="font-size: 16px;">{{ curso.materiaNombre }}</strong>
+                          <span class="grade-parallel">{{ curso.area }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          <!-- PASO 3: Crear Usuario -->
+          @if (teacherWizardStep() === 3) {
+            <div class="wizard-summary" style="text-align: center; padding: 32px 16px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color: var(--brand); margin-bottom: 16px;">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <h4>Crear Cuenta de Acceso</h4>
+              <p style="margin-top: 8px; color: var(--muted);">Se creará una cuenta de acceso para el docente <strong>{{ createdTeacherName() }}</strong>.</p>
+              <div style="margin-top: 24px; display: inline-block; text-align: left; background: var(--surface-soft); padding: 16px 24px; border-radius: 8px; border: 1px solid var(--line);">
+                <p style="margin-bottom: 8px;"><strong>Usuario propuesto:</strong> {{ formDocente.value.correo || formDocente.value.documentoIdentidad }}</p>
+                <p><strong>Contraseña inicial:</strong> {{ formDocente.value.documentoIdentidad }}</p>
+              </div>
+            </div>
+          }
+
+          <!-- PASO 4: Confirmación -->
+          @if (teacherWizardStep() === 4) {
+            <div class="wizard-summary" style="text-align: center; padding: 32px 16px;">
+              <div style="width: 64px; height: 64px; background: var(--forest-soft); color: var(--forest); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="32" height="32">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <h4>¡Alta de Docente Completada!</h4>
+              <p style="margin-top: 8px; color: var(--muted);">El proceso se ha completado con éxito.</p>
+              
+              <div style="margin-top: 24px; text-align: left; background: #fff; padding: 16px 24px; border-radius: 8px; border: 1px solid var(--line); display: inline-block;">
+                <p style="margin-bottom: 12px; font-weight: 600; color: var(--ink);">Credenciales de acceso generadas:</p>
+                <p style="margin-bottom: 4px;"><strong>Usuario:</strong> {{ teacherCredentials()?.username }}</p>
+                <p><strong>Contraseña:</strong> {{ teacherCredentials()?.password }}</p>
+                <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">Por favor, entregue estas credenciales al docente.</p>
+              </div>
+            </div>
+          }
+        </div>
+        <div class="modal-footer">
+          @if (teacherWizardStep() < 4) {
+            <button class="pill-btn" style="background: white; border: 1px solid var(--line-strong); color: var(--ink);" (click)="closeTeacherWizard()">Cancelar</button>
+          }
+          
+          @if (teacherWizardStep() === 1) {
+            <button class="pill-btn" (click)="teacherStep1Create()" [disabled]="formDocente.invalid || teacherWizardLoading()">{{ teacherWizardLoading() ? 'Guardando...' : 'Guardar y Continuar' }}</button>
+          }
+          @if (teacherWizardStep() === 2) {
+            <button class="pill-btn" style="background: white; border: 1px solid var(--line-strong); color: var(--ink); margin-right: 8px;" (click)="teacherWizardStep.set(3)" [disabled]="teacherWizardLoading()">Omitir por ahora</button>
+            <button class="pill-btn" (click)="teacherStep2Assign()" [disabled]="!selectedTeacherCursoId() || teacherWizardLoading()">{{ teacherWizardLoading() ? 'Asignando...' : 'Asignar y Continuar' }}</button>
+          }
+          @if (teacherWizardStep() === 3) {
+            <button class="pill-btn" (click)="teacherStep3CreateUser()" [disabled]="teacherWizardLoading()">{{ teacherWizardLoading() ? 'Creando...' : 'Crear Usuario y Finalizar' }}</button>
+          }
+          @if (teacherWizardStep() === 4) {
+            <button class="pill-btn" (click)="closeTeacherWizard()">Cerrar</button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</section>

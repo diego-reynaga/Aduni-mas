@@ -1,0 +1,414 @@
+:host {
+  display: block;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.login-page {
+  height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(560px, 1.05fr) minmax(430px, 0.95fr);
+  font-family: "Segoe UI Variable", "Segoe UI", "Trebuchet MS", sans-serif;
+  background: #faf8f1;
+}
+
+.login-institution {
+  position: relative;
+  min-width: 0;
+  height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(28px, 3.2vw, 46px) clamp(42px, 5vw, 72px);
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(16px, 2.2vh, 24px);
+  color: #fff;
+  background:
+    radial-gradient(circle at 74% 18%, rgba(244, 194, 64, 0.12), transparent 36%),
+    radial-gradient(circle at 18% 82%, rgba(47, 94, 173, 0.28), transparent 42%),
+    linear-gradient(140deg, #0b1633 0%, #102650 52%, #173b7a 100%);
+}
+
+.login-institution::before {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border: 1px solid rgba(244, 194, 64, 0.22);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-institution::after {
+  content: "";
+  position: absolute;
+  right: -130px;
+  bottom: -115px;
+  width: 370px;
+  height: 370px;
+  border: 58px solid rgba(255, 255, 255, 0.10);
+  border-radius: 50%;
+  z-index: 0;
+}
+
+.institution-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.institution-pattern::before {
+  content: "";
+  position: absolute;
+  top: -34px;
+  right: -92px;
+  width: 360px;
+  height: 240px;
+  opacity: 0.55;
+  background: repeating-linear-gradient(
+    -17deg,
+    transparent 0,
+    transparent 15px,
+    rgba(244, 194, 64, 0.12) 16px,
+    rgba(244, 194, 64, 0.12) 17px
+  );
+}
+
+.institution-pattern::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  width: 160px;
+  height: 160px;
+  border-left: 2px solid rgba(244, 194, 64, 0.32);
+  border-top: 2px solid rgba(244, 194, 64, 0.32);
+}
+
+.institution-head,
+.institution-copy-block,
+.institution-illustration,
+.period-card {
+  position: relative;
+  z-index: 1;
+}
+
+.institution-head {
+  display: flex;
+  align-items: center;
+}
+
+.institution-logo {
+  width: clamp(170px, 16vw, 240px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.28));
+}
+
+.institution-copy-block {
+  max-width: 520px;
+  margin-top: clamp(8px, 2vh, 24px);
+}
+
+.institution-copy {
+  margin: 0;
+  color: rgba(244, 248, 255, 0.94);
+  font-size: clamp(17px, 1.45vw, 20px);
+  line-height: 1.55;
+  font-weight: 500;
+}
+
+.institution-illustration {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  width: min(92%, 680px);
+  max-height: 48vh;
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+
+.illustration-glow {
+  position: absolute;
+  width: 78%;
+  height: 52%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(244, 194, 64, 0.20) 0%, rgba(244, 194, 64, 0.08) 48%, transparent 72%),
+    radial-gradient(circle, rgba(47, 94, 173, 0.22) 0%, transparent 68%);
+  filter: blur(24px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.student-illustration {
+  position: relative;
+  z-index: 1;
+  width: clamp(460px, 44vw, 680px);
+  max-width: 100%;
+  max-height: 48vh;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 18px 34px rgba(8, 16, 38, 0.38));
+}
+
+.period-card {
+  width: fit-content;
+  min-width: 178px;
+  padding: 12px 16px;
+  margin-bottom: clamp(4px, 1vh, 12px);
+  border: 1px solid rgba(244, 194, 64, 0.46);
+  background: rgba(12, 28, 59, 0.74);
+  backdrop-filter: blur(2px);
+}
+
+.period-card span {
+  display: block;
+  margin-bottom: 4px;
+  color: rgba(230, 239, 255, 0.82);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.period-card strong {
+  color: #f4c240;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.login-access {
+  min-width: 0;
+  height: 100dvh;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  padding: clamp(28px, 4vw, 56px);
+  background: linear-gradient(180deg, #faf8f1 0%, #fffdf7 100%);
+  color: #172033;
+}
+
+.login-shell {
+  width: min(100%, 460px);
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.login-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.login-heading h2 {
+  margin: 0;
+  font-size: clamp(30px, 3.3vw, 42px);
+  line-height: 1.05;
+  font-weight: 780;
+  color: #111b2d;
+}
+
+.login-heading p {
+  margin: 0;
+  color: #5a6373;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.section-kicker {
+  margin: 0;
+  color: #f4c240;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.login-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.form-label {
+  margin-top: 8px;
+  color: #1f2b40;
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  border: 1px solid #d8dce4;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 32, 66, 0.06);
+}
+
+.input-shell:focus-within {
+  border-color: #f4c240;
+  box-shadow: 0 0 0 3px rgba(244, 194, 64, 0.2);
+}
+
+.input-icon {
+  width: 44px;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #61708b;
+}
+
+.input-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.login-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 50px;
+  border: 0;
+  background: transparent;
+  padding: 0 12px 0 2px;
+  color: #172033;
+  font-size: 15px;
+  outline: none;
+}
+
+.toggle-password {
+  border: 0;
+  background: transparent;
+  color: #173b7a;
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.toggle-password:hover {
+  color: #0b1633;
+}
+
+.login-error {
+  margin: 0;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-left: 3px solid #9f1239;
+  background: #fff4f6;
+  color: #9f1239;
+  font-size: 13px;
+}
+
+.login-submit {
+  margin-top: 12px;
+  min-height: 52px;
+  border: 1px solid #e0b223;
+  background: linear-gradient(180deg, #f5c84c 0%, #e8b12a 100%);
+  color: #111111;
+  font-size: 15px;
+  font-weight: 780;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 20px rgba(232, 177, 42, 0.32);
+}
+
+.login-submit:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f6d168 0%, #eab735 100%);
+}
+
+.login-footnote {
+  margin: 0;
+  color: #6a7487;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  :host {
+    height: auto;
+    overflow: auto;
+  }
+
+  .login-page {
+    height: auto;
+    min-height: 100dvh;
+    overflow: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .login-institution {
+    height: auto;
+    min-height: 48vh;
+    padding: 24px;
+  }
+
+  .institution-illustration {
+    width: min(520px, 90%);
+    max-height: none;
+  }
+
+  .student-illustration {
+    width: min(520px, 100%);
+    max-height: none;
+  }
+
+  .login-access {
+    height: auto;
+    min-height: auto;
+    padding: 28px 22px 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-institution {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: auto;
+    gap: 14px;
+    padding: 22px 20px 0;
+  }
+
+  .institution-head {
+    align-self: flex-start;
+  }
+
+  .institution-logo {
+    width: min(300px, 92vw);
+  }
+
+  /* El diseño móvil de referencia no incluye el párrafo institucional ni la tarjeta de periodo */
+  .institution-copy-block,
+  .period-card {
+    display: none;
+  }
+
+  .institution-illustration {
+    width: min(320px, 82%);
+    max-height: 34vh;
+  }
+
+  .student-illustration {
+    width: 100%;
+    max-height: 34vh;
+  }
+
+  .login-access {
+    position: relative;
+    z-index: 2;
+    margin-top: -28px;
+    padding: 34px 22px 32px;
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -18px 30px rgba(11, 22, 51, 0.18);
+  }
+}

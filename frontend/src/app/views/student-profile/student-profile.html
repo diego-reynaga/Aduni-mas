@@ -1,0 +1,85 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Datos Personales</p>
+      <h2>Mi Perfil</h2>
+      <p>Actualiza tu información personal y datos de contacto de manera segura.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="toast-container"><div class="toast is-danger">{{ error() }}</div></div>
+  }
+  @if (success()) {
+    <div class="toast-container"><div class="toast is-success">{{ success() }}</div></div>
+  }
+
+  @if (profile(); as p) {
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <h3>Información del Estudiante</h3>
+          <p>Manten tus datos de contacto actualizados para recibir notificaciones.</p>
+        </div>
+      </div>
+      
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-grid" style="padding: 1.5rem;">
+        
+        <div class="field" style="grid-column: span 1;">
+          <label>Código Estudiante</label>
+          <input type="text" [value]="p.codigo" readonly class="search-input" style="background-color: var(--field-bg); opacity: 0.7;">
+        </div>
+
+        <div class="field" style="grid-column: span 1;">
+          <label>{{ p.tipoDocumento || 'Documento' }}</label>
+          <input type="text" [value]="p.documentoIdentidad" readonly class="search-input" style="background-color: var(--field-bg); opacity: 0.7;">
+        </div>
+
+        <div class="field">
+          <label>Nombres</label>
+          <input type="text" formControlName="nombres" class="search-input" required>
+        </div>
+
+        <div class="field">
+          <label>Apellidos</label>
+          <input type="text" formControlName="apellidos" class="search-input" required>
+        </div>
+
+        <div class="field">
+          <label>Fecha de Nacimiento</label>
+          <input type="date" formControlName="fechaNacimiento" class="search-input">
+        </div>
+
+        <div class="field">
+          <label>Género</label>
+          <select formControlName="genero" class="search-input">
+            <option value="">Seleccione</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="text" formControlName="telefono" class="search-input">
+        </div>
+
+        <div class="field">
+          <label>Correo Electrónico</label>
+          <input type="email" formControlName="correo" class="search-input">
+        </div>
+
+        <div class="field" style="grid-column: 1 / -1;">
+          <label>Dirección</label>
+          <input type="text" formControlName="direccion" class="search-input">
+        </div>
+
+        <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 1rem;">
+          <button type="submit" class="btn-primary" [disabled]="form.invalid || isSaving()">
+            {{ isSaving() ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+</section>

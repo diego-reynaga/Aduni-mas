@@ -1,0 +1,113 @@
+<section class="page-container" [@fadeIn]>
+  <!-- Header / Filters -->
+  <div class="modern-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 16px 24px; background: white; border: 1px solid var(--line, #e2e8f0); border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+    <div>
+      <h2 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 800; color: var(--ink, #0f172a);">Asignación Docente</h2>
+      <p style="margin: 0; color: var(--steel, #64748b); font-size: 14px;">Asigne profesores a cada materia según el aula.</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <select class="premium-select" style="min-width: 200px; height: 42px;" (change)="selectGestion($event)">
+        @for (row of gestiones(); track row.id) {
+          <option [value]="row.id" [selected]="row.id === selectedGestionId()">{{ row.anio }} - {{ row.nombre }}</option>
+        }
+      </select>
+      <select class="premium-select" style="min-width: 200px; height: 42px;" (change)="selectPeriodo($event)">
+        <option [value]="null">Seleccione un Periodo</option>
+        @for (row of periodos(); track row.id) {
+          <option [value]="row.id" [selected]="row.id === selectedPeriodoId()">{{ row.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (error()) { <p class="form-error-note">{{ error() }}</p> }
+  @if (success()) { <p class="read-only-note">{{ success() }}</p> }
+
+  <!-- Main Grid of Classrooms Grouped by Level -->
+  <div class="content-grid" style="display: flex; flex-direction: column; gap: 40px; padding-bottom: 40px;">
+    @for (nivel of niveles(); track nivel.nivelNombre) {
+      <div class="level-section">
+        <h2 style="font-size: 18px; color: var(--ink); margin-bottom: 16px; border-bottom: 2px solid var(--primary); padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+          Nivel: {{ nivel.nivelNombre }}
+          <span style="font-size: 12px; font-weight: 600; padding: 2px 8px; background: var(--surface-hover); color: var(--steel); border-radius: 4px; border: 1px solid var(--line);">
+            Turno {{ nivel.nivelTurno }}
+          </span>
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px;" [@staggerList]="nivel.aulas.length">
+          @for (aula of nivel.aulas; track aula.nombreAula) {
+            <div class="classroom-card">
+              <div class="classroom-header">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <h3 style="margin:0; font-size: 16px; font-weight: 700;">{{ aula.nombreAula }}</h3>
+              </div>
+              <div class="classroom-body">
+                @for (curso of aula.materias; track curso.id) {
+                  <div class="subject-row">
+                    <div class="subject-info">
+                      <span class="subject-name">{{ curso.materiaNombre }}</span>
+                      <span class="subject-code">{{ curso.materiaCodigo }}</span>
+                    </div>
+                    <div class="subject-assignment">
+                      @if (asignacionesActivas().has(curso.id)) {
+                        <div class="assigned-wrapper">
+                          <button class="assigned-pill" (click)="openDrawer(curso)">
+                            <div class="avatar-micro">{{ asignacionesActivas().get(curso.id)!.docenteNombre.charAt(0) }}</div>
+                            <span class="teacher-name">{{ asignacionesActivas().get(curso.id)!.docenteNombre }}</span>
+                          </button>
+                          <button class="remove-assignment-btn" title="Quitar profesor" (click)="removeAsignacion(curso, $event)">×</button>
+                        </div>
+                      } @else {
+                        <button class="unassigned-pill" (click)="openDrawer(curso)">
+                          <div class="status-dot"></div>
+                          Sin Asignar
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+    
+    @if (niveles().length === 0) {
+      <div class="empty-state" style="text-align: center; padding: 48px; border: 1px dashed var(--line); border-radius: 12px;">
+        <p style="color: var(--steel);">No hay materias registradas para la gestión activa.</p>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Drawer para seleccionar Profesor -->
+@if (isDrawerOpen()) {
+  <div class="drawer-overlay" (click)="closeDrawer()" [@fadeIn]></div>
+  <div class="drawer" [@slideInRight]>
+    <div class="drawer-header">
+      <div>
+        <p class="section-kicker" style="font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin: 0 0 4px 0;">Asignando profesor a:</p>
+        <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: var(--ink);">{{ selectedCursoForDrawer()?.materiaNombre }}</h3>
+        <p style="margin: 4px 0 0 0; color: var(--steel); font-size: 14px;">{{ selectedCursoForDrawer()?.gradoNombre }} {{ selectedCursoForDrawer()?.paralelo }}</p>
+      </div>
+      <button class="close-btn" (click)="closeDrawer()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: var(--steel);">&times;</button>
+    </div>
+    
+    <div class="drawer-body">
+      <div class="teacher-list">
+        @for (docente of docentes(); track docente.id) {
+          <button class="teacher-card" (click)="assignTeacher(docente)">
+            <div class="avatar-large">{{ docente.nombres.charAt(0) }}{{ docente.apellidos.charAt(0) }}</div>
+            <div class="teacher-details">
+              <span class="teacher-name-large">{{ docente.nombres }} {{ docente.apellidos }}</span>
+              <span class="teacher-code">{{ docente.codigo }}</span>
+            </div>
+            <div class="teacher-load" title="Materias asignadas en este periodo">
+              <span class="load-badge">{{ teacherLoad().get(docente.subtypeId!) || 0 }} clases</span>
+            </div>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

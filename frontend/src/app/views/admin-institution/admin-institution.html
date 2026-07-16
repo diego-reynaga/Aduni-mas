@@ -1,0 +1,124 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Configuracion institucional</p>
+      <h2>Datos y Ciclo Operativo</h2>
+      <p>Administre la información base, años escolares y periodos académicos.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="form-error-note">{{ error() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="read-only-note">{{ successMessage() }}</p>
+  }
+
+  <!-- TABS -->
+  <div class="tab-container">
+    <button [class.active]="activeTab() === 'institucion'" (click)="setTab('institucion')">Institución</button>
+  </div>
+
+  <!-- TAB: INSTITUCION -->
+  @if (activeTab() === 'institucion') {
+    @if (loading()) {
+      <p class="read-only-note">Cargando configuracion institucional...</p>
+    }
+    <div class="split-grid mt-4">
+      <section class="surface">
+        <form [formGroup]="formConfig" (ngSubmit)="saveConfig()">
+          <div class="surface-header">
+            <div>
+              <h3>Ficha institucional</h3>
+              <p>Registro principal de la identidad educativa.</p>
+            </div>
+            <div class="data-chip-row">
+              <button class="btn-secondary btn-compact" type="button" [disabled]="loading() || savingConfig() || !formConfig.dirty" (click)="resetConfig()">
+                Descartar cambios
+              </button>
+              <button class="btn-primary btn-compact" type="submit" [disabled]="loading() || savingConfig() || !formConfig.dirty">
+                {{ savingConfig() ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="surface-body form-grid">
+            <div class="field col-span-full">
+              <span>Logotipo de la Institución</span>
+              <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
+                <input type="file" accept="image/*" (change)="onFileSelected($event)" #fileInput style="display: none;">
+                <button type="button" class="btn btn-secondary" (click)="fileInput.click()">Subir logo local</button>
+                <span>o URL:</span>
+                <input type="url" formControlName="logoUrl" placeholder="https://..." style="flex: 1; min-width: 200px;">
+              </div>
+              @if (formConfig.controls.logoUrl.touched && formConfig.controls.logoUrl.invalid) {
+                <span class="field-error">Ingrese una URL que comience con http:// o https://.</span>
+              }
+              
+              @if (logoPreviewUrl()) {
+                <div style="margin-top: 1rem;">
+                  <p><small>Vista previa (se subirá al guardar):</small></p>
+                  <img [src]="logoPreviewUrl()" alt="Logo Preview" class="logo-preview">
+                </div>
+              } @else if (formConfig.controls.logoUrl.value) {
+                <div style="margin-top: 1rem;">
+                  <img [src]="formConfig.controls.logoUrl.value" alt="Logo de Institución" class="logo-preview">
+                </div>
+              }
+            </div>
+
+            <label class="field col-span-full">
+              <span>Nombre de la academia *</span>
+              <input formControlName="nombre" maxlength="150">
+            </label>
+            <label class="field">
+              <span>RUC</span>
+              <input formControlName="ruc" maxlength="20">
+            </label>
+            <label class="field">
+              <span>Telefono</span>
+              <input formControlName="telefono" maxlength="30">
+            </label>
+            <label class="field col-span-full">
+              <span>Direccion</span>
+              <input formControlName="direccion" maxlength="200">
+            </label>
+            <label class="field">
+              <span>Correo institucional</span>
+              <input type="email" formControlName="correoInstitucional">
+            </label>
+            <label class="field">
+              <span>Sitio web</span>
+              <input type="url" formControlName="sitioWeb">
+            </label>
+          </div>
+        </form>
+      </section>
+
+      <aside class="surface">
+        <div class="surface-header">
+          <div>
+            <h3>Trazabilidad</h3>
+          </div>
+        </div>
+        <div class="surface-body">
+          @if (audits().length === 0) {
+            <p class="empty-state">No hay operaciones de trazabilidad registradas.</p>
+          } @else {
+            <div class="timeline">
+              @for (entry of audits(); track entry.fecha + entry.detalle) {
+                <div class="timeline-item">
+                  <div class="timeline-content">
+                    <strong>{{ entry.accion }}</strong>
+                    <span>{{ entry.fecha | date:'dd/MM/yyyy HH:mm' }} · Por <strong>{{ entry.responsable }}</strong></span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+
+</section>

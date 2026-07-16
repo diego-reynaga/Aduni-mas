@@ -1,0 +1,143 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Importaciones de notas</p>
+      <h2>Historial institucional</h2>
+      <p>Revise lotes procesados, responsables, cursos afectados y observaciones registradas en Supabase.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="import-alert is-error">{{ error() }}</p>
+  }
+
+  <section class="surface">
+    <div class="surface-header">
+      <div>
+        <p class="section-kicker">Lotes</p>
+        <h3>Importaciones registradas</h3>
+        <p>{{ loading() ? 'Cargando historial...' : history().length + ' lotes encontrados' }}</p>
+      </div>
+    </div>
+    <div class="quiet-table-wrap">
+      <table class="quiet-table admin-import-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Archivo</th>
+            <th>Trimestre</th>
+            <th>Docente</th>
+            <th>Área</th>
+            <th>Grado</th>
+            <th>Responsable</th>
+            <th>Importados</th>
+            <th>Errores</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of history(); track row.idImportacion) {
+            <tr class="clickable-row" (click)="selectImport(row)">
+              <td>{{ row.fechaImportacion }}</td>
+              <td>
+                <strong>{{ row.nombreArchivo }}</strong><br>
+                <span class="text-xs text-slate-500">#{{ row.idImportacion }}</span>
+              </td>
+              <td>{{ row.trimestre || '-' }}</td>
+              <td>{{ row.docente }}</td>
+              <td>{{ row.areaCurricular }}</td>
+              <td>{{ row.grado }} {{ row.seccion }}</td>
+              <td>{{ row.usuarioResponsable }}</td>
+              <td>{{ row.totalCorrectas }}</td>
+              <td>{{ row.totalConError }}</td>
+              <td><span [class]="statusClass(row.estado)">{{ row.estado }}</span></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="10">No hay importaciones registradas.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (selected(); as detail) {
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <p class="section-kicker">Detalle</p>
+          <h3>{{ detail.nombreArchivo }}</h3>
+          <p>{{ detail.observacion }}</p>
+        </div>
+        <span [class]="statusClass(detail.estado)">{{ detail.estado }}</span>
+      </div>
+      <div class="surface-body">
+        <dl class="metadata-grid">
+          <div>
+            <dt>Trimestre</dt>
+            <dd>{{ detail.trimestre || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Año</dt>
+            <dd>{{ detail.metadata.anio || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Área</dt>
+            <dd>{{ detail.metadata.areaCurricular || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Docente</dt>
+            <dd>{{ detail.metadata.docente || '-' }}</dd>
+          </div>
+          <div>
+            <dt>Grado</dt>
+            <dd>{{ detail.metadata.grado }} {{ detail.metadata.seccion }}</dd>
+          </div>
+          <div>
+            <dt>Usuario</dt>
+            <dd>{{ detail.usuarioResponsable }}</dd>
+          </div>
+          <div>
+            <dt>Fecha</dt>
+            <dd>{{ detail.fechaImportacion }}</dd>
+          </div>
+          <div>
+            <dt>Filas</dt>
+            <dd>{{ detail.totalFilas }}</dd>
+          </div>
+          <div>
+            <dt>Errores</dt>
+            <dd>{{ detail.totalConError }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="surface">
+      <div class="surface-header">
+        <div>
+          <p class="section-kicker">Errores</p>
+          <h3>Observaciones del lote</h3>
+          <p>{{ errors().length }} registros de error asociados.</p>
+        </div>
+        <button class="btn-secondary" type="button" (click)="downloadErrors()" [disabled]="errors().length === 0">
+          Descargar errores
+        </button>
+      </div>
+      <div class="error-list">
+        @for (item of errors(); track $index) {
+          <div class="error-line">
+            <strong>Fila {{ item.filaExcel || '-' }}</strong>
+            <span>{{ item.campo }} · {{ item.descripcionError }}</span>
+            @if (item.estudianteTexto) {
+              <small>{{ item.estudianteTexto }}</small>
+            }
+          </div>
+        } @empty {
+          <p class="empty-state">Este lote no tiene errores registrados.</p>
+        }
+      </div>
+    </section>
+  }
+</section>
