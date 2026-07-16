@@ -47,6 +47,10 @@
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.28));
 }
 
+.brand-seal {
+  display: none;
+}
+
 .role-nav {
   display: grid;
   gap: 8px;
@@ -746,6 +750,11 @@
 
 .academic-app.is-collapsed .brand-seal {
   display: block;
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff; /* Blanco */
 }
 
 /* Base transition elements */

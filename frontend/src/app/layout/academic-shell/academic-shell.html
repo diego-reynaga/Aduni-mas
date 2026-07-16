@@ -6,8 +6,12 @@
   <aside class="academic-sidebar" [class.is-mobile-open]="isMobileMenuOpen()">
     <div class="sidebar-header">
       <a class="brand-block" [routerLink]="homeRoute()" aria-label="Ir al inicio" (click)="closeMobileMenu()">
-        <img src="ADUNI+.png" alt="Aduni+ Logo" class="brand-logo">
-        <span class="brand-seal">A+</span>
+        @if (institutionConfig()?.logoUrl) {
+          <img [src]="institutionConfig()?.logoUrl" [alt]="institutionConfig()?.nombre || 'Logo'" class="brand-logo">
+        } @else {
+          <img src="ADUNI+.png" alt="Aduni+ Logo" class="brand-logo">
+        }
+        <span class="brand-seal">A</span>
       </a>
       <button class="sidebar-collapse-btn" (click)="toggleSidebarCollapse()">
         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>

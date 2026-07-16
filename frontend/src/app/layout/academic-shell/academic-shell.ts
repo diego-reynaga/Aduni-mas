@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } 
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { PortalService } from '../../core/portal.service';
-import { ROLE_HOME, ROLE_LABELS, RoleName } from '../../core/models';
+import { ROLE_HOME, ROLE_LABELS, RoleName, InstitutionConfig } from '../../core/models';
 import { expandCollapse, routeAnimations, staggerNav } from '../../core/animations';
 
 interface NavItem {
@@ -89,10 +89,24 @@ export class AcademicShell implements OnInit {
   readonly activeGestionName = signal('Cargando...');
   readonly activePeriodName = signal('...');
 
+  // Institutional config
+  readonly institutionConfig = signal<InstitutionConfig | null>(null);
+
   ngOnInit() {
     this.loadActivePeriod();
     window.addEventListener('gestionChanged', () => {
       this.loadActivePeriod();
+    });
+    this.loadInstitutionConfig();
+    window.addEventListener('institutionConfigChanged', () => {
+      this.loadInstitutionConfig();
+    });
+  }
+
+  private loadInstitutionConfig() {
+    this.portal.getInstitutionConfigBase().subscribe({
+      next: (config) => this.institutionConfig.set(config),
+      error: () => this.institutionConfig.set(null),
     });
   }
 

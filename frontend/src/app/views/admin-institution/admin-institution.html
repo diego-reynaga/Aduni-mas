@@ -43,19 +43,29 @@
           </div>
 
           <div class="surface-body form-grid">
-            <label class="field col-span-full">
-              <span>URL HTTPS del logotipo</span>
-              <input type="url" formControlName="logoUrl" placeholder="https://institucion.example/logo.png">
-              <small>El proyecto no requiere Supabase Storage; indique una imagen alojada en un dominio institucional.</small>
+            <div class="field col-span-full">
+              <span>Logotipo de la Institución</span>
+              <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap;">
+                <input type="file" accept="image/*" (change)="onFileSelected($event)" #fileInput style="display: none;">
+                <button type="button" class="btn btn-secondary" (click)="fileInput.click()">Subir logo local</button>
+                <span>o URL:</span>
+                <input type="url" formControlName="logoUrl" placeholder="https://..." style="flex: 1; min-width: 200px;">
+              </div>
               @if (formConfig.controls.logoUrl.touched && formConfig.controls.logoUrl.invalid) {
                 <span class="field-error">Ingrese una URL que comience con http:// o https://.</span>
               }
-              @if (formConfig.controls.logoUrl.value) {
+              
+              @if (logoPreviewUrl()) {
+                <div style="margin-top: 1rem;">
+                  <p><small>Vista previa (se subirá al guardar):</small></p>
+                  <img [src]="logoPreviewUrl()" alt="Logo Preview" class="logo-preview">
+                </div>
+              } @else if (formConfig.controls.logoUrl.value) {
                 <div style="margin-top: 1rem;">
                   <img [src]="formConfig.controls.logoUrl.value" alt="Logo de Institución" class="logo-preview">
                 </div>
               }
-            </label>
+            </div>
 
             <label class="field col-span-full">
               <span>Nombre de la academia *</span>

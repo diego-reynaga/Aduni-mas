@@ -168,6 +168,14 @@ export class PortalService {
     });
   }
 
+  getInstitutionConfigBase(): Observable<InstitutionConfig> {
+    return this.observe(async () => {
+      const result = await supabase.from('configuracion_institucional').select('*').eq('codigo', 'PRINCIPAL').single();
+      const row = dataOf(result as DbResult<any>);
+      return this.toInstitution(row);
+    });
+  }
+
   saveAdminInstitution(config: InstitutionConfig): Observable<AdminInstitutionPayload> {
     return this.observe(async () => {
       const result = await supabase.from('configuracion_institucional').update({
@@ -179,7 +187,27 @@ export class PortalService {
         sitio_web: config.sitioWeb || null,
         logo_url: config.logoUrl || null,
       }).eq('codigo', 'PRINCIPAL').select().single();
+      window.dispatchEvent(new CustomEvent('institutionConfigChanged'));
       return { config: this.toInstitution(dataOf(result as DbResult<any>)), audits: [] };
+    });
+  }
+
+  uploadInstitutionLogo(file: File): Observable<string> {
+    return this.observe(async () => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo_${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('institucional')
+        .upload(fileName, file, { upsert: true });
+
+      if (error) throw error;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('institucional')
+        .getPublicUrl(fileName);
+
+      return publicUrlData.publicUrl;
     });
   }
 

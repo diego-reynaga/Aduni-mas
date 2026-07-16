@@ -33,6 +33,9 @@ export class AdminInstitution {
   readonly audits = signal<AuditEntry[]>([]);
   readonly savingConfig = signal(false);
 
+  readonly selectedLogoFile = signal<File | null>(null);
+  readonly logoPreviewUrl = signal<string | null>(null);
+
   readonly formConfig = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)] }),
     ruc: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(20)] }),
@@ -51,6 +54,16 @@ export class AdminInstitution {
     this.activeTab.set(tab);
     this.error.set('');
     this.successMessage.set('');
+  }
+
+  onFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+      this.selectedLogoFile.set(file);
+      const reader = new FileReader();
+      reader.onload = (e) => this.logoPreviewUrl.set(e.target?.result as string);
+      reader.readAsDataURL(file);
+    }
   }
 
   // --- LOGIC: INSTITUCION ---
@@ -80,6 +93,26 @@ export class AdminInstitution {
     }
 
     this.savingConfig.set(true);
+
+    if (this.selectedLogoFile()) {
+      this.portal.uploadInstitutionLogo(this.selectedLogoFile()!).subscribe({
+        next: (url) => {
+          this.formConfig.patchValue({ logoUrl: url });
+          this.selectedLogoFile.set(null);
+          this.logoPreviewUrl.set(null);
+          this.doSaveConfig();
+        },
+        error: (err) => {
+          this.savingConfig.set(false);
+          this.error.set('Error al subir el logo: ' + (err?.message || err?.error?.message || ''));
+        }
+      });
+    } else {
+      this.doSaveConfig();
+    }
+  }
+
+  private doSaveConfig(): void {
     this.portal.saveAdminInstitution(this.formConfig.getRawValue()).subscribe({
       next: (payload) => {
         this.savingConfig.set(false);
@@ -97,6 +130,8 @@ export class AdminInstitution {
 
   resetConfig(): void {
     this.formConfig.reset(this.config());
+    this.selectedLogoFile.set(null);
+    this.logoPreviewUrl.set(null);
     this.error.set('');
     this.successMessage.set('');
   }
