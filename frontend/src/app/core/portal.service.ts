@@ -386,6 +386,7 @@ export class PortalService {
       const selected = courses.find((item) => item.assignmentId === assignmentId) ?? courses[0] ?? null;
       if (!selected) {
         return {
+          courses,
           assignmentId: null,
           selectedCourse: null,
           trimestre: 'I_TRIMESTRE',
@@ -487,6 +488,7 @@ export class PortalService {
         };
       }).sort((a, b) => a.estudiante.localeCompare(b.estudiante, 'es'));
       return {
+        courses,
         assignmentId: selected.assignmentId,
         selectedCourse: selected,
         trimestre,

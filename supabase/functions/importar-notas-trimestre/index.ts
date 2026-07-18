@@ -21,11 +21,14 @@ const FIRST_STUDENT_ROW = 16;
 const DEFAULT_CAPACITY_NAMES = ["PRACTICA", "EXAMEN", "CUADERNO"] as const;
 
 const COMPETENCES = [
-  { number: 1, nameCol: 5, noteCols: [5, 6, 7, 8, 9, 10] },
-  { number: 2, nameCol: 12, noteCols: [12, 13, 14, 15, 16, 17] },
-  { number: 3, nameCol: 19, noteCols: [19, 20, 21, 22, 23, 24] },
-  { number: 4, nameCol: 26, noteCols: [26, 27, 28, 29, 30, 31] },
+  { number: 1, nameCol: 5, noteCols: [5, 6, 7, 8, 9, 10], averageCol: 11 },
+  { number: 2, nameCol: 12, noteCols: [12, 13, 14, 15, 16, 17], averageCol: 18 },
+  { number: 3, nameCol: 19, noteCols: [19, 20, 21, 22, 23, 24], averageCol: 25 },
+  { number: 4, nameCol: 26, noteCols: [26, 27, 28, 29, 30, 31], averageCol: 32 },
 ] as const;
+const FINAL_AVERAGE_COLUMN = 37;
+const COMPETENCE_NAME_ROW = 6;
+const CAPACITY_NAME_ROW = 8;
 
 const USEFUL_COLUMNS = new Set([
   0, 1,
@@ -114,6 +117,13 @@ function round2(value: number): number {
 
 function average(values: number[]): number | null {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+}
+
+function gradeValue(value: unknown): number | null {
+  const raw = clean(value).replace(',', '.');
+  if (!raw) return null;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 20 ? parsed : null;
 }
 
 function achievement(value: number | null): string | null {
@@ -370,14 +380,14 @@ Deno.serve(async (req: Request) => {
 
       const competencies: ParsedCompetence[] = [];
       for (const definition of COMPETENCES) {
-        const name = clean(readCell(trimesterSheet, 6, definition.nameCol)) || `Competencia ${definition.number}`;
-        const notes: ParsedNote[] = [];
-        const validValues: number[] = [];
-        for (const column of definition.noteCols) {
-          const noteName = clean(readCell(trimesterSheet, 8, column)) || `Nota ${excelColumn(column)}`;
+        const name = clean(readCell(trimesterSheet, COMPETENCE_NAME_ROW, definition.nameCol)) || `Competencia ${definition.number}`;
+        const rawNotes = definition.noteCols.map((column, index) => {
           const raw = readCell(trimesterSheet, row, column);
+          const rawHeader = clean(readCell(trimesterSheet, CAPACITY_NAME_ROW, column));
+          const hasValue = raw !== null && clean(raw) !== "";
+          const headerIsMeaningful = Boolean(rawHeader) && !isCapacityPlaceholder(rawHeader);
           let value: number | null = null;
-          if (raw !== null && clean(raw) !== "") {
+          if (hasValue) {
             const parsed = Number(clean(raw).replace(",", "."));
             if (!Number.isFinite(parsed)) {
               errors.push(rowError(row + 1, rawName, excelColumn(column), "La celda no contiene una nota numérica válida."));
@@ -385,14 +395,26 @@ Deno.serve(async (req: Request) => {
               errors.push(rowError(row + 1, rawName, excelColumn(column), "La nota debe estar entre 0 y 20."));
             } else {
               value = parsed;
-              validValues.push(value);
             }
           }
-          notes.push({ columnaExcel: excelColumn(column), nombreNota: noteName, valor: value });
-        }
+          return {
+            numeroCapacidad: index + 1,
+            columnaExcel: excelColumn(column),
+            nombreNota: capacityName(rawHeader, index + 1),
+            valor: value,
+            activa: hasValue || headerIsMeaningful,
+          };
+        });
+        // The source format may leave a competency entirely blank. Keep its
+        // three base slots so that the imported record remains editable in
+        // /docente/notas and is compatible with the shared grade RPC.
+        const activeCount = Math.max(3, rawNotes.reduce(
+          (count, note) => note.activa ? note.numeroCapacidad : count,
+          0,
+        ));
+        const notes = rawNotes.slice(0, activeCount);
         const competenceAverage = gradeValue(readCell(trimesterSheet, row, definition.averageCol))
-          ?? average(validValues);
-        if (notes.length === 0 && competenceAverage === null) continue;
+          ?? average(notes.map((note) => note.valor).filter((value): value is number => value !== null));
         competencies.push({
           numero: definition.number,
           nombre: name,
@@ -446,118 +468,67 @@ Deno.serve(async (req: Request) => {
 
     const importable = students.filter((item) => item.idEstudiante && item.promedioFinalTrimestre !== null && item.errores.length === 0);
     const allErrors = [...globalErrors, ...students.flatMap((item) => item.errores)];
-    const state = importable.length === 0 ? "FALLIDA" : allErrors.length ? "OBSERVADA" : "PROCESADA";
-    const { data: batch, error: batchError } = await admin.from("importaciones_notas").insert({
-      asignacion_docente_id: assignmentId,
-      usuario_id: userData.user.id,
-      nombre_archivo: file.name.slice(0, 180),
-      hash_archivo: await sha256(bytes),
-      trimestre,
-      anio: metadata.anio,
-      nivel: metadata.nivel,
-      institucion: metadata.institucion,
-      lugar: metadata.lugar,
-      area_curricular: metadata.areaCurricular,
-      docente_excel: metadata.docente,
-      grado: metadata.grado,
-      seccion: metadata.seccion,
-      total_registros: students.length,
-      registros_validos: importable.length,
-      registros_observados: students.length - importable.length,
-      estado: state,
-      confirmada: true,
-      detalle: `Importación confirmada para ${course.materias.nombre} / ${period.nombre}`,
-    }).select("id").single();
-    if (batchError || !batch) throw batchError ?? new Error("No se pudo crear el historial de importación.");
-
-    if (allErrors.length) {
-      const { error } = await admin.from("errores_importacion_notas").insert(allErrors.map((item) => ({
-        importacion_id: batch.id,
-        fila_excel: item.filaExcel,
-        estudiante_texto: item.estudianteTexto?.slice(0, 180) ?? null,
-        campo: item.campo.slice(0, 80),
-        descripcion: item.descripcionError.slice(0, 500),
-        critico: item.critico,
-      })));
-      if (error) throw error;
-    }
-
-    const detailRows = importable.flatMap((student) => student.competencias.flatMap((competence) => competence.notas
-      .filter((note) => note.valor !== null)
-      .map((note) => ({
-        estudiante_id: student.idEstudiante,
-        asignacion_docente_id: assignmentId,
-        importacion_id: batch.id,
-        trimestre,
-        numero_competencia: competence.numero,
-        nombre_competencia: competence.nombre.slice(0, 255),
-        columna_excel: note.columnaExcel,
-        nombre_nota: note.nombreNota.slice(0, 100),
-        valor_nota: note.valor,
-        fila_excel: student.filaExcel,
-      }))));
-    const competenceRows = importable.flatMap((student) => student.competencias
-      .filter((competence) => competence.promedioCompetencia !== null)
-      .map((competence) => ({
-        estudiante_id: student.idEstudiante,
-        asignacion_docente_id: assignmentId,
-        importacion_id: batch.id,
-        trimestre,
-        numero_competencia: competence.numero,
-        nombre_competencia: competence.nombre.slice(0, 255),
-        promedio_competencia: competence.promedioCompetencia,
-        logro_literal: competence.logroLiteral,
-      })));
-    const finalRows = importable.map((student) => ({
-      estudiante_id: student.idEstudiante,
-      asignacion_docente_id: assignmentId,
-      trimestre,
-      tipo: "PROMEDIO_FINAL",
-      valor: student.promedioFinalTrimestre,
-      logro_literal: student.logroFinalTrimestre,
-      publicado: true,
-      observacion: `Promedio final importado desde ${trimestre.replaceAll("_", " ")}`,
-      importacion_id: batch.id,
-      registrado_por: userData.user.id,
-    }));
-
-    if (detailRows.length) {
-      const { error } = await admin.from("calificacion_detalle_trimestre").upsert(detailRows, {
-        onConflict: "estudiante_id,asignacion_docente_id,trimestre,numero_competencia,columna_excel",
-      });
-      if (error) throw error;
-    }
-    if (competenceRows.length) {
-      const { error } = await admin.from("calificacion_competencia_trimestre").upsert(competenceRows, {
-        onConflict: "estudiante_id,asignacion_docente_id,trimestre,numero_competencia",
-      });
-      if (error) throw error;
-    }
-    if (finalRows.length) {
-      const { error } = await admin.from("notas").upsert(finalRows, {
-        onConflict: "estudiante_id,asignacion_docente_id,trimestre,tipo",
-      });
-      if (error) throw error;
-    }
-    await admin.from("auditoria").insert({
-      usuario_id: userData.user.id,
-      accion: "IMPORTAR_NOTAS_TRIMESTRE",
-      entidad: "importaciones_notas",
-      entidad_id: batch.id,
-      usuario_responsable: profile.username,
-      detalle: { trimestre, asignacionId: assignmentId, archivo: file.name, registros: students.length, importados: importable.length },
+    const competencies = COMPETENCES.map((definition) => {
+      const sample = students.flatMap((student) => student.competencias)
+        .find((item) => item.numero === definition.number);
+      const capacities = sample?.notas ?? definition.noteCols.slice(0, 3).map((column, index) => ({
+        numeroCapacidad: index + 1,
+        columnaExcel: excelColumn(column),
+        nombreNota: capacityName(clean(readCell(trimesterSheet, CAPACITY_NAME_ROW, column)), index + 1),
+        valor: null,
+        activa: true,
+      }));
+      return {
+        numero_competencia: definition.number,
+        nombre_competencia: sample?.nombre ?? `Competencia ${definition.number}`,
+        nombres_capacidades: capacities.map((capacity) => capacity.nombreNota),
+      };
     });
-
+    const studentPayload = importable.map((student) => ({
+      estudiante_id: student.idEstudiante,
+      competencias: student.competencias.map((competence) => ({
+        numero_competencia: competence.numero,
+        notas: competence.notas.map((note) => note.valor),
+      })),
+    }));
+    const detailCount = studentPayload.reduce(
+      (total, student) => total + student.competencias.reduce(
+        (subtotal, competence) => subtotal + competence.notas.filter((note) => note !== null).length,
+        0,
+      ),
+      0,
+    );
+    const { data: persisted, error: persistError } = await userClient.rpc("confirmar_importacion_notas", {
+      p_asignacion_id: assignmentId,
+      p_trimestre: trimestre,
+      p_nombre_archivo: file.name.slice(0, 180),
+      p_hash_archivo: await sha256(bytes),
+      p_metadata: metadata,
+      p_total_registros: students.length,
+      p_registros_validos: importable.length,
+      p_detalle: `Importación confirmada para ${course.materias.nombre} / ${period.nombre}`,
+      p_competencias: competencies,
+      p_estudiantes: studentPayload,
+      p_errores: allErrors.map((item) => ({
+        fila_excel: item.filaExcel,
+        estudiante_texto: item.estudianteTexto,
+        campo: item.campo,
+        descripcion: item.descripcionError,
+        critico: item.critico,
+      })),
+    });
+    if (persistError) throw persistError;
+    const saved = persisted as { idImportacion: string; message: string; competenciasGuardadas: number; promediosFinalesGuardados: number };
     return response({
-      message: state === "PROCESADA" ? "Importación confirmada correctamente." : "Importación confirmada con observaciones.",
-      idImportacion: batch.id,
+      message: saved.message,
+      idImportacion: saved.idImportacion,
       trimestre,
       totalFilas: students.length,
       totalCorrectas: importable.length,
       totalConError: students.length - importable.length,
-      notasIndividualesGuardadas: detailRows.length,
-      competenciasGuardadas: competenceRows.length,
-      promediosFinalesGuardados: finalRows.length,
+      notasIndividualesGuardadas: detailCount,
+      competenciasGuardadas: saved.competenciasGuardadas,
+      promediosFinalesGuardados: saved.promediosFinalesGuardados,
       errores: allErrors,
     });
   } catch (error) {

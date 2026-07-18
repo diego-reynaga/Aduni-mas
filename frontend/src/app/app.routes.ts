@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, roleGuard } from './core/auth.guard';
+import { pendingChangesGuard } from './core/pending-changes.guard';
 import { AcademicShell } from './layout/academic-shell/academic-shell';
 import { AdminAcademic } from './views/admin-academic/admin-academic';
 import { AdminDashboard } from './views/admin-dashboard/admin-dashboard';
@@ -117,6 +118,7 @@ export const routes: Routes = [
         path: 'docente/notas',
         component: TeacherGrades,
         canActivate: [roleGuard(['DOCENTE'])],
+        canDeactivate: [pendingChangesGuard],
       },
       {
         path: 'docente/importar-notas',

@@ -1,7 +1,7 @@
 import { DecimalPipe, DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   CompetencyCapacity,
   CompetencyConfig,
@@ -31,10 +31,12 @@ type CapacityEditor = {
 export class TeacherGrades {
   private readonly portal = inject(PortalService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
   private previouslyFocusedElement: HTMLElement | null = null;
 
   readonly assignmentId = signal<EntityId | null>(null);
+  readonly courses = signal<CourseAssignment[]>([]);
   readonly selectedCourse = signal<CourseAssignment | null>(null);
   readonly trimestre = signal<TrimestreImportacion>('I_TRIMESTRE');
   readonly competencias = signal<CompetencyConfig[]>([]);
@@ -49,6 +51,9 @@ export class TeacherGrades {
   readonly editingCapacity = signal<CapacityEditor | null>(null);
   readonly capacityNameDraft = signal('');
   readonly capacityNameError = signal('');
+  readonly editingCompetency = signal<CompetencyNumber | null>(null);
+  readonly competencyNameDraft = signal('');
+  readonly competencyNameError = signal('');
 
   readonly activeCompetency = computed(() => this.competencias().find(
     (item) => item.numero === this.selectedCompetencyNumber(),
@@ -69,6 +74,20 @@ export class TeacherGrades {
     this.selectedCompetencyNumber.set(Number(value) as CompetencyNumber);
     this.error.set('');
     this.message.set('');
+  }
+
+  switchCourse(value: EntityId | null): void {
+    if (!value || value === this.assignmentId()) return;
+    if (this.dirty() && !window.confirm('Tiene cambios sin guardar. ¿Desea cambiar de curso y descartarlos?')) return;
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { assignmentId: value },
+      queryParamsHandling: '',
+    });
+  }
+
+  hasPendingChanges(): boolean {
+    return this.dirty();
   }
 
   capacityGrade(row: GradeEntry, capacityIndex: number): number | null {
@@ -133,6 +152,68 @@ export class TeacherGrades {
     })));
     this.markDirty();
     this.openCapacityEditor(competency.numero, capacity.numero);
+  }
+
+  removeCapacity(competencia: CompetencyNumber, capacidad: number): void {
+    const config = this.competencias().find((item) => item.numero === competencia);
+    if (!config || config.capacidades.length <= 3) return;
+    const selected = config.capacidades.find((item) => item.numero === capacidad);
+    if (!selected || !window.confirm(`¿Eliminar la capacidad “${selected.nombre}”? Sus notas se quitarán al guardar.`)) return;
+
+    this.competencias.update((items) => items.map((item) => item.numero === competencia
+      ? {
+        ...item,
+        capacidades: item.capacidades
+          .filter((capacity) => capacity.numero !== capacidad)
+          .map((capacity, index) => ({ ...capacity, numero: index + 1 })),
+      }
+      : item));
+    this.rows.update((rows) => rows.map((row) => ({
+      ...row,
+      competencias: row.competencias.map((item) => item.numero === competencia
+        ? { ...item, notas: item.notas.filter((_, index) => index !== capacidad - 1) }
+        : item),
+    })));
+    this.markDirty();
+  }
+
+  openCompetencyEditor(competencia: CompetencyNumber, event?: Event): void {
+    const config = this.competencias().find((item) => item.numero === competencia);
+    if (!config) return;
+    this.previouslyFocusedElement = event?.currentTarget as HTMLElement | null;
+    this.competencyNameDraft.set(config.nombre);
+    this.competencyNameError.set('');
+    this.editingCompetency.set(competencia);
+    queueMicrotask(() => this.document.getElementById('competency-name-input')?.focus());
+  }
+
+  saveCompetencyName(): void {
+    const competencyNumber = this.editingCompetency();
+    if (!competencyNumber) return;
+    const name = this.competencyNameDraft().trim().replace(/\s+/g, ' ');
+    if (!name) {
+      this.competencyNameError.set('Ingrese un nombre para la competencia.');
+      return;
+    }
+    if (name.length > 255) {
+      this.competencyNameError.set('Use como máximo 255 caracteres.');
+      return;
+    }
+    this.competencias.update((items) => items.map((item) => item.numero === competencyNumber
+      ? { ...item, nombre: name }
+      : item));
+    this.markDirty();
+    this.closeCompetencyEditor();
+  }
+
+  closeCompetencyEditor(): void {
+    if (!this.editingCompetency()) return;
+    this.editingCompetency.set(null);
+    this.competencyNameDraft.set('');
+    this.competencyNameError.set('');
+    const target = this.previouslyFocusedElement;
+    this.previouslyFocusedElement = null;
+    queueMicrotask(() => target?.focus());
   }
 
   openCapacityEditor(competencia: CompetencyNumber, capacidad: number, event?: Event): void {
@@ -251,6 +332,7 @@ export class TeacherGrades {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeCapacityEditor();
+    this.closeCompetencyEditor();
   }
 
   @HostListener('window:beforeunload', ['$event'])
@@ -268,6 +350,7 @@ export class TeacherGrades {
     this.portal.teacherGrades(assignmentId).subscribe({
       next: (payload) => {
         this.loading.set(false);
+        this.courses.set(payload.courses);
         this.assignmentId.set(payload.assignmentId);
         this.selectedCourse.set(payload.selectedCourse);
         this.trimestre.set(payload.trimestre);
@@ -285,6 +368,7 @@ export class TeacherGrades {
         this.loading.set(false);
         this.error.set(this.errorMessage(error, 'No se pudo cargar el acta de notas.'));
         this.assignmentId.set(null);
+        this.courses.set([]);
         this.selectedCourse.set(null);
         this.competencias.set([]);
         this.rows.set([]);

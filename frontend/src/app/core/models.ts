@@ -150,6 +150,7 @@ export interface TeacherDashboardPayload {
 }
 
 export interface TeacherGradesPayload {
+  courses: CourseAssignment[];
   assignmentId: EntityId | null;
   selectedCourse: CourseAssignment | null;
   trimestre: TrimestreImportacion;

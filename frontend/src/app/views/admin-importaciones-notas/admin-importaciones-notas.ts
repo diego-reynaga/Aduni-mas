@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { ErrorImportacionNotas, ImportacionNotasDetalle, ImportacionNotasHistorial } from '../../core/models';
 import { NotasService } from '../../core/notas.service';
 import { fadeIn } from '../../core/animations';
+import { downloadImportErrorsReport } from '../../core/import-errors-report';
 
 @Component({
   selector: 'app-admin-importaciones-notas',
@@ -49,23 +50,11 @@ export class AdminImportacionesNotas {
     if (errors.length === 0 || !this.selected()) {
       return;
     }
-    const header = ['Fila', 'Estudiante', 'Campo', 'Descripcion'];
-    const body = errors.map((item) => [
-      item.filaExcel ?? '',
-      item.estudianteTexto ?? '',
-      item.campo,
-      item.descripcionError,
-    ]);
-    const csv = [header, ...body]
-      .map((columns) => columns.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `errores-importacion-${this.selected()?.idImportacion}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadImportErrorsReport(
+      errors,
+      `reporte-observaciones-importacion-${this.selected()?.idImportacion}.csv`,
+      'REPORTE DE OBSERVACIONES · ADMINISTRACIÓN',
+    );
   }
 
   private loadHistory(): void {

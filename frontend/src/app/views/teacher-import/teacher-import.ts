@@ -13,6 +13,7 @@ import {
 import { NotasService } from '../../core/notas.service';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn } from '../../core/animations';
+import { downloadImportErrorsReport } from '../../core/import-errors-report';
 
 @Component({
   selector: 'app-teacher-import',
@@ -238,24 +239,7 @@ export class TeacherImport {
   }
 
   private downloadErrorCsv(errors: ErrorImportacionNotas[], filename: string): void {
-    const header = ['Fila', 'Estudiante', 'Campo', 'Descripcion', 'Critico'];
-    const body = errors.map((error) => [
-      error.filaExcel ?? '',
-      error.estudianteTexto ?? '',
-      error.campo,
-      error.descripcionError,
-      error.critico ? 'SI' : 'NO',
-    ]);
-    const csv = [header, ...body]
-      .map((columns) => columns.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadImportErrorsReport(errors, filename, 'REPORTE DE OBSERVACIONES · IMPORTACIÓN DE NOTAS');
   }
 
   private errorMessage(error: unknown, fallback: string): string {
