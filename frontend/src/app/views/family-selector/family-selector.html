@@ -1,0 +1,54 @@
+<section class="page-stack" [@fadeIn] style="max-width: 1000px; margin: 0 auto; align-items: center; padding-top: 10vh;">
+  <div style="text-align: center; margin-bottom: 3rem;">
+    <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--foreground); margin-bottom: 0.75rem; letter-spacing: -0.5px;">
+      ¿A quién deseas consultar?
+    </h1>
+    <p style="color: var(--muted); font-size: 1.1rem;">
+      Selecciona el perfil de tu hijo para ingresar a su dashboard académico.
+    </p>
+  </div>
+
+  @if (loading()) {
+    <div style="padding: 40px; text-align: center; color: var(--muted);">
+      <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--brand-primary); animation: spin 1s ease-in-out infinite;"></div>
+      <p style="margin-top: 16px; font-weight: 500;">Cargando perfiles...</p>
+      <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+  } @else if (error()) {
+    <div class="form-error-note" style="text-align: center;">{{ error() }}</div>
+  } @else if (students().length === 0) {
+    <div class="empty-state-enhanced" style="text-align: center; padding: 4rem; max-width: 500px;">
+      <svg viewBox="0 0 24 24" width="64" height="64" stroke="var(--muted)" stroke-width="1" fill="none" style="margin-bottom: 1rem;"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+      <p style="font-weight: 700; font-size: 1.25rem; color: var(--ink); margin-bottom: 0.5rem;">No hay estudiantes vinculados a tu cuenta.</p>
+      <p style="color: var(--muted); font-size: 0.95rem;">Por favor, comunícate con administración para regularizar la vinculación familiar y poder visualizar las calificaciones.</p>
+    </div>
+  } @else {
+    <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+      @for (student of students(); track student.codigo) {
+        <button class="surface" 
+                style="display: flex; flex-direction: column; align-items: center; padding: 2.5rem 2rem; border-radius: 24px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 240px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);"
+                onmouseover="this.style.borderColor='var(--brand-primary)'; this.style.transform='translateY(-8px)'; this.style.boxShadow='0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';"
+                onmouseout="this.style.borderColor='var(--line)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.02)';"
+                (click)="selectStudent(student.codigo)">
+          
+          <div style="width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 800; margin-bottom: 1.5rem; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);">
+            <svg viewBox="0 0 24 24" width="56" height="56" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          
+          <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--ink); margin-bottom: 0.5rem; text-align: center; line-height: 1.2;">
+            {{ student.estudiante.split(',')[1]?.trim() || student.estudiante }}
+          </h3>
+          <p style="color: var(--slate-500); font-size: 0.9rem; font-weight: 500; margin-bottom: 1rem; text-align: center;">
+            {{ student.grado }}
+          </p>
+          <span class="status-pill is-info" style="font-size: 0.75rem; padding: 4px 12px;">
+            {{ student.parentesco }}
+          </span>
+        </button>
+      }
+    </div>
+  }
+</section>

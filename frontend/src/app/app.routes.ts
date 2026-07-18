@@ -8,7 +8,7 @@ import { AdminInstitution } from './views/admin-institution/admin-institution';
 import { AdminSupervision } from './views/admin-supervision/admin-supervision';
 import { AdminUsers } from './views/admin-users/admin-users';
 import { AdminPersonal } from './views/admin-personal/admin-personal';
-import { FamilyPortal } from './views/family-portal/family-portal';
+
 import { Login } from './views/login/login';
 import { StudentPortal } from './views/student-portal/student-portal';
 import { TeacherDashboard } from './views/teacher-dashboard/teacher-dashboard';
@@ -159,7 +159,32 @@ export const routes: Routes = [
       },
       {
         path: 'familia',
-        component: FamilyPortal,
+        redirectTo: 'familia/selector',
+        pathMatch: 'full'
+      },
+      {
+        path: 'familia/selector',
+        loadComponent: () => import('./views/family-selector/family-selector').then(m => m.FamilySelector),
+        canActivate: [roleGuard(['PADRE_FAMILIA'])],
+      },
+      {
+        path: 'familia/resumen',
+        loadComponent: () => import('./views/family-summary/family-summary').then(m => m.FamilySummary),
+        canActivate: [roleGuard(['PADRE_FAMILIA'])],
+      },
+      {
+        path: 'familia/alertas',
+        loadComponent: () => import('./views/family-alerts/family-alerts').then(m => m.FamilyAlerts),
+        canActivate: [roleGuard(['PADRE_FAMILIA'])],
+      },
+      {
+        path: 'familia/kardex',
+        loadComponent: () => import('./views/family-kardex/family-kardex').then(m => m.FamilyKardex),
+        canActivate: [roleGuard(['PADRE_FAMILIA'])],
+      },
+      {
+        path: 'familia/horario',
+        loadComponent: () => import('./views/family-schedule/family-schedule').then(m => m.FamilySchedule),
         canActivate: [roleGuard(['PADRE_FAMILIA'])],
       },
     ],

@@ -1,0 +1,113 @@
+<section class="page-stack" [@fadeIn]>
+  <div class="page-heading">
+    <div>
+      <p class="section-kicker">Portal familiar</p>
+      <h2>Resumen del Estudiante</h2>
+      @if (selectedStudent()) {
+        <p style="font-weight: 500; color: var(--brand-primary); margin-top: 4px;">
+          Viendo información de: {{ selectedStudent()?.estudiante }}
+        </p>
+      }
+    </div>
+    <span class="status-pill is-good">Permiso de lectura</span>
+  </div>
+
+  @if (error()) {
+    <div class="form-error-note" style="margin-bottom: 20px;">{{ error() }}</div>
+  }
+
+  <!-- KPI Grid Superior -->
+  <div class="kpi-grid" [@staggerRows]="3">
+    <!-- Promedio General -->
+    <div class="kpi-card" style="transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease; cursor: pointer;"
+         onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.06)';"
+         onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)';">
+      <div class="kpi-icon is-good" style="animation: pulse 2s infinite;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+          <polyline points="17 6 23 6 23 12"></polyline>
+        </svg>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Promedio General</span>
+        <span class="kpi-value">
+          <strong style="color: var(--brand-primary); font-size: 2rem;">
+            {{ selectedStudent()?.promedioGeneral || 0 | number: '1.2-2' }}
+          </strong>
+        </span>
+        <span class="kpi-subtext">Rendimiento acumulado anual</span>
+      </div>
+    </div>
+
+    <!-- Nivel y Grado -->
+    <div class="kpi-card" style="transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease; cursor: pointer;"
+         onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.06)';"
+         onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)';">
+      <div class="kpi-icon is-admin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+        </svg>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Grado Académico</span>
+        <span class="kpi-value"><strong>{{ selectedStudent()?.grado || 'Sin grado' }}</strong></span>
+        <span class="kpi-subtext">Matrícula vigente activa</span>
+      </div>
+    </div>
+
+    <!-- Parentesco -->
+    <div class="kpi-card" style="transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease; cursor: pointer;"
+         onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 12px 24px rgba(0,0,0,0.06)';"
+         onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)';">
+      <div class="kpi-icon is-student">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="kpi-data">
+        <span class="kpi-label">Parentesco</span>
+        <span class="kpi-value"><strong>{{ selectedStudent()?.parentesco || 'N/A' }}</strong></span>
+        <span class="kpi-subtext">Vínculo familiar autorizado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <section class="surface" style="margin-top: 12px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
+           onmouseover="this.style.transform='scale(1.005)'; this.style.boxShadow='0 20px 25px -5px rgba(0, 0, 0, 0.1)';"
+           onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)';">
+    <div class="surface-header" style="border-bottom: 1px solid var(--line);">
+      <div>
+        <h3>Estado de la Cuenta</h3>
+        <p>Vista general del perfil seleccionado.</p>
+      </div>
+      <span class="status-pill-premium is-active" style="padding: 6px 14px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);">
+        <div class="pulse-dot"></div> Estudiante Activo
+      </span>
+    </div>
+
+    <div class="surface-body" style="padding: 40px 24px; text-align: center; color: var(--slate-500); background: linear-gradient(180deg, var(--surface) 0%, var(--slate-50) 100%);">
+      <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: white; border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 24px; color: var(--brand-primary);">
+        <svg viewBox="0 0 24 24" width="40" height="40" stroke="currentColor" stroke-width="1.5" fill="none">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <p style="font-size: 1.35rem; font-weight: 700; color: var(--ink); margin-bottom: 8px;">Todo en orden</p>
+      <p style="max-width: 480px; margin: 0 auto; font-size: 1.05rem; line-height: 1.6;">
+        El perfil se encuentra activo. Utiliza el menú lateral para acceder a las notas detalladas, horario de clases y alertas académicas de este estudiante de manera rápida y segura.
+      </p>
+    </div>
+  </section>
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</section>

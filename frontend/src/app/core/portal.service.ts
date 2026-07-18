@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { defer, from, map, Observable, of, throwError } from 'rxjs';
 import * as Academico from './academico.models';
 import { AuthService } from './auth.service';
@@ -97,6 +97,7 @@ function defaultCompetencies(): CompetencyConfig[] {
 @Injectable({ providedIn: 'root' })
 export class PortalService {
   private readonly auth = inject(AuthService);
+  public readonly familySelectedCode = signal<string>('');
 
   adminDashboard(): Observable<AdminDashboardPayload> {
     return this.observe(async () => {
@@ -706,6 +707,77 @@ export class PortalService {
     });
   }
 
+  familyCompetencyGrades(codigo: string): Observable<StudentCourseCompetencyReport[]> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id').eq('codigo', codigo).single() as DbResult<any>);
+      const details = dataOf(await supabase
+        .from('calificacion_detalle_trimestre')
+        .select('*,asignaciones_docente!inner(cursos!inner(materias(nombre)),periodos(nombre))')
+        .eq('estudiante_id', student.id) as DbResult<any[]>);
+      const averages = dataOf(await supabase
+        .from('calificacion_competencia_trimestre')
+        .select('*')
+        .eq('estudiante_id', student.id) as DbResult<any[]>);
+
+      const groups = new Map<string, any[]>();
+      for (const d of details) {
+        const key = `${d.asignacion_docente_id}|${d.trimestre}`;
+        groups.set(key, [...(groups.get(key) ?? []), d]);
+      }
+
+      const result: StudentCourseCompetencyReport[] = [];
+      for (const [key, rows] of groups) {
+        const [assignmentId, trimestre] = key.split('|');
+        const first = rows[0];
+        const assignment = embedded<any>(first.asignaciones_docente);
+        const course = embedded<any>(assignment?.cursos);
+        const subject = embedded<any>(course?.materias);
+        const period = embedded<any>(assignment?.periodos);
+
+        const compMap = new Map<number, any[]>();
+        for (const r of rows) {
+          const cn = Number(r.numero_competencia);
+          if (!compMap.has(cn)) compMap.set(cn, []);
+          compMap.get(cn)!.push(r);
+        }
+
+        const competencias: StudentCompetencyDetail[] = [];
+        for (const [num, items] of compMap) {
+          const capacidades = items.map((i: any) => ({
+            numero: Number(i.numero_capacidad),
+            nombre: i.nombre_nota,
+            nota: i.valor_nota !== null ? Number(i.valor_nota) : null,
+          })).sort((a: any, b: any) => a.numero - b.numero);
+
+          const avgRow = averages.find(a => 
+            a.asignacion_docente_id === assignmentId && 
+            a.trimestre === trimestre && 
+            Number(a.numero_competencia) === num
+          );
+
+          competencias.push({
+            numeroCompetencia: num,
+            nombreCompetencia: items[0].nombre_competencia,
+            capacidades,
+            promedioCompetencia: avgRow && avgRow.promedio_competencia !== null ? Number(avgRow.promedio_competencia) : null,
+          });
+        }
+        
+        const validPromedios = competencias.map(c => c.promedioCompetencia).filter(p => p !== null) as number[];
+        const promedioFinal = validPromedios.length ? validPromedios.reduce((a,b)=>a+b,0)/validPromedios.length : null;
+
+        result.push({
+          curso: subject?.nombre ?? 'Curso',
+          periodo: period?.nombre ?? 'Periodo',
+          trimestre,
+          competencias,
+          promedioFinal,
+        });
+      }
+      return result;
+    });
+  }
+
   getUsers(): Observable<UsuarioResponse[]> {
     return this.observe(async () => {
       const rows = dataOf(await supabase.from('profiles').select('*,personas(nombres,apellidos,numero_documento,correo)').order('username') as DbResult<any[]>);
@@ -1087,6 +1159,73 @@ export class PortalService {
   getMiHorario(): Observable<HorarioEntry[]> {
     return this.observe(async () => {
       const student = dataOf(await supabase.from('estudiantes').select('id').single() as DbResult<any>);
+      const matricula = dataOf(await supabase
+        .from('matriculas')
+        .select('grado_id')
+        .eq('estudiante_id', student.id)
+        .eq('estado', 'ACTIVA')
+        .limit(1)
+        .single() as DbResult<any>);
+      const rows = dataOf(await supabase
+        .from('horarios')
+        .select('*,cursos(materias(nombre),asignaciones_docente(docentes(personas(nombres,apellidos))))')
+        .eq('grado_id', matricula.grado_id)
+        .order('dia_semana')
+        .order('hora_inicio') as DbResult<any[]>);
+      const DIAS = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+      return rows.map((row: any) => {
+        const course = embedded<any>(row.cursos);
+        const subject = embedded<any>(course?.materias);
+
+        let docente = '';
+        if (course?.asignaciones_docente && course.asignaciones_docente.length > 0) {
+          const assignment = course.asignaciones_docente[0];
+          const teacher = embedded<any>(assignment?.docentes);
+          const person = embedded<any>(teacher?.personas);
+          if (person) {
+            docente = `${person.nombres} ${person.apellidos}`;
+          }
+        }
+
+        return {
+          id: row.id,
+          gradoId: row.grado_id,
+          cursoId: row.curso_id,
+          diaSemana: row.dia_semana,
+          diaNombre: DIAS[row.dia_semana] ?? '',
+          horaInicio: row.hora_inicio.slice(0, 5),
+          horaFin: row.hora_fin.slice(0, 5),
+          curso: subject?.nombre ?? '',
+          materia: subject?.nombre ?? '',
+          aula: row.aula ?? '',
+          docente
+        };
+      });
+    });
+  }
+
+  getRecesoEstudiante(codigo: string): Observable<GradoRecesoResponse> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id').eq('codigo', codigo).single() as DbResult<any>);
+      const matricula = dataOf(await supabase
+        .from('matriculas')
+        .select('grado_id')
+        .eq('estudiante_id', student.id)
+        .eq('estado', 'ACTIVA')
+        .limit(1)
+        .single() as DbResult<any>);
+      const row = dataOf(await supabase.from('grados').select('receso_inicio, receso_fin').eq('id', matricula.grado_id).single() as DbResult<any>);
+      return {
+        gradoId: matricula.grado_id,
+        recesoInicio: row.receso_inicio ? row.receso_inicio.slice(0, 5) : null,
+        recesoFin: row.receso_fin ? row.receso_fin.slice(0, 5) : null
+      };
+    });
+  }
+
+  getHorarioEstudiante(codigo: string): Observable<HorarioEntry[]> {
+    return this.observe(async () => {
+      const student = dataOf(await supabase.from('estudiantes').select('id').eq('codigo', codigo).single() as DbResult<any>);
       const matricula = dataOf(await supabase
         .from('matriculas')
         .select('grado_id')

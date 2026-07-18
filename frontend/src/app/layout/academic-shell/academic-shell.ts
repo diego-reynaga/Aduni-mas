@@ -9,6 +9,7 @@ interface NavItem {
   label: string;
   route: string;
   eyebrow: string;
+  icon?: string;
 }
 
 interface NavGroup {
@@ -58,7 +59,11 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Mis Matrículas', route: '/estudiante/matriculas', eyebrow: 'Historial' },
   ],
   PADRE_FAMILIA: [
-    { label: 'Seguimiento familiar', route: '/familia', eyebrow: 'Lectura' },
+    { label: 'Cambiar Estudiante', route: '/familia/selector', eyebrow: 'Familia', icon: 'users' },
+    { label: 'Resumen del Estudiante', route: '/familia/resumen', eyebrow: 'Seguimiento' },
+    { label: 'Alertas Académicas', route: '/familia/alertas', eyebrow: 'Seguimiento' },
+    { label: 'Kardex de Notas', route: '/familia/kardex', eyebrow: 'Académico' },
+    { label: 'Horario de Clases', route: '/familia/horario', eyebrow: 'Académico' },
   ],
 };
 
