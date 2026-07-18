@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HorarioEntry, EntityId } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { ConfirmationService } from '../../core/confirmation.service';
 import { fadeIn, slideInRight, staggerList } from '../../core/animations';
 
 interface GradoInfo {
@@ -29,6 +30,7 @@ import { CommonModule } from '@angular/common';
 })
 export class AdminSchedules implements OnInit {
   private readonly portal = inject(PortalService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly fb = inject(FormBuilder);
 
   readonly grados = signal<GradoInfo[]>([]);
@@ -669,11 +671,10 @@ export class AdminSchedules implements OnInit {
     this.cerrarPanel();
   }
 
-  eliminar(id: EntityId) {
-    if (confirm('¿Remover este bloque del borrador?')) {
-      this.horarios.update(h => h.filter(x => x.id !== id));
-      this.cerrarPanel();
-    }
+  async eliminar(id: EntityId): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Quitar bloque', message: 'El bloque se retirará del borrador de horario.', confirmLabel: 'Quitar', tone: 'danger' })) return;
+    this.horarios.update(h => h.filter(x => x.id !== id));
+    this.cerrarPanel();
   }
 
   async guardarTodo() {

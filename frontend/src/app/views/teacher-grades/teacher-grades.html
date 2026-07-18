@@ -15,7 +15,7 @@
               id="course-select"
               [ngModel]="assignmentId()"
               (ngModelChange)="switchCourse($event)"
-              [disabled]="loading()"
+              [disabled]="loading() || saving()"
             >
               @for (course of courses(); track course.assignmentId) {
                 <option [ngValue]="course.assignmentId">
@@ -43,13 +43,6 @@
       </div>
     </div>
   }
-
-  <div class="grade-notice grade-notice--info">
-    <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19">
-      <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-11v6m0-10h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-    <p>Las capacidades vacías no se cuentan en el promedio. Si toda una competencia está vacía, su logro también queda vacío.</p>
-  </div>
 
   <div class="grade-live-region" aria-live="polite" aria-atomic="true">
     @if (error()) {
@@ -80,7 +73,7 @@
       <button
         class="btn-primary grade-save-button"
         type="button"
-        [disabled]="saving() || loading() || !assignmentId()"
+        [disabled]="saving() || loading() || !assignmentId() || !dirty()"
         (click)="save()"
       >
         @if (saving()) {
@@ -99,18 +92,31 @@
       <div class="competency-workspace">
         <div class="competency-tabs" role="tablist" aria-label="Competencias del curso">
           @for (item of competencias(); track item.numero) {
-            <button
-              class="competency-tab"
-              type="button"
-              role="tab"
-              [attr.aria-selected]="item.numero === selectedCompetencyNumber()"
-              [class.is-active]="item.numero === selectedCompetencyNumber()"
-              [disabled]="loading()"
-              (click)="selectCompetency(item.numero)"
-            >
-              <span class="competency-tab__number">{{ item.numero }}</span>
-              <span class="competency-tab__name">{{ item.nombre }}</span>
-            </button>
+            <div class="competency-tab-group" [class.is-active]="item.numero === selectedCompetencyNumber()">
+              <button
+                class="competency-tab"
+                type="button"
+                role="tab"
+                [attr.aria-selected]="item.numero === selectedCompetencyNumber()"
+                [disabled]="loading() || saving()"
+                (click)="selectCompetency(item.numero)"
+              >
+                <span class="competency-tab__number">{{ item.numero }}</span>
+                <span class="competency-tab__name">{{ item.nombre }}</span>
+              </button>
+              <button
+                class="competency-edit-button"
+                type="button"
+                [disabled]="loading() || saving()"
+                [attr.aria-label]="'Editar nombre de competencia ' + item.numero"
+                [title]="'Editar ' + item.nombre"
+                (click)="openCompetencyEditor(item.numero, $event)"
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15">
+                  <path d="m4 16-.8 4 4-.8L18 8.4 15.6 6 4 16Zm9.9-8.2 2.3 2.3M14.8 6.8l1.8-1.8a1.7 1.7 0 0 1 2.4 0 1.7 1.7 0 0 1 0 2.4l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
           }
         </div>
         <div class="active-competency-bar">
@@ -122,17 +128,9 @@
             <span>{{ competency.capacidades.length }} capacidades</span>
             <span>{{ evaluatedStudents() }}/{{ rows().length }} evaluados</span>
             <button
-              class="btn-subtle btn-compact"
-              type="button"
-              [disabled]="loading()"
-              (click)="openCompetencyEditor(competency.numero, $event)"
-            >
-              Editar nombre
-            </button>
-            <button
               class="btn-primary btn-compact"
               type="button"
-              [disabled]="competency.capacidades.length >= 6 || loading()"
+              [disabled]="competency.capacidades.length >= 6 || loading() || saving()"
               [attr.aria-describedby]="competency.capacidades.length >= 6 ? 'capacity-limit-help' : null"
               (click)="addCapacity()"
             >
@@ -167,6 +165,7 @@
                       type="button"
                       [attr.aria-label]="'Editar nombre de ' + capacity.nombre"
                       [title]="'Editar ' + capacity.nombre"
+                      [disabled]="saving()"
                       (click)="openCapacityEditor(competency.numero, capacity.numero, $event)"
                     >
                       <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15">
@@ -176,7 +175,7 @@
                     <button
                       class="capacity-edit-button capacity-delete-button"
                       type="button"
-                      [disabled]="competency.capacidades.length <= 3"
+                      [disabled]="competency.capacidades.length <= 3 || saving()"
                       [attr.aria-label]="'Eliminar ' + capacity.nombre"
                       [title]="competency.capacidades.length <= 3 ? 'Cada competencia debe conservar al menos 3 capacidades' : 'Eliminar ' + capacity.nombre"
                       (click)="removeCapacity(competency.numero, capacity.numero)"
@@ -216,6 +215,7 @@
                       [attr.aria-invalid]="isGradeInvalid(capacityGrade(row, capacityIndex)) ? 'true' : null"
                       [attr.aria-label]="capacity.nombre + ' de ' + row.estudiante"
                       [ngModel]="capacityGrade(row, capacityIndex)"
+                      [disabled]="saving()"
                       (ngModelChange)="updateGrade(row, capacityIndex, $event)"
                     >
                   </td>
@@ -312,7 +312,9 @@
       role="dialog"
       aria-modal="true"
       aria-labelledby="competency-dialog-title"
+      aria-describedby="competency-dialog-description"
       (mousedown)="$event.stopPropagation()"
+      (keydown)="handleDialogKeydown($event)"
     >
       <button class="capacity-dialog__close" type="button" aria-label="Cerrar" (click)="closeCompetencyEditor()">
         <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
@@ -321,6 +323,7 @@
       </button>
       <p class="section-kicker">Competencia {{ competencyNumber }}</p>
       <h2 id="competency-dialog-title">Editar nombre de competencia</h2>
+      <p id="competency-dialog-description">Este nombre se mostrará en el registro y en el resumen de notas.</p>
       <label for="competency-name-input">Nombre de la competencia</label>
       <input
         id="competency-name-input"

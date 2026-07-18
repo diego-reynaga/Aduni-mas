@@ -1,0 +1,37 @@
+@if (confirmation.pending(); as dialog) {
+  <div class="confirmation-backdrop" (mousedown)="confirmation.cancel()">
+    <section
+      id="confirmation-dialog"
+      class="confirmation-dialog"
+      [class.confirmation-dialog--danger]="dialog.tone === 'danger'"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirmation-dialog-title"
+      aria-describedby="confirmation-dialog-description"
+      (mousedown)="$event.stopPropagation()"
+      (keydown)="handleKeydown($event)"
+    >
+      <div class="confirmation-dialog__heading">
+        <div class="confirmation-dialog__icon" aria-hidden="true">
+          @if (dialog.tone === 'danger') {
+            <svg viewBox="0 0 24 24" width="25" height="25">
+              <path d="M12 8v5m0 4h.01M10.3 3.7 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.7a2 2 0 0 0-3.4 0Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" width="25" height="25">
+              <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-11v6m0-10h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          }
+        </div>
+        <h2 id="confirmation-dialog-title">{{ dialog.title }}</h2>
+      </div>
+      <p id="confirmation-dialog-description">{{ dialog.message }}</p>
+      <div class="confirmation-dialog__actions">
+        <button #cancelButton class="btn-secondary" type="button" (click)="confirmation.cancel()">Cancelar</button>
+        <button class="btn-primary" type="button" [class.confirmation-dialog__confirm--danger]="dialog.tone === 'danger'" (click)="confirmation.accept()">
+          {{ dialog.confirmLabel }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

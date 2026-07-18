@@ -14,6 +14,7 @@ import {
 import { fadeIn } from '../../core/animations';
 import { excelAchievement, excelAverage, hasInvalidGrade } from '../../core/grade-calculation';
 import { PortalService } from '../../core/portal.service';
+import { ConfirmationService } from '../../core/confirmation.service';
 
 type CapacityEditor = {
   competencia: CompetencyNumber;
@@ -33,7 +34,9 @@ export class TeacherGrades {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
+  private readonly confirmation = inject(ConfirmationService);
   private previouslyFocusedElement: HTMLElement | null = null;
+  private loadRequestId = 0;
 
   readonly assignmentId = signal<EntityId | null>(null);
   readonly courses = signal<CourseAssignment[]>([]);
@@ -76,9 +79,14 @@ export class TeacherGrades {
     this.message.set('');
   }
 
-  switchCourse(value: EntityId | null): void {
+  async switchCourse(value: EntityId | null): Promise<void> {
     if (!value || value === this.assignmentId()) return;
-    if (this.dirty() && !window.confirm('Tiene cambios sin guardar. ¿Desea cambiar de curso y descartarlos?')) return;
+    if (this.dirty() && !await this.confirmation.confirm({
+      title: 'Cambios sin guardar',
+      message: 'Al cambiar de curso se descartarán las modificaciones realizadas en el acta actual.',
+      confirmLabel: 'Cambiar curso',
+      tone: 'danger',
+    })) return;
     void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { assignmentId: value },
@@ -154,11 +162,16 @@ export class TeacherGrades {
     this.openCapacityEditor(competency.numero, capacity.numero);
   }
 
-  removeCapacity(competencia: CompetencyNumber, capacidad: number): void {
+  async removeCapacity(competencia: CompetencyNumber, capacidad: number): Promise<void> {
     const config = this.competencias().find((item) => item.numero === competencia);
     if (!config || config.capacidades.length <= 3) return;
     const selected = config.capacidades.find((item) => item.numero === capacidad);
-    if (!selected || !window.confirm(`¿Eliminar la capacidad “${selected.nombre}”? Sus notas se quitarán al guardar.`)) return;
+    if (!selected || !await this.confirmation.confirm({
+      title: 'Eliminar capacidad',
+      message: `Se eliminará “${selected.nombre}” y sus notas se quitarán al guardar el acta.`,
+      confirmLabel: 'Eliminar capacidad',
+      tone: 'danger',
+    })) return;
 
     this.competencias.update((items) => items.map((item) => item.numero === competencia
       ? {
@@ -342,6 +355,7 @@ export class TeacherGrades {
   }
 
   private loadGrades(assignmentId?: EntityId): void {
+    const requestId = ++this.loadRequestId;
     this.loading.set(true);
     this.error.set('');
     this.message.set('');
@@ -349,6 +363,7 @@ export class TeacherGrades {
 
     this.portal.teacherGrades(assignmentId).subscribe({
       next: (payload) => {
+        if (requestId !== this.loadRequestId) return;
         this.loading.set(false);
         this.courses.set(payload.courses);
         this.assignmentId.set(payload.assignmentId);
@@ -365,6 +380,7 @@ export class TeacherGrades {
         this.selectedCompetencyNumber.set(payload.competencias[0]?.numero ?? 1);
       },
       error: (error) => {
+        if (requestId !== this.loadRequestId) return;
         this.loading.set(false);
         this.error.set(this.errorMessage(error, 'No se pudo cargar el acta de notas.'));
         this.assignmentId.set(null);

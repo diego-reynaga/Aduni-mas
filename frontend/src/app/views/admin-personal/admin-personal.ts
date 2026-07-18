@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 import { PortalService } from '../../core/portal.service';
 import { PersonaResponse, PersonaRequest } from '../../core/models';
 import { fadeIn, staggerRows, staggerList, scaleInModal, slideAlert, tabTransition, slideInRight, counterAnimate } from '../../core/animations';
+import { ConfirmationService } from '../../core/confirmation.service';
 
 type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
 
@@ -18,6 +19,7 @@ type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
 })
 export class AdminPersonal {
   private readonly portal = inject(PortalService);
+  private readonly confirmation = inject(ConfirmationService);
 
   readonly activeTab = signal<Tab>('general');
   readonly personas = signal<PersonaResponse[]>([]);
@@ -286,8 +288,8 @@ export class AdminPersonal {
     });
   }
 
-  desactivarPersona(p: PersonaResponse): void {
-    if (!confirm(`¿Desactivar a ${p.nombres} ${p.apellidos}?`)) return;
+  async desactivarPersona(p: PersonaResponse): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Desactivar persona', message: `${p.nombres} ${p.apellidos} dejará de estar activo en el sistema.`, confirmLabel: 'Desactivar', tone: 'danger' })) return;
     this.portal.deletePersona(p.id).subscribe({
       next: () => {
         this.loadPersonas();
