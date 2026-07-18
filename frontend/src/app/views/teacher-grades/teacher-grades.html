@@ -1,13 +1,30 @@
 <section class="page-stack teacher-page teacher-grades-page" [@fadeIn]>
   @if (selectedCourse()) {
     <div class="page-heading teacher-course-heading">
-      <div>
+      <div class="teacher-course-heading__content">
         <p class="section-kicker">Registro por competencias</p>
         <h2>{{ selectedCourse()!.curso }}</h2>
         <p>
           {{ selectedCourse()!.grado }} sección {{ selectedCourse()!.seccion }} · {{ selectedCourse()!.periodo }} ·
           {{ selectedCourse()!.estudiantes }} estudiantes matriculados.
         </p>
+        @if (courses().length > 1) {
+          <label class="course-switcher" for="course-select">
+            <span>Cambiar curso</span>
+            <select
+              id="course-select"
+              [ngModel]="assignmentId()"
+              (ngModelChange)="switchCourse($event)"
+              [disabled]="loading()"
+            >
+              @for (course of courses(); track course.assignmentId) {
+                <option [ngValue]="course.assignmentId">
+                  {{ course.curso }} · {{ course.grado }} {{ course.seccion }} · {{ course.periodo }}
+                </option>
+              }
+            </select>
+          </label>
+        }
       </div>
       <div class="data-chip-row grade-context-chips">
         <span class="data-chip">Notas: 0–20</span>
@@ -78,43 +95,54 @@
       </button>
     </div>
 
-    <div class="competency-toolbar">
-      <label class="competency-picker" for="competency-select">
-        <span>Competencia a evaluar</span>
-        <select
-          id="competency-select"
-          [ngModel]="selectedCompetencyNumber()"
-          (ngModelChange)="selectCompetency($event)"
-          [disabled]="loading() || competencias().length === 0"
-        >
-          @for (competency of competencias(); track competency.numero) {
-            <option [ngValue]="competency.numero">{{ competency.numero }}. {{ competency.nombre }}</option>
+    @if (activeCompetency(); as competency) {
+      <div class="competency-workspace">
+        <div class="competency-tabs" role="tablist" aria-label="Competencias del curso">
+          @for (item of competencias(); track item.numero) {
+            <button
+              class="competency-tab"
+              type="button"
+              role="tab"
+              [attr.aria-selected]="item.numero === selectedCompetencyNumber()"
+              [class.is-active]="item.numero === selectedCompetencyNumber()"
+              [disabled]="loading()"
+              (click)="selectCompetency(item.numero)"
+            >
+              <span class="competency-tab__number">{{ item.numero }}</span>
+              <span class="competency-tab__name">{{ item.nombre }}</span>
+            </button>
           }
-        </select>
-      </label>
-
-      @if (activeCompetency(); as competency) {
-        <div class="competency-toolbar__summary" aria-live="polite">
-          <span class="capacity-count">
-            <strong>{{ competency.capacidades.length }}</strong>/6 capacidades
-          </span>
-          <span class="evaluated-count">{{ evaluatedStudents() }}/{{ rows().length }} con logro</span>
-          <button
-            class="capacity-add-button"
-            type="button"
-            [disabled]="competency.capacidades.length >= 6 || loading()"
-            [attr.aria-describedby]="competency.capacidades.length >= 6 ? 'capacity-limit-help' : null"
-            (click)="addCapacity()"
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17">
-              <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            Añadir capacidad
-          </button>
-          <span id="capacity-limit-help" class="sr-only">El límite es de seis capacidades por competencia.</span>
         </div>
-      }
-    </div>
+        <div class="active-competency-bar">
+          <div>
+            <span class="section-kicker">Competencia {{ competency.numero }}</span>
+            <strong>{{ competency.nombre }}</strong>
+          </div>
+          <div class="active-competency-bar__actions" aria-live="polite">
+            <span>{{ competency.capacidades.length }} capacidades</span>
+            <span>{{ evaluatedStudents() }}/{{ rows().length }} evaluados</span>
+            <button
+              class="btn-subtle btn-compact"
+              type="button"
+              [disabled]="loading()"
+              (click)="openCompetencyEditor(competency.numero, $event)"
+            >
+              Editar nombre
+            </button>
+            <button
+              class="btn-primary btn-compact"
+              type="button"
+              [disabled]="competency.capacidades.length >= 6 || loading()"
+              [attr.aria-describedby]="competency.capacidades.length >= 6 ? 'capacity-limit-help' : null"
+              (click)="addCapacity()"
+            >
+              Añadir capacidad
+            </button>
+            <span id="capacity-limit-help" class="sr-only">El límite es de seis capacidades por competencia.</span>
+          </div>
+        </div>
+      </div>
+    }
 
     @if (loading()) {
       <div class="grade-loading" aria-live="polite">
@@ -143,6 +171,18 @@
                     >
                       <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15">
                         <path d="m4 16-.8 4 4-.8L18 8.4 15.6 6 4 16Zm9.9-8.2 2.3 2.3M14.8 6.8l1.8-1.8a1.7 1.7 0 0 1 2.4 0 1.7 1.7 0 0 1 0 2.4l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button
+                      class="capacity-edit-button capacity-delete-button"
+                      type="button"
+                      [disabled]="competency.capacidades.length <= 3"
+                      [attr.aria-label]="'Eliminar ' + capacity.nombre"
+                      [title]="competency.capacidades.length <= 3 ? 'Cada competencia debe conservar al menos 3 capacidades' : 'Eliminar ' + capacity.nombre"
+                      (click)="removeCapacity(competency.numero, capacity.numero)"
+                    >
+                      <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15">
+                        <path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </button>
                   </div>
@@ -260,6 +300,44 @@
       <div class="capacity-dialog__actions">
         <button class="btn-secondary" type="button" (click)="closeCapacityEditor()">Cancelar</button>
         <button class="btn-primary" type="button" (click)="saveCapacityName()">Guardar nombre</button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (editingCompetency(); as competencyNumber) {
+  <div class="capacity-dialog-backdrop" (mousedown)="closeCompetencyEditor()">
+    <section
+      class="capacity-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="competency-dialog-title"
+      (mousedown)="$event.stopPropagation()"
+    >
+      <button class="capacity-dialog__close" type="button" aria-label="Cerrar" (click)="closeCompetencyEditor()">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+          <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <p class="section-kicker">Competencia {{ competencyNumber }}</p>
+      <h2 id="competency-dialog-title">Editar nombre de competencia</h2>
+      <label for="competency-name-input">Nombre de la competencia</label>
+      <input
+        id="competency-name-input"
+        type="text"
+        maxlength="255"
+        autocomplete="off"
+        [ngModel]="competencyNameDraft()"
+        (ngModelChange)="competencyNameDraft.set($event); competencyNameError.set('')"
+        (keyup.enter)="saveCompetencyName()"
+        [attr.aria-invalid]="competencyNameError() ? 'true' : null"
+      >
+      @if (competencyNameError()) {
+        <p class="capacity-dialog__error" role="alert">{{ competencyNameError() }}</p>
+      }
+      <div class="capacity-dialog__actions">
+        <button class="btn-secondary" type="button" (click)="closeCompetencyEditor()">Cancelar</button>
+        <button class="btn-primary" type="button" (click)="saveCompetencyName()">Guardar nombre</button>
       </div>
     </section>
   </div>

@@ -111,7 +111,9 @@ export class AdminAssignments {
   loadAll(): void {
     this.loadGestiones();
     this.portal.getPersonas().subscribe({
-      next: rows => this.docentes.set(rows.filter(row => row.tipoPersona === 'DOCENTE')),
+      next: rows => this.docentes.set(rows.filter(
+        (row) => row.tipoPersona === 'DOCENTE' && Boolean(row.subtypeId),
+      )),
       error: () => this.error.set('No se pudo cargar el directorio de docentes.'),
     });
     this.loadAsignaciones();
@@ -135,6 +137,7 @@ export class AdminAssignments {
     const id = (event.target as HTMLSelectElement).value || null;
     this.selectedGestionId.set(id);
     this.periodos.set([]);
+    this.selectedPeriodoId.set(null);
     if (id) this.loadPeriodos(id);
   }
 
@@ -142,7 +145,9 @@ export class AdminAssignments {
     this.portal.getPeriodos(gestionId).subscribe({
       next: rows => {
         this.periodos.set(rows);
-        const currentPeriodo = this.selectedPeriodoId() ?? rows[0]?.id ?? null;
+        const currentPeriodo = rows.some((row) => row.id === this.selectedPeriodoId())
+          ? this.selectedPeriodoId()
+          : rows[0]?.id ?? null;
         this.selectedPeriodoId.set(currentPeriodo);
       },
       error: () => this.error.set('No se pudieron cargar los periodos.'),
