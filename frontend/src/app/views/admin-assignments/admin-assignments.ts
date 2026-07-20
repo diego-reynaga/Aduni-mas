@@ -6,6 +6,7 @@ import * as Academico from '../../core/academico.models';
 import { EntityId, PersonaResponse } from '../../core/models';
 import { fadeIn, slideInRight, staggerList } from '../../core/animations';
 import { Observable, switchMap, of } from 'rxjs';
+import { ConfirmationService } from '../../core/confirmation.service';
 
 export interface AulaGroup {
   nombreAula: string;
@@ -29,6 +30,7 @@ export interface LevelGroup {
 })
 export class AdminAssignments {
   private readonly portal = inject(PortalService);
+  private readonly confirmation = inject(ConfirmationService);
 
   readonly gestiones = signal<Academico.GestionAcademicaResponse[]>([]);
   readonly periodos = signal<Academico.PeriodoAcademicoResponse[]>([]);
@@ -217,12 +219,12 @@ export class AdminAssignments {
     });
   }
 
-  removeAsignacion(curso: Academico.CursoResponse, event: Event): void {
+  async removeAsignacion(curso: Academico.CursoResponse, event: Event): Promise<void> {
     event.stopPropagation();
     const existing = this.asignacionesActivas().get(curso.id);
     if (!existing) return;
     
-    if (!confirm(`¿Eliminar la asignación de ${existing.docenteNombre}?`)) return;
+    if (!await this.confirmation.confirm({ title: 'Eliminar asignación', message: `Se retirará la asignación de ${existing.docenteNombre}.`, confirmLabel: 'Eliminar', tone: 'danger' })) return;
     this.portal.closeAsignacionDocente(existing.id).subscribe({
       next: () => {
         this.success.set('Asignación eliminada.');

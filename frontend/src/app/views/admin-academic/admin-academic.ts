@@ -10,6 +10,7 @@ import {
 import { EntityId } from '../../core/models';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { ConfirmationService } from '../../core/confirmation.service';
 
 type Tab = 'resumen' | 'niveles' | 'grados' | 'materias';
 
@@ -29,6 +30,7 @@ export interface GrupoGrado {
 })
 export class AdminAcademic {
   private readonly portal = inject(PortalService);
+  private readonly confirmation = inject(ConfirmationService);
 
   readonly activeTab = signal<Tab>('resumen');
   readonly error = signal('');
@@ -218,8 +220,8 @@ export class AdminAcademic {
     }
   }
 
-  deleteNivel(id: EntityId) {
-    if (!confirm('¿Desactivar este nivel?')) return;
+  async deleteNivel(id: EntityId): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Desactivar nivel', message: 'El nivel dejará de estar disponible para nuevas operaciones.', confirmLabel: 'Desactivar', tone: 'danger' })) return;
     this.portal.deleteNivel(id).subscribe({
       next: () => { this.showSuccess('Nivel desactivado'); this.loadNiveles(); },
       error: () => this.showError('Error al desactivar nivel')
@@ -278,8 +280,8 @@ export class AdminAcademic {
     }
   }
 
-  deleteGrado(grado: Academico.GradoResponse) {
-    if (!confirm('¿Desactivar este grado?')) return;
+  async deleteGrado(grado: Academico.GradoResponse): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Desactivar grado', message: 'El grado dejará de estar disponible para nuevas operaciones.', confirmLabel: 'Desactivar', tone: 'danger' })) return;
     this.portal.deleteGrado(grado.id).subscribe({
       next: () => { this.showSuccess('Grado desactivado'); this.loadGradosForNivel(grado.nivelEducativoId); },
       error: () => this.showError('Error al desactivar grado')
@@ -404,8 +406,8 @@ export class AdminAcademic {
     }
   }
 
-  deleteMateria(id: EntityId) {
-    if (!confirm('¿Desactivar esta materia?')) return;
+  async deleteMateria(id: EntityId): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Desactivar materia', message: 'La materia dejará de estar disponible para nuevas operaciones.', confirmLabel: 'Desactivar', tone: 'danger' })) return;
     this.portal.deleteMateria(id).subscribe({
       next: () => { this.showSuccess('Materia desactivada'); this.loadMaterias(); },
       error: () => this.showError('Error al desactivar materia')

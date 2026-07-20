@@ -8,6 +8,7 @@ import { fadeIn, expandCollapse, scaleInModal } from '../../core/animations';
 import { dateRangeValidator } from '../../core/validators';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { ConfirmationService } from '../../core/confirmation.service';
 
 function periodoWithinGestionValidator(gestiones: () => Academico.GestionAcademicaResponse[], selectedGestionId: () => EntityId | null): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -37,6 +38,7 @@ function periodoWithinGestionValidator(gestiones: () => Academico.GestionAcademi
 })
 export class AdminPeriods {
   private readonly portal = inject(PortalService);
+  private readonly confirmation = inject(ConfirmationService);
 
   readonly gestiones = signal<Academico.GestionAcademicaResponse[]>([]);
   readonly periodosPorGestion = signal<Map<EntityId, Academico.PeriodoAcademicoResponse[]>>(new Map());
@@ -166,8 +168,8 @@ export class AdminPeriods {
     });
   }
 
-  activarGestion(row: Academico.GestionAcademicaResponse): void {
-    if (!confirm(`¿Activar la gestión ${row.nombre}? Esto desactivará cualquier otra gestión activa.`)) return;
+  async activarGestion(row: Academico.GestionAcademicaResponse): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Activar gestión', message: `Se activará ${row.nombre} y se desactivará cualquier otra gestión activa.`, confirmLabel: 'Activar gestión', tone: 'primary' })) return;
     
     // Primero, desactivar todas las demás gestiones
     this.gestiones().forEach(g => {
@@ -187,8 +189,8 @@ export class AdminPeriods {
     });
   }
 
-  closeGestion(row: Academico.GestionAcademicaResponse): void {
-    if (!confirm(`¿Desactivar la gestión ${row.nombre}?`)) return;
+  async closeGestion(row: Academico.GestionAcademicaResponse): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Desactivar gestión', message: `La gestión ${row.nombre} dejará de estar activa.`, confirmLabel: 'Desactivar', tone: 'danger' })) return;
     this.portal.patchGestion(row.id, { activa: false }).subscribe({
       next: () => {
         this.loadGestiones();
@@ -237,8 +239,8 @@ export class AdminPeriods {
     });
   }
 
-  closePeriodo(row: Academico.PeriodoAcademicoResponse): void {
-    if (!confirm(`¿Cerrar el periodo ${row.nombre}?`)) return;
+  async closePeriodo(row: Academico.PeriodoAcademicoResponse): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Cerrar período', message: `El período ${row.nombre} quedará cerrado para nuevas operaciones.`, confirmLabel: 'Cerrar período', tone: 'danger' })) return;
     this.portal.patchPeriodo(row.id, { cerrado: true }).subscribe({
       next: () => {
         if (this.selectedGestionId()) this.loadPeriodos(this.selectedGestionId()!);

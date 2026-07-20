@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { EntityId, ROLE_LABELS, RoleName, UserRow, PersonaDropdown, RolResponse, ALL_ROLES, UsuarioRequest, AuditoriaResponse, AuditDatePreset } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { ConfirmationService } from '../../core/confirmation.service';
 import {
   fadeIn, staggerRows, slideInRight, slideAlert,
   scaleInModal, tabTransition, counterAnimate, expandCollapse
@@ -20,6 +21,7 @@ import {
 })
 export class AdminUsers {
   private readonly portal = inject(PortalService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly route = inject(ActivatedRoute);
 
   readonly users = signal<UserRow[]>([]);
@@ -515,8 +517,8 @@ export class AdminUsers {
     return candidate?.error?.message || fallback;
   }
 
-  deactivateUser(userRow: UserRow): void {
-    if (!confirm(`¿Está seguro de desactivar la cuenta del usuario: "${userRow.persona}"?`)) {
+  async deactivateUser(userRow: UserRow): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Desactivar cuenta', message: `La cuenta de ${userRow.persona} dejará de poder ingresar al sistema.`, confirmLabel: 'Desactivar', tone: 'danger' })) {
       return;
     }
     const id = userRow.id;
@@ -531,8 +533,8 @@ export class AdminUsers {
     });
   }
 
-  activateUser(userRow: UserRow): void {
-    if (!confirm(`¿Está seguro de reactivar la cuenta del usuario: "${userRow.persona}"?`)) {
+  async activateUser(userRow: UserRow): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Reactivar cuenta', message: `La cuenta de ${userRow.persona} volverá a poder ingresar al sistema.`, confirmLabel: 'Reactivar', tone: 'primary' })) {
       return;
     }
     const id = userRow.id;
@@ -550,6 +552,7 @@ export class AdminUsers {
   isSystemRole(roleName: string): boolean {
     return (this.SYSTEM_ROLES as string[]).includes(roleName.toUpperCase());
   }
+
 
 
 

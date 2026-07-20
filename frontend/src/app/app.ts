@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { routeAnimations } from './core/animations';
+import { ConfirmationDialog } from './shared/confirmation-dialog/confirmation-dialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ConfirmationDialog],
   templateUrl: './app.html',
   styleUrl: './app.css',
   animations: [routeAnimations],

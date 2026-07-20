@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn, tabTransition, slideAlert, counterAnimate, slideInRight, scaleInModal, slideInUp, staggerList } from '../../core/animations';
 import { EntityId, StudentAdminRequest, StudentAdminResponse } from '../../core/models';
+import { ConfirmationService } from '../../core/confirmation.service';
 
 type Tab = 'directorio' | 'matriculas';
 
@@ -19,6 +20,7 @@ type Tab = 'directorio' | 'matriculas';
 })
 export class AdminStudents {
   private readonly portal = inject(PortalService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly router = inject(Router);
 
   readonly activeTab = signal<Tab>('directorio');
@@ -181,8 +183,8 @@ export class AdminStudents {
     });
   }
 
-  desactivarEstudiante(student: StudentAdminResponse) {
-    if (!confirm(`¿Desactivar a ${student.nombres} ${student.apellidos}?`)) return;
+  async desactivarEstudiante(student: StudentAdminResponse): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Desactivar estudiante', message: `${student.nombres} ${student.apellidos} dejará de estar activo en el sistema.`, confirmLabel: 'Desactivar', tone: 'danger' })) return;
     this.portal.desactivarEstudiante(student.id).subscribe({
       next: () => { this.success.set('Estudiante desactivado.'); this.loadEstudiantes(); },
       error: err => this.error.set(this.errorMessage(err, 'No se pudo desactivar al estudiante.')),
@@ -303,8 +305,8 @@ export class AdminStudents {
     });
   }
 
-  cambiarEstadoMatricula(id: EntityId, nuevoEstado: string) {
-    if (!confirm(`¿Está seguro de cambiar el estado a ${nuevoEstado}?`)) return;
+  async cambiarEstadoMatricula(id: EntityId, nuevoEstado: string): Promise<void> {
+    if (!await this.confirmation.confirm({ title: 'Cambiar estado de matrícula', message: `La matrícula pasará al estado ${nuevoEstado}.`, confirmLabel: 'Cambiar estado', tone: 'danger' })) return;
     this.loading.set(true);
     this.portal.cambiarEstadoMatricula(id, nuevoEstado).subscribe({
       next: () => {
