@@ -4,12 +4,10 @@
       <p class="section-kicker">Mantenimiento de Sistema</p>
       <h2>
         @if (activeTab() === 'usuarios') { Gestión de Cuentas de Usuario }
-        @else if (activeTab() === 'roles') { Catálogo de Roles }
         @else { Auditorías y Seguridad }
       </h2>
       <p>
         @if (activeTab() === 'usuarios') { Administre las cuentas de usuarios asociadas a personas. }
-        @else if (activeTab() === 'roles') { Gestione los roles institucionales del sistema. }
         @else { Trazabilidad completa de operaciones y accesos críticos. }
       </p>
     </div>
@@ -220,122 +218,6 @@
   </div>
   }
 
-  <!-- TAB DE ROLES -->
-  @if (activeTab() === 'roles') {
-    <div [@tabTransition]>
-      
-      <!-- KPI Cards (Roles) -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-icon is-admin">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
-          </div>
-          <div class="kpi-data">
-            <span class="kpi-label">Roles Totales</span>
-            <span class="kpi-value"><strong [@counterAnimate]="totalRoles()">{{ totalRoles() }}</strong></span>
-            <span class="kpi-subtext">Registrados en base de datos</span>
-          </div>
-        </div>
-
-        <div class="kpi-card">
-          <div class="kpi-icon is-good">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-          </div>
-          <div class="kpi-data">
-            <span class="kpi-label">Roles de Sistema</span>
-            <span class="kpi-value"><strong [@counterAnimate]="totalSystemRoles()">{{ totalSystemRoles() }}</strong></span>
-            <span class="kpi-subtext">Críticos y no modificables</span>
-          </div>
-        </div>
-
-      </div>
-
-
-
-    <div class="table-container-full">
-      @if (loading()) {
-        <section class="surface">
-          <div class="surface-header"><div><h3>Catálogo en BD</h3></div></div>
-          <div class="quiet-table-wrap">
-            <table class="quiet-table" style="min-width: 100%;"><thead><tr>
-              <th>ID</th><th>Nombre del Rol</th><th>Fecha de Creación</th><th>Acción</th>
-            </tr></thead><tbody>
-              @for (_ of [1,2,3]; track _) {
-                <tr><td colspan="4"><div class="skeleton-row"><div class="skeleton-line w-16"></div><div class="skeleton-line w-36"></div><div class="skeleton-line w-24"></div><div class="skeleton-line w-20"></div></div></td></tr>
-              }
-            </tbody></table>
-          </div>
-        </section>
-      } @else {
-        <section class="surface">
-          <div class="surface-header">
-            <div>
-              <h3>Catálogo de Roles en DB ({{ rolesList().length }})</h3>
-              <p>Lista de accesos registrados en el sistema mapeados a RolNombre enum.</p>
-            </div>
-          </div>
-
-          <div class="quiet-table-wrap">
-            <table class="quiet-table" style="min-width: 100%;">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre del Rol</th>
-                  <th>Fecha de Creación</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody [@staggerRows]="rolesList().length">
-                @for (role of rolesList(); track role.id) {
-                  <tr [class.system-role-row]="isSystemRole(role.nombre)">
-                    <td><strong># {{ role.id }}</strong></td>
-                    <td>
-                      {{ getRoleLabel(role.nombre) }}
-                      @if (isSystemRole(role.nombre)) {
-                        <span class="system-badge">Rol del sistema</span>
-                      }
-                    </td>
-                    <td>{{ role.creadoEn === '-' ? '—' : (role.creadoEn | date:'dd/MM/yyyy HH:mm') }}</td>
-                    <td>
-                      @if (!isSystemRole(role.nombre)) {
-                        <button class="btn-danger-subtle" (click)="deleteRole(role)">
-                          Eliminar
-                        </button>
-                      } @else {
-                        <span class="protected-label" style="display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 13px; font-weight: 500;">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                          </svg>
-                          Protegido
-                        </span>
-                      }
-                    </td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="4">
-                      <div class="empty-state-enhanced">
-                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--muted)" stroke-width="1" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        <p>No hay roles registrados</p>
-                        <span>Crea un nuevo rol para comenzar.</span>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-      }
-    </div>
-    </div>
-  }
 
   <!-- TAB DE AUDITORÍA -->
   @if (activeTab() === 'auditoria') {

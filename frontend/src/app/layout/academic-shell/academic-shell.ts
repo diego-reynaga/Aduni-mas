@@ -26,7 +26,6 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
 
     // Módulo Personas y usuarios
     { label: 'Cuenta de usuarios', route: '/admin/usuarios', eyebrow: 'Personas y usuarios' },
-    { label: 'Roles', route: '/admin/roles', eyebrow: 'Personas y usuarios' },
     { label: 'Auditorias', route: '/admin/auditorias', eyebrow: 'Personas y usuarios' },
 
     // Módulo Recursos Humanos y Familias
@@ -37,7 +36,6 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Estructura académica', route: '/admin/academico', eyebrow: 'Gestión Académica' },
     { label: 'Gestiones y Periodos', route: '/admin/periodos', eyebrow: 'Gestión Académica' },
     { label: 'Asignaciones Docentes', route: '/admin/asignaciones', eyebrow: 'Gestión Académica' },
-    { label: 'Horarios', route: '/admin/horarios', eyebrow: 'Gestión Académica' },
 
     // Módulo Notas
     { label: 'Supervisión docente', route: '/admin/supervision', eyebrow: 'Calificaciones' },
@@ -52,18 +50,16 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Importacion Excel', route: '/docente/importar-notas', eyebrow: 'Carga' },
   ],
   ESTUDIANTE: [
-    { label: 'Dashboard', route: '/estudiante', eyebrow: 'Inicio' },
-    { label: 'Mi Horario', route: '/estudiante/horario', eyebrow: 'Clases' },
-    { label: 'Notas por Competencia', route: '/estudiante/notas-competencia', eyebrow: 'Rendimiento' },
-    { label: 'Mis Apoderados', route: '/estudiante/apoderados', eyebrow: 'Familia' },
-    { label: 'Mis Matrículas', route: '/estudiante/matriculas', eyebrow: 'Historial' },
+    { label: 'Dashboard', route: '/estudiante', eyebrow: 'Portal Estudiante' },
+    { label: 'Notas por Competencia', route: '/estudiante/notas-competencia', eyebrow: 'Portal Estudiante' },
+    { label: 'Mis Apoderados', route: '/estudiante/apoderados', eyebrow: 'Portal Estudiante' },
+    { label: 'Mis Matrículas', route: '/estudiante/matriculas', eyebrow: 'Portal Estudiante' },
   ],
   PADRE_FAMILIA: [
-    { label: 'Cambiar Estudiante', route: '/familia/selector', eyebrow: 'Familia', icon: 'users' },
-    { label: 'Resumen del Estudiante', route: '/familia/resumen', eyebrow: 'Seguimiento' },
-    { label: 'Alertas Académicas', route: '/familia/alertas', eyebrow: 'Seguimiento' },
-    { label: 'Kardex de Notas', route: '/familia/kardex', eyebrow: 'Académico' },
-    { label: 'Horario de Clases', route: '/familia/horario', eyebrow: 'Académico' },
+    { label: 'Cambiar Estudiante', route: '/familia/selector', eyebrow: 'Portal Familia', icon: 'users' },
+    { label: 'Resumen del Estudiante', route: '/familia/resumen', eyebrow: 'Portal Familia' },
+    { label: 'Alertas Académicas', route: '/familia/alertas', eyebrow: 'Portal Familia' },
+    { label: 'Kardex de Notas', route: '/familia/kardex', eyebrow: 'Portal Familia' },
   ],
 };
 
@@ -88,7 +84,10 @@ export class AcademicShell implements OnInit {
   readonly activeRole = this.auth.activeRole;
   readonly roleLabels = ROLE_LABELS;
   readonly availableRoles = computed(() => this.auth.availableRoles());
-  readonly navItems = computed(() => NAV_BY_ROLE[this.activeRole() ?? 'ADMINISTRADOR']);
+  readonly navItems = computed(() => {
+    const role = this.activeRole();
+    return role ? NAV_BY_ROLE[role] : [];
+  });
 
   // Reactive state for current period
   readonly activeGestionName = signal('Cargando...');

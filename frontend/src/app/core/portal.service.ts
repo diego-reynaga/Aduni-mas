@@ -555,7 +555,6 @@ export class PortalService {
           { label: 'Promedio general', value: average.toFixed(2), detail: 'Solo notas publicadas', tone: 'maroon' },
           { label: 'Cursos publicados', value: String(own.length), detail: 'Protegidos por RLS', tone: 'forest' },
           { label: 'Código', value: student.codigo, detail: 'Estudiante autenticado', tone: 'gold' },
-          { label: 'Acceso', value: 'Lectura', detail: 'Sin permisos de modificación', tone: 'ink' },
         ], reports: own,
       };
     });
@@ -564,14 +563,19 @@ export class PortalService {
   studentCompetencyGrades(): Observable<StudentCourseCompetencyReport[]> {
     return this.observe(async () => {
       const student = dataOf(await supabase.from('estudiantes').select('id').single() as DbResult<any>);
-      const details = dataOf(await supabase
-        .from('calificacion_detalle_trimestre')
-        .select('*,asignaciones_docente!inner(cursos!inner(materias(nombre)),periodos(nombre))')
-        .eq('estudiante_id', student.id) as DbResult<any[]>);
-      const averages = dataOf(await supabase
-        .from('calificacion_competencia_trimestre')
-        .select('*')
-        .eq('estudiante_id', student.id) as DbResult<any[]>);
+      const [detailsResult, averagesResult] = await Promise.all([
+        supabase
+          .from('calificacion_detalle_trimestre')
+          .select('*,asignaciones_docente!inner(cursos!inner(materias(nombre)),periodos(nombre))')
+          .eq('estudiante_id', student.id),
+        supabase
+          .from('calificacion_competencia_trimestre')
+          .select('*')
+          .eq('estudiante_id', student.id)
+      ]);
+
+      const details = dataOf(detailsResult as DbResult<any[]>);
+      const averages = dataOf(averagesResult as DbResult<any[]>);
 
       const groups = new Map<string, any[]>();
       for (const d of details) {

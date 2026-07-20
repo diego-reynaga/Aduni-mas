@@ -48,12 +48,6 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
-        path: 'admin/roles',
-        component: AdminUsers,
-        data: { tab: 'roles' },
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-      },
-      {
         path: 'admin/auditorias',
         component: AdminUsers,
         data: { tab: 'auditoria' },
@@ -99,11 +93,7 @@ export const routes: Routes = [
         component: AdminAssignments,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
-      {
-        path: 'admin/horarios',
-        loadComponent: () => import('./views/admin-schedules/admin-schedules').then(m => m.AdminSchedules),
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-      },
+
       {
         path: 'admin/familias',
         component: AdminFamilyLinks,
@@ -154,11 +144,7 @@ export const routes: Routes = [
         loadComponent: () => import('./views/student-enrollments/student-enrollments').then(m => m.StudentEnrollments),
         canActivate: [roleGuard(['ESTUDIANTE'])],
       },
-      {
-        path: 'estudiante/horario',
-        loadComponent: () => import('./views/student-schedule/student-schedule').then(m => m.StudentSchedule),
-        canActivate: [roleGuard(['ESTUDIANTE'])],
-      },
+
       {
         path: 'familia',
         redirectTo: 'familia/selector',
@@ -184,11 +170,7 @@ export const routes: Routes = [
         loadComponent: () => import('./views/family-kardex/family-kardex').then(m => m.FamilyKardex),
         canActivate: [roleGuard(['PADRE_FAMILIA'])],
       },
-      {
-        path: 'familia/horario',
-        loadComponent: () => import('./views/family-schedule/family-schedule').then(m => m.FamilySchedule),
-        canActivate: [roleGuard(['PADRE_FAMILIA'])],
-      },
+
     ],
   },
   {

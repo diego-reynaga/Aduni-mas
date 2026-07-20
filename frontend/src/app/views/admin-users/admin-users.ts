@@ -29,7 +29,7 @@ export class AdminUsers {
   readonly allRoles = ALL_ROLES;
   readonly error = signal('');
   readonly successMessage = signal('');
-  readonly activeTab = signal<'usuarios' | 'roles' | 'auditoria'>('usuarios');
+  readonly activeTab = signal<'usuarios' | 'auditoria'>('usuarios');
   readonly searchQuery = signal('');
 
   // Filtros avanzados de Usuarios
@@ -131,10 +131,7 @@ export class AdminUsers {
     return totals;
   });
 
-  // KPIs para Roles
-  readonly totalRoles = computed(() => this.rolesList().length);
-  readonly totalSystemRoles = computed(() => this.rolesList().filter(r => this.isSystemRole(r.nombre)).length);
-  readonly totalCustomRoles = computed(() => this.rolesList().filter(r => !this.isSystemRole(r.nombre)).length);
+
 
   readonly filteredUsers = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
@@ -157,7 +154,7 @@ export class AdminUsers {
 
   constructor() {
     this.route.data.subscribe(data => {
-      const tab = data['tab'] as 'usuarios' | 'roles' | 'auditoria';
+      const tab = data['tab'] as 'usuarios' | 'auditoria';
       if (tab) {
         this.setTab(tab);
       }
@@ -217,7 +214,7 @@ export class AdminUsers {
     }, 300));
   }
 
-  setTab(tab: 'usuarios' | 'roles' | 'auditoria'): void {
+  setTab(tab: 'usuarios' | 'auditoria'): void {
     this.activeTab.set(tab);
     this.error.set('');
     this.successMessage.set('');
@@ -554,24 +551,7 @@ export class AdminUsers {
     return (this.SYSTEM_ROLES as string[]).includes(roleName.toUpperCase());
   }
 
-  deleteRole(role: RolResponse): void {
-    if (!confirm(`¿Está seguro de eliminar de forma permanente el rol "${role.nombre}"?`)) {
-      return;
-    }
 
-    this.portal.deleteRole(role.id).subscribe({
-      next: () => {
-        this.showAlertMsg('Rol eliminado exitosamente.', 'success');
-        this.loadData();
-      },
-      error: (err) => {
-        this.showAlertMsg(
-          err.error?.message || 'No es posible eliminar el rol porque está asignado a cuentas activas.',
-          'error'
-        );
-      },
-    });
-  }
 
   // (Lógica de personas eliminada porque se migró al componente admin-personal)
 }

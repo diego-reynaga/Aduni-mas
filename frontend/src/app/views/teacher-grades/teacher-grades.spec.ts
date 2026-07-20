@@ -37,6 +37,7 @@ const payload: TeacherGradesPayload = {
   trimestre: 'I_TRIMESTRE',
   competencias: competencies,
   rows: [row],
+  courses: [],
 };
 
 describe('TeacherGrades', () => {
