@@ -45,9 +45,9 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Configuración', route: '/admin/configuracion', eyebrow: 'Institución' },
   ],
   DOCENTE: [
-    { label: 'Carga docente', route: '/docente', eyebrow: 'Cursos' },
-    { label: 'Acta de notas', route: '/docente/notas', eyebrow: 'Registro' },
-    { label: 'Importacion Excel', route: '/docente/importar-notas', eyebrow: 'Carga' },
+    { label: 'Carga docente', route: '/docente', eyebrow: 'Portal Docente' },
+    { label: 'Acta de notas', route: '/docente/notas', eyebrow: 'Portal Docente' },
+    { label: 'Importacion Excel', route: '/docente/importar-notas', eyebrow: 'Portal Docente' },
   ],
   ESTUDIANTE: [
     { label: 'Dashboard', route: '/estudiante', eyebrow: 'Portal Estudiante' },
@@ -59,7 +59,7 @@ const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
     { label: 'Cambiar Estudiante', route: '/familia/selector', eyebrow: 'Portal Familia', icon: 'users' },
     { label: 'Resumen del Estudiante', route: '/familia/resumen', eyebrow: 'Portal Familia' },
     { label: 'Alertas Académicas', route: '/familia/alertas', eyebrow: 'Portal Familia' },
-    { label: 'Kardex de Notas', route: '/familia/kardex', eyebrow: 'Portal Familia' },
+    { label: 'Notas', route: '/familia/notas', eyebrow: 'Portal Familia' },
   ],
 };
 

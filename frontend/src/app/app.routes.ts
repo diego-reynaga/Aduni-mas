@@ -166,7 +166,7 @@ export const routes: Routes = [
         canActivate: [roleGuard(['PADRE_FAMILIA'])],
       },
       {
-        path: 'familia/kardex',
+        path: 'familia/notas',
         loadComponent: () => import('./views/family-kardex/family-kardex').then(m => m.FamilyKardex),
         canActivate: [roleGuard(['PADRE_FAMILIA'])],
       },
