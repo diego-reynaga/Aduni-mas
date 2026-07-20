@@ -241,7 +241,6 @@ export interface CompetenciaTrimestre {
   nombre: string;
   notas: NotaIndividualTrimestre[];
   promedioCompetencia: number | null;
-  logroLiteral: string | null;
 }
 
 export interface ResumenEstadisticoTrimestre {
@@ -250,14 +249,6 @@ export interface ResumenEstadisticoTrimestre {
   noEvaluados: number;
   aprobados: number;
   desaprobados: number;
-  nivelAD: number;
-  nivelA: number;
-  nivelB: number;
-  nivelC: number;
-  porcentajeAD: number;
-  porcentajeA: number;
-  porcentajeB: number;
-  porcentajeC: number;
 }
 
 export interface EstudianteTrimestrePreview {
@@ -269,7 +260,6 @@ export interface EstudianteTrimestrePreview {
   estadoMapeo: 'ENCONTRADO' | 'NO_ENCONTRADO';
   competencias: CompetenciaTrimestre[];
   promedioFinalTrimestre: number | null;
-  logroFinalTrimestre: string | null;
   errores: ErrorImportacionNotas[];
 }
 

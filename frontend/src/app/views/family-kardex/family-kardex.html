@@ -38,7 +38,7 @@
           <span class="kpi-label">Promedio Semestral</span>
           <span class="kpi-value">
             <strong style="color: var(--brand-primary); font-size: 2rem;">
-              {{ overallAverage() | number: '1.2-2' }}
+              {{ overallAverage() | number: '1.0-0' }}
             </strong>
           </span>
           <span class="kpi-subtext">De todos los cursos evaluados</span>
@@ -97,7 +97,7 @@
               <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--muted); display: block;">Promedio Final</span>
               <strong style="font-size: 1.75rem; line-height: 1;"
                       [style.color]="report.promedioFinal && report.promedioFinal >= 11 ? 'var(--forest)' : (report.promedioFinal ? 'var(--danger)' : 'var(--ink)')">
-                {{ report.promedioFinal !== null ? (report.promedioFinal | number: '1.2-2') : '-' }}
+                {{ report.promedioFinal !== null ? (report.promedioFinal | number: '1.0-0') : '-' }}
               </strong>
             </div>
             @if (report.promedioFinal !== null) {
@@ -131,7 +131,7 @@
                   <td style="text-align: center; vertical-align: middle;">
                     <strong class="score-strong" style="font-size: 15px; padding: 4px 12px; border-radius: 12px; background: white; border: 1px solid var(--line);"
                             [style.color]="comp.promedioCompetencia && comp.promedioCompetencia >= 11 ? 'var(--forest)' : (comp.promedioCompetencia ? 'var(--danger)' : 'var(--muted)')">
-                      {{ comp.promedioCompetencia !== null ? (comp.promedioCompetencia | number: '1.2-2') : '-' }}
+                      {{ comp.promedioCompetencia !== null ? (comp.promedioCompetencia | number: '1.0-0') : '-' }}
                     </strong>
                   </td>
                 </tr>

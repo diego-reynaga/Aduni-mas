@@ -36,3 +36,16 @@ export function excelAchievement(value: number): 'C' | 'B' | 'A' | 'AD' {
   if (value <= 19) return 'A';
   return 'AD';
 }
+
+export function formatGrade(value: GradeValue | undefined): string {
+  if (value == null || !Number.isFinite(value)) return '-';
+  if (Number.isInteger(value)) return String(value);
+  return value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+}
+
+// The official workbook stores the full formula result but displays its
+// calculated averages with the `00` number format (no decimal places).
+export function formatExcelAverage(value: GradeValue | undefined): string {
+  if (value == null || !Number.isFinite(value)) return '-';
+  return value.toFixed(0);
+}

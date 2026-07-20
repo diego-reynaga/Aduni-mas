@@ -4,14 +4,13 @@ import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { CompetencyConfig, GradeEntry, TeacherGradesPayload } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
+import { UNIVERSAL_COMPETENCIES } from '../../core/competencies';
 import { TeacherGrades } from './teacher-grades';
 
-const competencies: CompetencyConfig[] = [
-  { numero: 1, nombre: 'Cantidad', capacidades: ['PRACTICA', 'EXAMEN', 'CUADERNO'].map((nombre, index) => ({ numero: index + 1, nombre })) },
-  { numero: 2, nombre: 'Regularidad', capacidades: ['PRACTICA', 'EXAMEN', 'CUADERNO'].map((nombre, index) => ({ numero: index + 1, nombre })) },
-  { numero: 3, nombre: 'Forma', capacidades: ['PRACTICA', 'EXAMEN', 'CUADERNO'].map((nombre, index) => ({ numero: index + 1, nombre })) },
-  { numero: 4, nombre: 'Datos', capacidades: ['PRACTICA', 'EXAMEN', 'CUADERNO'].map((nombre, index) => ({ numero: index + 1, nombre })) },
-];
+const competencies: CompetencyConfig[] = UNIVERSAL_COMPETENCIES.map((competency) => ({
+  ...competency,
+  capacidades: ['PRACTICA', 'EXAMEN', 'CUADERNO'].map((nombre, index) => ({ numero: index + 1, nombre })),
+}));
 
 const row: GradeEntry = {
   estudianteId: 'student-1',
@@ -71,6 +70,8 @@ describe('TeacherGrades', () => {
     expect(fixture.componentInstance.competencias()).toHaveLength(4);
     expect(fixture.componentInstance.activeCompetency()?.capacidades.map((item) => item.nombre))
       .toEqual(['PRACTICA', 'EXAMEN', 'CUADERNO']);
+    expect(fixture.nativeElement.querySelectorAll('.competency-edit-button')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelectorAll('.achievement-badge')).toHaveLength(0);
   });
 
   it('adds capacities up to six and keeps a blank slot for every student', () => {

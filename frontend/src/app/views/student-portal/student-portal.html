@@ -57,7 +57,7 @@
               <td>{{ report.practica }}</td>
               <td>{{ report.examen || 'Pendiente' }}</td>
               <td>{{ report.tarea }}</td>
-              <td class="score-strong">{{ report.promedio | number: '1.2-2' }}</td>
+              <td class="score-strong">{{ report.promedio | number: '1.0-0' }}</td>
               <td><span [class]="statusClass(report.estado)">{{ report.estado }}</span></td>
             </tr>
           }

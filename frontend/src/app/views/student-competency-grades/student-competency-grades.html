@@ -21,7 +21,7 @@
         <div class="metric-card tone-forest" style="padding: 0.5rem 1rem;">
           <p class="metric-card__label" style="font-size: 0.75rem;">Promedio Final</p>
           <strong class="metric-card__value" style="font-size: 1.5rem;">
-            {{ report.promedioFinal !== null ? (report.promedioFinal | number: '1.2-2') : '-' }}
+            {{ report.promedioFinal !== null ? (report.promedioFinal | number: '1.0-0') : '-' }}
           </strong>
         </div>
       </div>
@@ -38,7 +38,7 @@
             @for (comp of report.competencias; track comp.numeroCompetencia) {
               <tr style="background-color: var(--field-bg);">
                 <td><strong>{{ comp.numeroCompetencia }}. {{ comp.nombreCompetencia }}</strong></td>
-                <td style="text-align: right;"><strong class="score-strong">{{ comp.promedioCompetencia !== null ? (comp.promedioCompetencia | number: '1.2-2') : '-' }}</strong></td>
+                <td style="text-align: right;"><strong class="score-strong">{{ comp.promedioCompetencia !== null ? (comp.promedioCompetencia | number: '1.0-0') : '-' }}</strong></td>
               </tr>
               @for (cap of comp.capacidades; track cap.numero) {
                 <tr>

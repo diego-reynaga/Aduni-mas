@@ -955,7 +955,7 @@ a {
 }
 
 .result-grid--compact {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .result-grid article {
@@ -1090,7 +1090,112 @@ a {
 }
 
 .import-preview-table--wide {
-  min-width: 1320px;
+  min-width: 1180px;
+}
+
+.excel-calculation-note {
+  margin: 0 20px 16px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d7e0f2;
+  border-radius: 8px;
+  background: #f8faff;
+  color: #294889;
+}
+
+.excel-calculation-note div {
+  display: grid;
+  gap: 2px;
+}
+
+.excel-calculation-note strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.excel-calculation-note span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.excel-calculation-note small {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #e9eefb;
+  color: #294889;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.preview-competency-heading {
+  width: 118px;
+  min-width: 118px;
+}
+
+.preview-student-cell {
+  width: 270px;
+  min-width: 270px;
+}
+
+.preview-student-cell__identity {
+  display: grid;
+  gap: 3px;
+}
+
+.preview-student-cell__identity strong {
+  color: var(--ink);
+  line-height: 1.35;
+}
+
+.preview-student-cell__identity span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.note-detail-toggle {
+  min-height: 32px;
+  margin-top: 9px;
+  padding: 5px 10px 5px 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #c9d5ed;
+  border-radius: 999px;
+  background: #f7f9fe;
+  color: #294889;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.note-detail-toggle svg {
+  transition: transform 0.16s ease;
+}
+
+.note-detail-toggle:hover {
+  border-color: #8fa6d3;
+  background: #edf2ff;
+  color: #172f73;
+}
+
+.note-detail-toggle:focus-visible {
+  outline: 3px solid rgba(23, 47, 115, 0.22);
+  outline-offset: 2px;
+}
+
+.note-detail-toggle.is-expanded {
+  border-color: #172f73;
+  background: #172f73;
+  color: #fff;
+}
+
+.note-detail-toggle.is-expanded svg {
+  transform: rotate(180deg);
 }
 
 .preview-row--error td {
@@ -1098,7 +1203,8 @@ a {
 }
 
 .expanded-row td {
-  background: #fffdf6;
+  background: #f8faff;
+  box-shadow: inset 4px 0 0 #172f73;
 }
 
 .competency-mini-grid {
@@ -1108,9 +1214,16 @@ a {
 }
 
 .competency-mini-grid article {
-  border: 1px solid var(--line);
+  border: 1px solid #d7e0f2;
+  border-radius: 6px;
   background: white;
   padding: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-detail-toggle svg {
+    transition: none;
+  }
 }
 
 .competency-mini-grid h4 {
@@ -1269,6 +1382,16 @@ a {
   .result-grid,
   .metadata-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .excel-calculation-note {
+    margin-inline: 14px;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .excel-calculation-note small {
+    grid-column: 2;
+    justify-self: start;
   }
 
   .competency-mini-grid {

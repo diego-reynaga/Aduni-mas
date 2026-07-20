@@ -11,6 +11,8 @@ import {
 } from './models';
 import { supabase } from './supabase.client';
 
+const MAX_IMPORT_FILE_BYTES = 10 * 1024 * 1024;
+
 function throwIfError<T>(result: { data: T; error: { message: string } | null }): T {
   if (result.error) throw new Error(result.error.message);
   return result.data;
@@ -94,6 +96,12 @@ export class NotasService {
     modo: 'preview' | 'confirmar',
   ): Promise<unknown> {
     if (!assignmentId) throw new Error('Seleccione una asignación docente.');
+    if (!file.name.toLocaleLowerCase('es').endsWith('.xlsx')) {
+      throw new Error('Seleccione un archivo de Excel con extensión .xlsx.');
+    }
+    if (file.size <= 0) throw new Error('El archivo seleccionado está vacío.');
+    if (file.size > MAX_IMPORT_FILE_BYTES) throw new Error('El archivo debe pesar como máximo 10 MB.');
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('trimestre', trimestre);
@@ -103,9 +111,18 @@ export class NotasService {
     if (error) {
       const context = (error as { context?: Response }).context;
       if (context) {
-        let payload: { message?: string } | null = null;
-        try { payload = await context.clone().json() as { message?: string }; } catch { /* Non-JSON gateway error. */ }
+        let payload: { message?: string; error?: string; details?: string } | null = null;
+        try {
+          payload = await context.clone().json() as { message?: string; error?: string; details?: string };
+        } catch {
+          try {
+            const text = (await context.clone().text()).trim();
+            if (text) payload = { message: text };
+          } catch { /* The gateway did not return a readable body. */ }
+        }
         if (payload?.message) throw new Error(payload.message);
+        if (payload?.error) throw new Error(payload.error);
+        if (payload?.details) throw new Error(payload.details);
       }
       throw new Error(error.message || 'No se pudo ejecutar la importación.');
     }

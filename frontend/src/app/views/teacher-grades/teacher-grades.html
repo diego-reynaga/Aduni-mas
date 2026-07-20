@@ -104,18 +104,6 @@
                 <span class="competency-tab__number">{{ item.numero }}</span>
                 <span class="competency-tab__name">{{ item.nombre }}</span>
               </button>
-              <button
-                class="competency-edit-button"
-                type="button"
-                [disabled]="loading() || saving()"
-                [attr.aria-label]="'Editar nombre de competencia ' + item.numero"
-                [title]="'Editar ' + item.nombre"
-                (click)="openCompetencyEditor(item.numero, $event)"
-              >
-                <svg aria-hidden="true" viewBox="0 0 24 24" width="15" height="15">
-                  <path d="m4 16-.8 4 4-.8L18 8.4 15.6 6 4 16Zm9.9-8.2 2.3 2.3M14.8 6.8l1.8-1.8a1.7 1.7 0 0 1 2.4 0 1.7 1.7 0 0 1 0 2.4l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
             </div>
           }
         </div>
@@ -188,7 +176,7 @@
                   <small>Capacidad {{ capacity.numero }}</small>
                 </th>
               }
-              <th class="summary-heading" scope="col">Logro<br><small>Competencia</small></th>
+              <th class="summary-heading" scope="col">Promedio<br><small>Competencia</small></th>
               <th class="summary-heading summary-heading--final" scope="col">Promedio<br><small>Final</small></th>
             </tr>
           </thead>
@@ -222,16 +210,14 @@
                 }
                 <td class="average-cell">
                   @if (competenceAverage !== null) {
-                    <strong>{{ competenceAverage | number: '1.0-2' }}</strong>
-                    <span class="achievement-badge">{{ achievement(competenceAverage) }}</span>
+                    <strong>{{ competenceAverage | number: '1.0-0' }}</strong>
                   } @else {
                     <span class="empty-average">Sin notas</span>
                   }
                 </td>
                 <td class="average-cell average-cell--final">
                   @if (studentFinalAverage !== null) {
-                    <strong>{{ studentFinalAverage | number: '1.0-2' }}</strong>
-                    <span class="achievement-badge achievement-badge--final">{{ achievement(studentFinalAverage) }}</span>
+                    <strong>{{ studentFinalAverage | number: '1.0-0' }}</strong>
                   } @else {
                     <span class="empty-average">—</span>
                   }
@@ -248,9 +234,10 @@
         </table>
       </div>
       <div class="formula-footnote">
-        <span>Fórmula aplicada</span>
-        <code>SI.ERROR(PROMEDIO(capacidades); "")</code>
-        <p>Se conservan hasta 6 posiciones por competencia y sólo se promedian las notas registradas.</p>
+        <span>Fórmulas del Excel</span>
+        <code>Competencia: SI.ERROR(PROMEDIO(capacidades); "")</code>
+        <code>Final: SI.ERROR(PROMEDIO(competencias); "")</code>
+        <p>Los promedios se muestran sin decimales, conservando la precisión para calcular.</p>
       </div>
     }
   </section>
@@ -300,47 +287,6 @@
       <div class="capacity-dialog__actions">
         <button class="btn-secondary" type="button" (click)="closeCapacityEditor()">Cancelar</button>
         <button class="btn-primary" type="button" (click)="saveCapacityName()">Guardar nombre</button>
-      </div>
-    </section>
-  </div>
-}
-
-@if (editingCompetency(); as competencyNumber) {
-  <div class="capacity-dialog-backdrop" (mousedown)="closeCompetencyEditor()">
-    <section
-      class="capacity-dialog"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="competency-dialog-title"
-      aria-describedby="competency-dialog-description"
-      (mousedown)="$event.stopPropagation()"
-      (keydown)="handleDialogKeydown($event)"
-    >
-      <button class="capacity-dialog__close" type="button" aria-label="Cerrar" (click)="closeCompetencyEditor()">
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
-          <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </button>
-      <p class="section-kicker">Competencia {{ competencyNumber }}</p>
-      <h2 id="competency-dialog-title">Editar nombre de competencia</h2>
-      <p id="competency-dialog-description">Este nombre se mostrará en el registro y en el resumen de notas.</p>
-      <label for="competency-name-input">Nombre de la competencia</label>
-      <input
-        id="competency-name-input"
-        type="text"
-        maxlength="255"
-        autocomplete="off"
-        [ngModel]="competencyNameDraft()"
-        (ngModelChange)="competencyNameDraft.set($event); competencyNameError.set('')"
-        (keyup.enter)="saveCompetencyName()"
-        [attr.aria-invalid]="competencyNameError() ? 'true' : null"
-      >
-      @if (competencyNameError()) {
-        <p class="capacity-dialog__error" role="alert">{{ competencyNameError() }}</p>
-      }
-      <div class="capacity-dialog__actions">
-        <button class="btn-secondary" type="button" (click)="closeCompetencyEditor()">Cancelar</button>
-        <button class="btn-primary" type="button" (click)="saveCompetencyName()">Guardar nombre</button>
       </div>
     </section>
   </div>

@@ -14,6 +14,7 @@ import { NotasService } from '../../core/notas.service';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn } from '../../core/animations';
 import { downloadImportErrorsReport } from '../../core/import-errors-report';
+import { formatExcelAverage, formatGrade } from '../../core/grade-calculation';
 
 @Component({
   selector: 'app-teacher-import',
@@ -32,6 +33,8 @@ export class TeacherImport {
     { value: 'II_TRIMESTRE', label: 'II TRIMESTRE' },
     { value: 'III_TRIMESTRE', label: 'III TRIMESTRE' },
   ];
+  readonly formatGrade = formatGrade;
+  readonly formatExcelAverage = formatExcelAverage;
 
   readonly form = this.fb.group({
     fileName: [''],

@@ -12,7 +12,7 @@ import {
   TrimestreImportacion,
 } from '../../core/models';
 import { fadeIn } from '../../core/animations';
-import { excelAchievement, excelAverage, hasInvalidGrade } from '../../core/grade-calculation';
+import { excelAverage, hasInvalidGrade } from '../../core/grade-calculation';
 import { PortalService } from '../../core/portal.service';
 import { ConfirmationService } from '../../core/confirmation.service';
 
@@ -54,9 +54,6 @@ export class TeacherGrades {
   readonly editingCapacity = signal<CapacityEditor | null>(null);
   readonly capacityNameDraft = signal('');
   readonly capacityNameError = signal('');
-  readonly editingCompetency = signal<CompetencyNumber | null>(null);
-  readonly competencyNameDraft = signal('');
-  readonly competencyNameError = signal('');
 
   readonly activeCompetency = computed(() => this.competencias().find(
     (item) => item.numero === this.selectedCompetencyNumber(),
@@ -133,10 +130,6 @@ export class TeacherGrades {
     return excelAverage(this.competencias().map((item) => this.competencyAverage(row, item.numero)));
   }
 
-  achievement(value: number | null): string {
-    return value === null ? '' : excelAchievement(value);
-  }
-
   isGradeInvalid(value: unknown): boolean {
     return hasInvalidGrade(value);
   }
@@ -188,45 +181,6 @@ export class TeacherGrades {
         : item),
     })));
     this.markDirty();
-  }
-
-  openCompetencyEditor(competencia: CompetencyNumber, event?: Event): void {
-    const config = this.competencias().find((item) => item.numero === competencia);
-    if (!config) return;
-    this.previouslyFocusedElement = event?.currentTarget as HTMLElement | null;
-    this.competencyNameDraft.set(config.nombre);
-    this.competencyNameError.set('');
-    this.editingCompetency.set(competencia);
-    queueMicrotask(() => this.document.getElementById('competency-name-input')?.focus());
-  }
-
-  saveCompetencyName(): void {
-    const competencyNumber = this.editingCompetency();
-    if (!competencyNumber) return;
-    const name = this.competencyNameDraft().trim().replace(/\s+/g, ' ');
-    if (!name) {
-      this.competencyNameError.set('Ingrese un nombre para la competencia.');
-      return;
-    }
-    if (name.length > 255) {
-      this.competencyNameError.set('Use como máximo 255 caracteres.');
-      return;
-    }
-    this.competencias.update((items) => items.map((item) => item.numero === competencyNumber
-      ? { ...item, nombre: name }
-      : item));
-    this.markDirty();
-    this.closeCompetencyEditor();
-  }
-
-  closeCompetencyEditor(): void {
-    if (!this.editingCompetency()) return;
-    this.editingCompetency.set(null);
-    this.competencyNameDraft.set('');
-    this.competencyNameError.set('');
-    const target = this.previouslyFocusedElement;
-    this.previouslyFocusedElement = null;
-    queueMicrotask(() => target?.focus());
   }
 
   openCapacityEditor(competencia: CompetencyNumber, capacidad: number, event?: Event): void {
@@ -345,7 +299,6 @@ export class TeacherGrades {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.closeCapacityEditor();
-    this.closeCompetencyEditor();
   }
 
   @HostListener('window:beforeunload', ['$event'])

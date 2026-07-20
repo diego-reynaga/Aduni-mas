@@ -134,8 +134,8 @@
 }
 
 .competency-tab-group {
-  min-width: 172px;
-  max-width: 240px;
+  min-width: 220px;
+  flex: 1 1 220px;
   display: flex;
   align-items: stretch;
   border: 1px solid #d8e1f2;
@@ -147,13 +147,14 @@
 
 .competency-tab {
   min-width: 0;
+  min-height: 66px;
   flex: 1;
   padding: 10px 12px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 9px;
   border: 0;
-  border-radius: 8px 0 0 0;
+  border-radius: 8px 8px 0 0;
   background: transparent;
   color: inherit;
   text-align: left;
@@ -184,6 +185,7 @@
   color: #294889;
   font-size: 12px;
   font-weight: 800;
+  margin-top: 1px;
 }
 
 .competency-tab-group.is-active .competency-tab__number {
@@ -192,36 +194,10 @@
 }
 
 .competency-tab__name {
-  overflow: hidden;
   font-size: 12px;
   font-weight: 750;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.competency-edit-button {
-  width: 34px;
-  flex: 0 0 34px;
-  margin: 7px 6px 7px 0;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  align-self: center;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: transparent;
-  color: currentColor;
-}
-
-.competency-edit-button:hover:not(:disabled) {
-  border-color: #c4d0ea;
-  background: #fff;
-  color: #172f73;
-}
-
-.competency-edit-button:disabled {
-  cursor: not-allowed;
-  opacity: .5;
+  line-height: 1.35;
+  white-space: normal;
 }
 
 .active-competency-bar {
@@ -262,7 +238,6 @@
 
 .course-switcher select:focus-visible,
 .competency-tab:focus-visible,
-.competency-edit-button:focus-visible,
 .capacity-edit-button:focus-visible,
 .capacity-dialog button:focus-visible,
 .capacity-dialog input:focus-visible,
@@ -456,23 +431,6 @@ tbody .sticky-column {
 
 .average-cell--final {
   background: #f8faff !important;
-}
-
-.achievement-badge {
-  min-width: 25px;
-  margin-top: 4px;
-  padding: 2px 6px;
-  display: inline-block;
-  border-radius: 999px;
-  background: #edf2ff;
-  color: #36509a;
-  font-size: 10px;
-  font-weight: 850;
-}
-
-.achievement-badge--final {
-  background: #172f73;
-  color: #fff;
 }
 
 .empty-average {
@@ -690,7 +648,7 @@ tbody .sticky-column {
   }
 
   .competency-tab-group {
-    min-width: 168px;
+    min-width: 220px;
   }
 
   .active-competency-bar {

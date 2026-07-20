@@ -47,6 +47,7 @@ import {
   GradoRecesoResponse
 } from './models';
 import { supabase } from './supabase.client';
+import { UNIVERSAL_COMPETENCY_NAMES } from './competencies';
 import { hasInvalidGrade } from './grade-calculation';
 
 type DbResult<T = any> = { data: T; error: { message: string; details?: string } | null };
@@ -73,12 +74,6 @@ function isMissingSchemaError(error: { message?: string; details?: string } | nu
 
 const COMPETENCY_NUMBERS: CompetencyNumber[] = [1, 2, 3, 4];
 const DEFAULT_CAPACITY_NAMES = ['PRACTICA', 'EXAMEN', 'CUADERNO'] as const;
-const DEFAULT_COMPETENCY_NAMES: Record<CompetencyNumber, string> = {
-  1: 'Resuelve problemas de cantidad',
-  2: 'Resuelve problemas de regularidad, equivalencia y cambio',
-  3: 'Resuelve problemas de forma, movimiento y localización',
-  4: 'Resuelve problemas de gestión de datos e incertidumbre',
-};
 const EXCEL_CAPACITY_COLUMNS: Record<CompetencyNumber, string[]> = {
   1: ['F', 'G', 'H', 'I', 'J', 'K'],
   2: ['M', 'N', 'O', 'P', 'Q', 'R'],
@@ -89,7 +84,7 @@ const EXCEL_CAPACITY_COLUMNS: Record<CompetencyNumber, string[]> = {
 function defaultCompetencies(): CompetencyConfig[] {
   return COMPETENCY_NUMBERS.map((numero) => ({
     numero,
-    nombre: DEFAULT_COMPETENCY_NAMES[numero],
+    nombre: UNIVERSAL_COMPETENCY_NAMES[numero],
     capacidades: DEFAULT_CAPACITY_NAMES.map((nombre, index) => ({ numero: index + 1, nombre })),
   }));
 }
@@ -463,7 +458,7 @@ export class PortalService {
           numero,
           nombre: String(stored?.nombre_competencia
             || competencyDetails[0]?.nombre_competencia
-            || DEFAULT_COMPETENCY_NAMES[numero]).trim(),
+            || UNIVERSAL_COMPETENCY_NAMES[numero]).trim(),
           capacidades,
         };
       });
