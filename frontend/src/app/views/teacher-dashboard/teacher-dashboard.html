@@ -1,18 +1,4 @@
 <section class="page-stack teacher-page teacher-dashboard-page" [@fadeIn]>
-  <div class="page-heading teacher-hero">
-    <div>
-      <p class="section-kicker">Portal docente</p>
-      <h2>Mi carga docente</h2>
-      <p>
-        Revise sus cursos asignados y elija como registrar las notas de cada grupo.
-      </p>
-    </div>
-    <div class="teacher-hero__actions">
-      <a class="btn-secondary" [routerLink]="['/docente/notas']">Registrar notas</a>
-      <a class="btn-primary" [routerLink]="['/docente/importar-notas']">Importar Excel</a>
-    </div>
-  </div>
-
   <div class="metric-grid teacher-metric-grid">
     @for (metric of metrics(); track metric.label) {
       <article class="metric-card tone-{{ metric.tone }}">
@@ -65,13 +51,22 @@
                 <span class="text-xs text-slate-500">{{ course.avance }}% registrado</span>
               </td>
               <td>
-                <a
-                  class="btn-secondary btn-compact"
-                  [routerLink]="['/docente/notas']"
-                  [queryParams]="{ assignmentId: course.assignmentId }"
-                >
-                  Registrar notas
-                </a>
+                <div class="teacher-course-actions">
+                  <a
+                    class="btn-secondary btn-compact"
+                    [routerLink]="['/docente/notas']"
+                    [queryParams]="{ assignmentId: course.assignmentId }"
+                  >
+                    Registrar notas
+                  </a>
+                  <a
+                    class="btn-primary btn-compact"
+                    [routerLink]="['/docente/importar-notas']"
+                    [queryParams]="{ assignmentId: course.assignmentId }"
+                  >
+                    Importar Excel
+                  </a>
+                </div>
               </td>
             </tr>
           }

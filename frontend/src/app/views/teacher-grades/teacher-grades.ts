@@ -42,6 +42,11 @@ export class TeacherGrades {
   readonly courses = signal<CourseAssignment[]>([]);
   readonly selectedCourse = signal<CourseAssignment | null>(null);
   readonly trimestre = signal<TrimestreImportacion>('I_TRIMESTRE');
+  readonly trimestres: ReadonlyArray<{ value: TrimestreImportacion; label: string }> = [
+    { value: 'I_TRIMESTRE', label: 'I TRIMESTRE' },
+    { value: 'II_TRIMESTRE', label: 'II TRIMESTRE' },
+    { value: 'III_TRIMESTRE', label: 'III TRIMESTRE' },
+  ];
   readonly competencias = signal<CompetencyConfig[]>([]);
   readonly selectedCompetencyNumber = signal<CompetencyNumber>(1);
   readonly rows = signal<GradeEntry[]>([]);
@@ -66,7 +71,8 @@ export class TeacherGrades {
   constructor() {
     this.route.queryParamMap.subscribe((params) => {
       const rawId = params.get('assignmentId');
-      this.loadGrades(rawId ?? undefined);
+      const requestedTrimestre = this.parseTrimestre(params.get('trimestre'));
+      this.loadGrades(rawId ?? undefined, requestedTrimestre ?? undefined);
     });
   }
 
@@ -86,7 +92,23 @@ export class TeacherGrades {
     })) return;
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { assignmentId: value },
+      queryParams: { assignmentId: value, trimestre: this.trimestre() },
+      queryParamsHandling: '',
+    });
+  }
+
+  async switchTrimestre(value: TrimestreImportacion): Promise<void> {
+    if (value === this.trimestre()) return;
+    if (this.dirty() && !await this.confirmation.confirm({
+      title: 'Cambios sin guardar',
+      message: 'Al cambiar de trimestre se descartarán las modificaciones realizadas en el acta actual.',
+      confirmLabel: 'Cambiar trimestre',
+      tone: 'danger',
+    })) return;
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { assignmentId: this.assignmentId(), trimestre: value },
       queryParamsHandling: '',
     });
   }
@@ -307,14 +329,15 @@ export class TeacherGrades {
     event.preventDefault();
   }
 
-  private loadGrades(assignmentId?: EntityId): void {
+  private loadGrades(assignmentId?: EntityId, trimestre?: TrimestreImportacion): void {
     const requestId = ++this.loadRequestId;
+    if (trimestre) this.trimestre.set(trimestre);
     this.loading.set(true);
     this.error.set('');
     this.message.set('');
     this.dirty.set(false);
 
-    this.portal.teacherGrades(assignmentId).subscribe({
+    this.portal.teacherGrades(assignmentId, trimestre).subscribe({
       next: (payload) => {
         if (requestId !== this.loadRequestId) return;
         this.loading.set(false);
@@ -350,6 +373,12 @@ export class TeacherGrades {
     if (typeof value === 'number') return value;
     const parsed = Number(String(value).trim().replace(',', '.'));
     return Number.isFinite(parsed) ? parsed : Number.NaN;
+  }
+
+  private parseTrimestre(value: string | null): TrimestreImportacion | null {
+    return this.trimestres.some((item) => item.value === value)
+      ? value as TrimestreImportacion
+      : null;
   }
 
   private markDirty(): void {

@@ -5,7 +5,7 @@
         <p class="section-kicker">Registro por competencias</p>
         <h2>{{ selectedCourse()!.curso }}</h2>
         <p>
-          {{ selectedCourse()!.grado }} sección {{ selectedCourse()!.seccion }} · {{ selectedCourse()!.periodo }} ·
+          {{ selectedCourse()!.grado }} sección {{ selectedCourse()!.seccion }} · {{ trimestre().replace('_', ' ') }} ·
           {{ selectedCourse()!.estudiantes }} estudiantes matriculados.
         </p>
         @if (courses().length > 1) {
@@ -87,6 +87,29 @@
         }
       </button>
     </div>
+
+    @if (assignmentId()) {
+      <div class="grade-trimester-switcher">
+        <div>
+          <span class="grade-trimester-switcher__label">Trimestre del acta</span>
+          <p>Seleccione el trimestre que desea registrar o consultar.</p>
+        </div>
+        <div class="grade-trimester-options" role="group" aria-label="Seleccionar trimestre del acta">
+          @for (item of trimestres; track item.value) {
+            <button
+              class="grade-trimester-option"
+              type="button"
+              [class.is-active]="item.value === trimestre()"
+              [attr.aria-pressed]="item.value === trimestre()"
+              [disabled]="loading() || saving()"
+              (click)="switchTrimestre(item.value)"
+            >
+              {{ item.label }}
+            </button>
+          }
+        </div>
+      </div>
+    }
 
     @if (activeCompetency(); as competency) {
       <div class="competency-workspace">

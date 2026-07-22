@@ -88,7 +88,6 @@ a {
   gap: 22px;
 }
 
-.teacher-hero,
 .teacher-course-heading {
   padding: 25px 26px;
   border: 1px solid #cfd8f2;
@@ -96,22 +95,23 @@ a {
   background: #fbfcff;
 }
 
-.teacher-hero {
-  align-items: center;
-}
-
-.teacher-hero .section-kicker,
 .teacher-course-heading .section-kicker,
 .teacher-courses .section-kicker,
 .teacher-grades-surface .section-kicker {
   color: #172f73;
 }
 
-.teacher-hero__actions {
+.teacher-course-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-course-actions .btn-compact {
+  min-width: 126px;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .teacher-metric-grid .metric-card {

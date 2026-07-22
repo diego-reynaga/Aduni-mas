@@ -106,6 +106,63 @@
   gap: 8px;
 }
 
+.grade-trimester-switcher {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid var(--grade-line);
+  background: #f8faff;
+}
+
+.grade-trimester-switcher__label {
+  display: block;
+  color: #233c80;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.grade-trimester-switcher p {
+  margin: 3px 0 0;
+  color: #6b7690;
+  font-size: 11px;
+}
+
+.grade-trimester-options {
+  padding: 3px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(116px, 1fr));
+  gap: 4px;
+  border: 1px solid #cbd7ed;
+  border-radius: 9px;
+  background: #e9effa;
+}
+
+.grade-trimester-option {
+  min-height: 38px;
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #536483;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.grade-trimester-option:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--grade-blue);
+}
+
+.grade-trimester-option.is-active {
+  border-color: #b8c7e4;
+  background: #fff;
+  color: var(--grade-blue);
+  box-shadow: 0 2px 6px rgba(23, 47, 115, 0.1);
+}
+
 .button-spinner {
   width: 15px;
   height: 15px;
@@ -237,6 +294,7 @@
 }
 
 .course-switcher select:focus-visible,
+.grade-trimester-option:focus-visible,
 .competency-tab:focus-visible,
 .capacity-edit-button:focus-visible,
 .capacity-dialog button:focus-visible,
@@ -633,6 +691,16 @@ tbody .sticky-column {
 
   .grade-save-button {
     width: 100%;
+  }
+
+  .grade-trimester-switcher {
+    padding: 14px 15px;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .grade-trimester-options {
+    grid-template-columns: 1fr;
   }
 
   .course-switcher {

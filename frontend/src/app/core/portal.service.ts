@@ -375,7 +375,7 @@ export class PortalService {
     });
   }
 
-  teacherGrades(assignmentId?: EntityId): Observable<TeacherGradesPayload> {
+  teacherGrades(assignmentId?: EntityId, requestedTrimestre?: TrimestreImportacion): Observable<TeacherGradesPayload> {
     return this.observe(async () => {
       const courses = await this.fetchTeacherCourses();
       const selected = courses.find((item) => item.assignmentId === assignmentId) ?? courses[0] ?? null;
@@ -392,7 +392,7 @@ export class PortalService {
       const details = dataOf(await supabase.from('asignaciones_docente').select('id,cursos!inner(grado_id),periodos!inner(gestion_id,nombre)').eq('id', selected.assignmentId).single() as DbResult<any>);
       const course = embedded<any>(details.cursos)!;
       const period = embedded<any>(details.periodos)!;
-      const trimestre = this.trimesterFrom(period.nombre ?? '');
+      const trimestre = requestedTrimestre ?? this.trimesterFrom(period.nombre ?? '');
       const enrollments = dataOf(await supabase.from('matriculas').select('estudiantes!inner(id,codigo,personas!inner(nombres,apellidos))').eq('grado_id', course.grado_id).eq('gestion_id', period.gestion_id).eq('estado', 'ACTIVA') as DbResult<any[]>);
       const [storedConfigs, storedDetails] = await Promise.all([
         supabase

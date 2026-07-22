@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import {
   CourseAssignment,
   ErrorImportacionNotas,
@@ -27,6 +28,7 @@ export class TeacherImport {
   private readonly notasService = inject(NotasService);
   private readonly portal = inject(PortalService);
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   readonly trimestres: Array<{ value: TrimestreImportacion; label: string }> = [
     { value: 'I_TRIMESTRE', label: 'I TRIMESTRE' },
@@ -215,11 +217,15 @@ export class TeacherImport {
       next: (payload) => {
         this.loadingContext.set(false);
         this.courses.set(payload.courses);
-        if (!this.form.controls.assignmentId.value) {
-          const firstAssignmentId = payload.courses[0]?.assignmentId ?? null;
-          this.form.patchValue({ assignmentId: firstAssignmentId });
-          this.selectedAssignmentId.set(firstAssignmentId);
-        }
+        const requestedAssignmentId = this.route.snapshot.queryParamMap.get('assignmentId');
+        const assignmentId = payload.courses.some((course) => course.assignmentId === requestedAssignmentId)
+          ? requestedAssignmentId
+          : payload.courses[0]?.assignmentId ?? null;
+        const requestedTrimestre = this.parseTrimestre(this.route.snapshot.queryParamMap.get('trimestre'));
+        const trimestre = requestedTrimestre ?? this.form.controls.trimestre.value;
+        this.form.patchValue({ assignmentId, trimestre });
+        this.selectedAssignmentId.set(assignmentId);
+        this.selectedTrimestre.set(trimestre);
       },
       error: () => {
         this.loadingContext.set(false);
@@ -243,6 +249,12 @@ export class TeacherImport {
 
   private downloadErrorCsv(errors: ErrorImportacionNotas[], filename: string): void {
     downloadImportErrorsReport(errors, filename, 'REPORTE DE OBSERVACIONES · IMPORTACIÓN DE NOTAS');
+  }
+
+  private parseTrimestre(value: string | null): TrimestreImportacion | null {
+    return this.trimestres.some((item) => item.value === value)
+      ? value as TrimestreImportacion
+      : null;
   }
 
   private errorMessage(error: unknown, fallback: string): string {

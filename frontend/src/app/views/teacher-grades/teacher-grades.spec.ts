@@ -1,7 +1,7 @@
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
-import { of } from 'rxjs';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { BehaviorSubject, of } from 'rxjs';
 import { CompetencyConfig, GradeEntry, TeacherGradesPayload } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
 import { UNIVERSAL_COMPETENCIES } from '../../core/competencies';
@@ -41,21 +41,34 @@ const payload: TeacherGradesPayload = {
 
 describe('TeacherGrades', () => {
   const saveTeacherGrades = vi.fn(() => of({ message: 'Guardado' }));
+  const teacherGrades = vi.fn((_: string | undefined, trimestre: string | undefined) => of({
+    ...payload,
+    trimestre: trimestre ?? payload.trimestre,
+  } as TeacherGradesPayload));
+  const navigate = vi.fn(() => Promise.resolve(true));
+  const queryParamMap = new BehaviorSubject(convertToParamMap({ assignmentId: 'assignment-1' }));
 
   beforeEach(async () => {
     saveTeacherGrades.mockClear();
+    teacherGrades.mockClear();
+    navigate.mockClear();
+    queryParamMap.next(convertToParamMap({ assignmentId: 'assignment-1' }));
     await TestBed.configureTestingModule({
       imports: [TeacherGrades],
       providers: [
         provideNoopAnimations(),
         {
           provide: ActivatedRoute,
-          useValue: { queryParamMap: of({ get: () => 'assignment-1' }) },
+          useValue: { queryParamMap: queryParamMap.asObservable() },
+        },
+        {
+          provide: Router,
+          useValue: { navigate },
         },
         {
           provide: PortalService,
           useValue: {
-            teacherGrades: () => of(payload),
+            teacherGrades,
             saveTeacherGrades,
           },
         },
@@ -72,6 +85,20 @@ describe('TeacherGrades', () => {
       .toEqual(['PRACTICA', 'EXAMEN', 'CUADERNO']);
     expect(fixture.nativeElement.querySelectorAll('.competency-edit-button')).toHaveLength(0);
     expect(fixture.nativeElement.querySelectorAll('.achievement-badge')).toHaveLength(0);
+  });
+
+  it('loads the trimester requested in the URL, including imported grades from II or III', () => {
+    queryParamMap.next(convertToParamMap({
+      assignmentId: 'assignment-1',
+      trimestre: 'II_TRIMESTRE',
+    }));
+    const fixture = TestBed.createComponent(TeacherGrades);
+    fixture.detectChanges();
+
+    expect(teacherGrades).toHaveBeenCalledWith('assignment-1', 'II_TRIMESTRE');
+    expect(fixture.componentInstance.trimestre()).toBe('II_TRIMESTRE');
+    expect(fixture.nativeElement.querySelector('.grade-trimester-option.is-active')?.textContent.trim())
+      .toBe('II TRIMESTRE');
   });
 
   it('adds capacities up to six and keeps a blank slot for every student', () => {
