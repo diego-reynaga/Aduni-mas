@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PortalService } from '../../core/portal.service';
 import { PersonaResponse, PersonaRequest } from '../../core/models';
 import { fadeIn, staggerRows, staggerList, scaleInModal, slideAlert, tabTransition, slideInRight, counterAnimate } from '../../core/animations';
@@ -20,6 +21,8 @@ type Tab = 'general' | 'docentes' | 'administrativos' | 'familias';
 export class AdminPersonal {
   private readonly portal = inject(PortalService);
   private readonly confirmation = inject(ConfirmationService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly activeTab = signal<Tab>('general');
   readonly personas = signal<PersonaResponse[]>([]);
@@ -160,12 +163,25 @@ export class AdminPersonal {
 
   constructor() {
     this.loadPersonas();
+    this.route.data.subscribe(data => {
+      const tab = data['tab'] as Tab;
+      if (tab) {
+        this.activeTab.set(tab);
+      }
+    });
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'] as Tab;
+      if (tab && ['general', 'docentes', 'administrativos', 'familias'].includes(tab)) {
+        this.activeTab.set(tab);
+      }
+    });
   }
 
   setTab(tab: Tab) {
     this.activeTab.set(tab);
     this.searchQuery.set('');
     this.closeModal();
+    void this.router.navigate(['/admin/personal', tab]);
   }
 
   showToast(msg: string, type: 'success' | 'error') {

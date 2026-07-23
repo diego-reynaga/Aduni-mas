@@ -105,7 +105,7 @@ export class PortalService {
       ]);
       return {
         metrics: [
-          { label: 'Usuarios activos', value: String(users.count ?? 0), detail: 'Supabase Auth + profiles', tone: 'maroon' },
+          { label: 'Usuarios activos', value: String(users.count ?? 0), detail: 'Cuentas habilitadas', tone: 'maroon' },
           { label: 'Docentes activos', value: String(teachers.count ?? 0), detail: 'Personal habilitado', tone: 'forest' },
           { label: 'Estudiantes', value: String(students.count ?? 0), detail: 'Directorio académico', tone: 'gold' },
           { label: 'Importaciones observadas', value: String(imports.count ?? 0), detail: 'Requieren revisión', tone: 'ink' },
@@ -604,7 +604,7 @@ export class PortalService {
 
           const avgRow = averages.find(a => 
             a.asignacion_docente_id === assignmentId && 
-            a.trimestre === trimestre && 
+            (a.trimestre === trimestre || (a.trimestre && trimestre && a.trimestre.replace(/[\s_-]+/g, '') === trimestre.replace(/[\s_-]+/g, ''))) && 
             Number(a.numero_competencia) === num
           );
 
@@ -615,6 +615,7 @@ export class PortalService {
             promedioCompetencia: avgRow && avgRow.promedio_competencia !== null ? Number(avgRow.promedio_competencia) : null,
           });
         }
+        competencias.sort((a, b) => a.numeroCompetencia - b.numeroCompetencia);
         
         const validPromedios = competencias.map(c => c.promedioCompetencia).filter(p => p !== null) as number[];
         const promedioFinal = validPromedios.length ? validPromedios.reduce((a,b)=>a+b,0)/validPromedios.length : null;
@@ -627,6 +628,7 @@ export class PortalService {
           promedioFinal,
         });
       }
+      result.sort((a, b) => a.curso.localeCompare(b.curso));
       return result;
     });
   }
@@ -752,7 +754,7 @@ export class PortalService {
 
           const avgRow = averages.find(a => 
             a.asignacion_docente_id === assignmentId && 
-            a.trimestre === trimestre && 
+            (a.trimestre === trimestre || (a.trimestre && trimestre && a.trimestre.replace(/[\s_-]+/g, '') === trimestre.replace(/[\s_-]+/g, ''))) && 
             Number(a.numero_competencia) === num
           );
 
@@ -763,6 +765,7 @@ export class PortalService {
             promedioCompetencia: avgRow && avgRow.promedio_competencia !== null ? Number(avgRow.promedio_competencia) : null,
           });
         }
+        competencias.sort((a, b) => a.numeroCompetencia - b.numeroCompetencia);
         
         const validPromedios = competencias.map(c => c.promedioCompetencia).filter(p => p !== null) as number[];
         const promedioFinal = validPromedios.length ? validPromedios.reduce((a,b)=>a+b,0)/validPromedios.length : null;
@@ -775,6 +778,7 @@ export class PortalService {
           promedioFinal,
         });
       }
+      result.sort((a, b) => a.curso.localeCompare(b.curso));
       return result;
     });
   }

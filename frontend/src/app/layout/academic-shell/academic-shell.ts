@@ -10,6 +10,7 @@ interface NavItem {
   route: string;
   eyebrow: string;
   icon?: string;
+  queryParams?: Record<string, string>;
 }
 
 interface NavGroup {
@@ -19,35 +20,36 @@ interface NavGroup {
 
 const NAV_BY_ROLE: Record<RoleName, NavItem[]> = {
   ADMINISTRADOR: [
+    // 1. Panel Principal
     { label: 'Resumen institucional', route: '/admin', eyebrow: 'Panel Principal' },
 
-    // Módulo Gestión de Alumnos
-    { label: 'Matrículas y Alumnos', route: '/admin/alumnos', eyebrow: 'Gestión de Alumnos' },
+    // 2. Comunidad
+    { label: 'Directorio de Alumnos', route: '/admin/alumnos/directorio', eyebrow: 'Comunidad' },
+    { label: 'Proceso de Matrículas', route: '/admin/alumnos/matriculas', eyebrow: 'Comunidad' },
+    { label: 'Personal y Docentes', route: '/admin/personal/general', eyebrow: 'Comunidad' },
+    { label: 'Vínculos Familiares', route: '/admin/familias', eyebrow: 'Comunidad' },
+    { label: 'Cuentas de Usuarios', route: '/admin/usuarios', eyebrow: 'Comunidad' },
 
-    // Módulo Personas y usuarios
-    { label: 'Cuenta de usuarios', route: '/admin/usuarios', eyebrow: 'Personas y usuarios' },
-    { label: 'Auditorias', route: '/admin/auditorias', eyebrow: 'Personas y usuarios' },
+    // 3. Planificación Académica
+    { label: 'Resumen Académico', route: '/admin/academico/resumen', eyebrow: 'Planificación Académica' },
+    { label: 'Niveles Educativos', route: '/admin/academico/niveles', eyebrow: 'Planificación Académica' },
+    { label: 'Grados y Salones', route: '/admin/academico/grados', eyebrow: 'Planificación Académica' },
+    { label: 'Materias y Cursos', route: '/admin/academico/materias', eyebrow: 'Planificación Académica' },
+    { label: 'Gestiones y Periodos', route: '/admin/periodos', eyebrow: 'Planificación Académica' },
+    { label: 'Asignaciones Docentes', route: '/admin/asignaciones', eyebrow: 'Planificación Académica' },
 
-    // Módulo Recursos Humanos y Familias
-    { label: 'Personal', route: '/admin/personal', eyebrow: 'Recursos Humanos y Familia' },
-    { label: 'Vínculos familiares', route: '/admin/familias', eyebrow: 'Recursos Humanos y Familia' },
+    // 4. Calificaciones
+    { label: 'Supervisión Docente', route: '/admin/supervision', eyebrow: 'Calificaciones' },
+    { label: 'Importación Masiva Excel', route: '/admin/importaciones-notas', eyebrow: 'Calificaciones' },
 
-    // Módulo Académico
-    { label: 'Estructura académica', route: '/admin/academico', eyebrow: 'Gestión Académica' },
-    { label: 'Gestiones y Periodos', route: '/admin/periodos', eyebrow: 'Gestión Académica' },
-    { label: 'Asignaciones Docentes', route: '/admin/asignaciones', eyebrow: 'Gestión Académica' },
-
-    // Módulo Notas
-    { label: 'Supervisión docente', route: '/admin/supervision', eyebrow: 'Calificaciones' },
-    { label: 'Importaciones Excel', route: '/admin/importaciones-notas', eyebrow: 'Calificaciones' },
-
-    // Módulo Institución
-    { label: 'Configuración', route: '/admin/configuracion', eyebrow: 'Institución' },
+    // 5. Ajustes del Sistema
+    { label: 'Configuración Institucional', route: '/admin/configuracion', eyebrow: 'Ajustes del Sistema' },
+    { label: 'Historial de Auditoría', route: '/admin/auditorias', eyebrow: 'Ajustes del Sistema' },
   ],
   DOCENTE: [
     { label: 'Carga docente', route: '/docente', eyebrow: 'Portal Docente' },
     { label: 'Acta de notas', route: '/docente/notas', eyebrow: 'Portal Docente' },
-    { label: 'Importacion Excel', route: '/docente/importar-notas', eyebrow: 'Portal Docente' },
+    { label: 'Importación Excel', route: '/docente/importar-notas', eyebrow: 'Portal Docente' },
   ],
   ESTUDIANTE: [
     { label: 'Dashboard', route: '/estudiante', eyebrow: 'Portal Estudiante' },
@@ -160,7 +162,16 @@ export class AcademicShell implements OnInit {
     }));
   });
 
-  readonly expandedModules = signal<Record<string, boolean>>({});
+  readonly expandedModules = signal<Record<string, boolean>>({
+    'Panel Principal': true,
+    'Comunidad': true,
+    'Planificación Académica': true,
+    'Calificaciones': true,
+    'Ajustes del Sistema': true,
+    'Portal Docente': true,
+    'Portal Estudiante': true,
+    'Portal Familia': true,
+  });
   readonly isMobileMenuOpen = signal(false);
 
   toggleMobileMenu(): void {

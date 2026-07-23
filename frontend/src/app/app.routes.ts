@@ -36,9 +36,63 @@ export const routes: Routes = [
     component: AcademicShell,
     canActivate: [authGuard],
     children: [
+      // Panel Principal
       {
         path: 'admin',
         component: AdminDashboard,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+
+      // Comunidad
+      {
+        path: 'admin/alumnos',
+        redirectTo: 'admin/alumnos/directorio',
+        pathMatch: 'full',
+      },
+      {
+        path: 'admin/alumnos/directorio',
+        component: AdminStudents,
+        data: { tab: 'directorio' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/alumnos/matriculas',
+        component: AdminStudents,
+        data: { tab: 'matriculas' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/personal',
+        redirectTo: 'admin/personal/general',
+        pathMatch: 'full',
+      },
+      {
+        path: 'admin/personal/general',
+        component: AdminPersonal,
+        data: { tab: 'general' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/personal/docentes',
+        component: AdminPersonal,
+        data: { tab: 'docentes' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/personal/administrativos',
+        component: AdminPersonal,
+        data: { tab: 'administrativos' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/personal/apoderados',
+        component: AdminPersonal,
+        data: { tab: 'familias' },
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/familias',
+        component: AdminFamilyLinks,
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
@@ -47,40 +101,35 @@ export const routes: Routes = [
         data: { tab: 'usuarios' },
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
-      {
-        path: 'admin/auditorias',
-        component: AdminUsers,
-        data: { tab: 'auditoria' },
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-      },
-      {
-        path: 'admin/personal',
-        component: AdminPersonal,
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-      },
+
+      // Planificación Académica
       {
         path: 'admin/academico',
+        redirectTo: 'admin/academico/resumen',
+        pathMatch: 'full',
+      },
+      {
+        path: 'admin/academico/resumen',
         component: AdminAcademic,
+        data: { tab: 'resumen' },
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
-        path: 'admin/supervision',
-        component: AdminSupervision,
+        path: 'admin/academico/niveles',
+        component: AdminAcademic,
+        data: { tab: 'niveles' },
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
-        path: 'admin/importaciones-notas',
-        component: AdminImportacionesNotas,
+        path: 'admin/academico/grados',
+        component: AdminAcademic,
+        data: { tab: 'grados' },
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
-        path: 'admin/configuracion',
-        component: AdminInstitution,
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-      },
-      {
-        path: 'admin/alumnos',
-        component: AdminStudents,
+        path: 'admin/academico/materias',
+        component: AdminAcademic,
+        data: { tab: 'materias' },
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {
@@ -94,9 +143,28 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
 
+      // Calificaciones
       {
-        path: 'admin/familias',
-        component: AdminFamilyLinks,
+        path: 'admin/supervision',
+        component: AdminSupervision,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/importaciones-notas',
+        component: AdminImportacionesNotas,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+
+      // Ajustes del Sistema
+      {
+        path: 'admin/configuracion',
+        component: AdminInstitution,
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+      },
+      {
+        path: 'admin/auditorias',
+        component: AdminUsers,
+        data: { tab: 'auditoria' },
         canActivate: [roleGuard(['ADMINISTRADOR'])],
       },
       {

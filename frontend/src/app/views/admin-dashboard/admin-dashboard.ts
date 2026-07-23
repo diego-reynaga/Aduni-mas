@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
-import { AuditEntry, Metric, TeacherProgress, EntityId, StudentAdminRequest, PersonaResponse, EstudianteApoderadoRequest } from '../../core/models';
+import { Metric, TeacherProgress, EntityId, StudentAdminRequest, PersonaResponse, EstudianteApoderadoRequest } from '../../core/models';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn, staggerList, staggerRows, slideInRight } from '../../core/animations';
 
@@ -20,7 +20,6 @@ export class AdminDashboard {
 
   readonly metrics = signal<Metric[]>([]);
   readonly progress = signal<TeacherProgress[]>([]);
-  readonly audits = signal<AuditEntry[]>([]);
   readonly error = signal('');
 
   // Wizard state
@@ -122,10 +121,9 @@ export class AdminDashboard {
       next: (payload) => {
         this.metrics.set(payload.metrics);
         this.progress.set(payload.progress);
-        this.audits.set(payload.audits);
       },
       error: () => {
-        this.error.set('No se pudo cargar el panel administrativo desde Supabase.');
+        this.error.set('No se pudo cargar el panel administrativo.');
       },
     });
   }

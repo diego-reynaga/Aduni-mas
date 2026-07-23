@@ -80,85 +80,52 @@
     <p class="read-only-note">{{ error() }}</p>
   }
 
-  <div class="split-grid">
-    <section class="surface">
-      <div class="surface-header">
-        <div>
-          <h3>Avance por docente y curso</h3>
-          <p>Estado operativo de actas por periodo academico.</p>
-        </div>
+  <section class="surface">
+    <div class="surface-header">
+      <div>
+        <h3>Avance por docente y curso</h3>
+        <p>Estado operativo de actas por periodo academico.</p>
       </div>
+    </div>
 
-      <div class="quiet-table-wrap" [@staggerList]="progress().length">
-        <table class="quiet-table">
-          <thead>
+    <div class="quiet-table-wrap" [@staggerList]="progress().length">
+      <table class="quiet-table">
+        <thead>
+          <tr>
+            <th>Docente</th>
+            <th>Curso</th>
+            <th>Grado</th>
+            <th>Avance</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody [@staggerRows]="progress().length">
+          @for (item of progress(); track item.codigo + item.curso) {
             <tr>
-              <th>Docente</th>
-              <th>Curso</th>
-              <th>Grado</th>
-              <th>Avance</th>
-              <th>Estado</th>
+              <td>
+                <strong>{{ item.docente }}</strong><br>
+                <span class="text-xs text-slate-500">{{ item.codigo }} · {{ item.area }}</span>
+              </td>
+              <td>{{ item.curso }}</td>
+              <td>{{ item.grado }}</td>
+              <td>
+                <div class="progress-track" aria-label="Avance">
+                  <span [style.width.%]="item.avance"></span>
+                </div>
+                <span class="text-xs text-slate-500">{{ item.avance }}%</span>
+              </td>
+              <td>
+                <span [class]="statusClass(item.estado)">
+                  <div class="status-dot"></div>
+                  {{ item.estado }}
+                </span>
+              </td>
             </tr>
-          </thead>
-          <tbody [@staggerRows]="progress().length">
-            @for (item of progress(); track item.codigo + item.curso) {
-              <tr>
-                <td>
-                  <strong>{{ item.docente }}</strong><br>
-                  <span class="text-xs text-slate-500">{{ item.codigo }} · {{ item.area }}</span>
-                </td>
-                <td>{{ item.curso }}</td>
-                <td>{{ item.grado }}</td>
-                <td>
-                  <div class="progress-track" aria-label="Avance">
-                    <span [style.width.%]="item.avance"></span>
-                  </div>
-                  <span class="text-xs text-slate-500">{{ item.avance }}%</span>
-                </td>
-                <td>
-                  <span [class]="statusClass(item.estado)">
-                    <div class="status-dot"></div>
-                    {{ item.estado }}
-                  </span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="surface">
-      <div class="surface-header">
-        <div>
-          <h3>Auditoria reciente</h3>
-          <p>Registro de acciones sensibles sobre notas y promedios.</p>
-        </div>
-      </div>
-
-      <div class="surface-body compact-list" [@staggerRows]="audits().length">
-        @for (entry of audits(); track entry.fecha + entry.accion) {
-          <div class="list-line" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line);">
-            <div>
-              <span class="status-pill-premium"
-                    [class.is-active]="entry.accion === 'CREATE' || entry.accion === 'LOGIN_SUCCESS'"
-                    [class.is-warning]="entry.accion === 'UPDATE'"
-                    [class.is-inactive]="entry.accion === 'DELETE' || entry.accion === 'LOGIN_FAIL' || entry.accion === 'REVOCATION'"
-                    style="margin-bottom: 6px; display: inline-flex;">
-                @if(entry.accion === 'CREATE' || entry.accion === 'LOGIN_SUCCESS') { <div class="pulse-dot"></div> }
-                {{ entry.accion }}
-              </span>
-              <div style="font-size: 13px; color: var(--steel);">
-                <code style="font-size: 11px; color: var(--forest); background: var(--forest-soft); padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 6px;">{{ entry.entidad }}</code>
-                <strong>{{ entry.responsable }}</strong>: {{ entry.detalle }}
-              </div>
-            </div>
-            <span style="color: var(--muted); font-size: 12px; white-space: nowrap;">{{ entry.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
-          </div>
-        }
-      </div>
-    </section>
-  </div>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <!-- WIZARD MODAL -->
   @if (showWizard()) {
