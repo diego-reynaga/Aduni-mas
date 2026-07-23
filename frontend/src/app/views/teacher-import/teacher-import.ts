@@ -30,14 +30,6 @@ export class TeacherImport {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
 
-  readonly trimestres: Array<{ value: TrimestreImportacion; label: string }> = [
-    { value: 'I_TRIMESTRE', label: 'I TRIMESTRE' },
-    { value: 'II_TRIMESTRE', label: 'II TRIMESTRE' },
-    { value: 'III_TRIMESTRE', label: 'III TRIMESTRE' },
-  ];
-  readonly formatGrade = formatGrade;
-  readonly formatExcelAverage = formatExcelAverage;
-
   readonly form = this.fb.group({
     fileName: [''],
     trimestre: this.fb.control<TrimestreImportacion>('I_TRIMESTRE', { nonNullable: true, validators: [Validators.required] }),
@@ -48,6 +40,7 @@ export class TeacherImport {
   readonly preview = signal<RegistroNotasTrimestrePreviewResponse | null>(null);
   readonly result = signal<ResultadoImportacionTrimestre | null>(null);
   readonly history = signal<ImportacionNotasHistorial[]>([]);
+  readonly showHistory = signal(false);
   readonly courses = signal<CourseAssignment[]>([]);
   readonly selectedTrimestre = signal<TrimestreImportacion>('I_TRIMESTRE');
   readonly selectedAssignmentId = signal<EntityId | null>(null);
@@ -58,8 +51,25 @@ export class TeacherImport {
   readonly loadingHistory = signal(false);
   readonly error = signal('');
 
+  readonly trimestres: Array<{ value: TrimestreImportacion; label: string }> = [
+    { value: 'I_TRIMESTRE', label: 'I TRIMESTRE' },
+    { value: 'II_TRIMESTRE', label: 'II TRIMESTRE' },
+    { value: 'III_TRIMESTRE', label: 'III TRIMESTRE' },
+  ];
+  readonly steps = [
+    { number: 1, title: 'Preparar archivo', detail: 'Curso, trimestre y Excel' },
+    { number: 2, title: 'Revisar datos', detail: 'Notas y observaciones' },
+    { number: 3, title: 'Confirmar guardado', detail: 'Registro final del trimestre' },
+  ];
+  readonly formatGrade = formatGrade;
+  readonly formatExcelAverage = formatExcelAverage;
+
   readonly selectedCourse = computed(
     () => this.courses().find((course) => course.assignmentId === this.selectedAssignmentId()) ?? null,
+  );
+
+  readonly selectedTrimestreLabel = computed(
+    () => this.trimestres.find((item) => item.value === this.selectedTrimestre())?.label ?? '',
   );
 
   readonly previewErrors = computed(() => {
@@ -72,6 +82,31 @@ export class TeacherImport {
       ...preview.estudiantes.flatMap((student) => student.errores),
     ];
   });
+
+  /** 1 = choosing file/course, 2 = reviewing the preview, 3 = saved. */
+  readonly currentStep = computed(() => {
+    if (this.result()) return 3;
+    return this.preview() ? 2 : 1;
+  });
+
+  /** Competencies actually present in the parsed file, in sheet order. */
+  readonly previewCompetencies = computed(() => {
+    const students = this.preview()?.estudiantes ?? [];
+    const seen = new Map<number, string>();
+    for (const student of students) {
+      for (const competence of student.competencias) {
+        if (!seen.has(competence.numero)) {
+          seen.set(competence.numero, competence.nombre);
+        }
+      }
+    }
+    return [...seen.entries()]
+      .map(([numero, nombre]) => ({ numero, nombre }))
+      .sort((a, b) => a.numero - b.numero);
+  });
+
+  /** Table column count, kept in sync with the header so the detail row spans correctly. */
+  readonly previewColumnCount = computed(() => 5 + this.previewCompetencies().length);
 
   readonly canPreview = computed(() => Boolean(this.selectedFile())
     && Boolean(this.selectedTrimestre())
@@ -89,6 +124,10 @@ export class TeacherImport {
   constructor() {
     this.loadContext();
     this.loadHistory();
+  }
+
+  toggleHistory(): void {
+    this.showHistory.update((v) => !v);
   }
 
   onFileSelected(event: Event): void {

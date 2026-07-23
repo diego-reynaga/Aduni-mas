@@ -40,13 +40,28 @@ const MAX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024;
 const FIRST_STUDENT_ROW = 16;
 const DEFAULT_CAPACITY_NAMES = ["PRACTICA", "EXAMEN", "CUADERNO"] as const;
 
+// Layout of the "REGISTRO AUXILIAR" template. Competency titles are NOT hardcoded:
+// they are read from the trimester sheet itself (row 7 / COMPETENCE_NAME_ROW) so the
+// importer works for any curricular area, not only Matemática.
 const COMPETENCES = [
-  { number: 1, name: "Resuelve problemas de cantidad", noteCols: [5, 6, 7, 8, 9, 10] },
-  { number: 2, name: "Resuelve problemas de regularidad, equivalencia y cambio", noteCols: [12, 13, 14, 15, 16, 17] },
-  { number: 3, name: "Resuelve problemas de forma, movimiento y localización", noteCols: [19, 20, 21, 22, 23, 24] },
-  { number: 4, name: "Resuelve problemas de gestión de datos e incertidumbre", noteCols: [26, 27, 28, 29, 30, 31] },
+  { number: 1, nameCol: 5, noteCols: [5, 6, 7, 8, 9, 10] },
+  { number: 2, nameCol: 12, noteCols: [12, 13, 14, 15, 16, 17] },
+  { number: 3, nameCol: 19, noteCols: [19, 20, 21, 22, 23, 24] },
+  { number: 4, nameCol: 26, noteCols: [26, 27, 28, 29, 30, 31] },
 ] as const;
+const COMPETENCE_NAME_ROW = 6;
 const CAPACITY_NAME_ROW = 8;
+
+// Header block of the trimester sheet (0-based row, column).
+const SHEET_HEADER_CELLS = {
+  institucion: [2, 3],
+  nivel: [2, 10],
+  grado: [2, 19],
+  seccion: [2, 26],
+  lugar: [3, 3],
+  areaCurricular: [3, 10],
+  docente: [4, 10],
+} as const;
 
 const USEFUL_COLUMNS = new Set([
   0, 1,
@@ -82,7 +97,8 @@ type ParsedStudent = {
   nombreExcel: string;
   idEstudiante: string | null;
   codigoEstudiante: string | null;
-  estadoMapeo: "ENCONTRADO" | "NO_ENCONTRADO";
+  estadoMapeo: "ENCONTRADO" | "NUEVO";
+  esNuevo: boolean;
   competencias: ParsedCompetence[];
   promedioFinalTrimestre: number | null;
   errores: ImportError[];
@@ -150,6 +166,22 @@ function isCapacityPlaceholder(value: string): boolean {
 function capacityName(header: string, number: number): string {
   if (header && !isCapacityPlaceholder(header)) return header;
   return DEFAULT_CAPACITY_NAMES[number - 1] ?? `CAPACIDAD ${number}`;
+}
+
+// Header cells carry labels glued to the value ("I.E.P.: ADUNI MAS"). Keep the value only.
+function stripLabel(value: string): string {
+  return value
+    .replace(/^\s*(?:I\.?\s*E\.?\s*P?\.?|INSTITUCI[ÓO]N(?:\s+EDUCATIVA)?|NIVEL|GRADO|SECCI[ÓO]N|[ÁA]REA(?:\s+CURRICULAR)?|DOCENTE|PROFESORA?|PROF)\s*\.?\s*:?\s*/i, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+// The INICIO sheet is template configuration and is frequently left with the values of
+// whichever registry the file was copied from. The trimester sheet header is the real
+// source of truth, so it wins whenever it has a value.
+function preferSheetValue(sheetValue: string, startValue: string): string {
+  const fromSheet = stripLabel(sheetValue);
+  return fromSheet || stripLabel(startValue);
 }
 
 function importErrorMessage(error: unknown): string {
@@ -298,7 +330,7 @@ Deno.serve(async (req: Request) => {
       .eq("id", assignmentId)
       .single();
     if (assignmentError || !assignment || assignment.estado !== "ACTIVA") {
-      return fail(req, "La asignación docente no existe o está cerrada.", 404);
+      throw new Error("La asignación docente no existe o está cerrada.");
     }
     const assignmentTeacher = assignment.docentes as unknown as { persona_id: string };
     if (profile.rol === "DOCENTE" && assignmentTeacher.persona_id !== profile.persona_id) {
@@ -329,15 +361,19 @@ Deno.serve(async (req: Request) => {
       throw new Error(`La plantilla requiere más de ${MAX_USEFUL_COLUMNS} columnas útiles.`);
     }
     const readCell = readCellFactory(workbook);
+    const sheetHeader = (key: keyof typeof SHEET_HEADER_CELLS): string => {
+      const [row, column] = SHEET_HEADER_CELLS[key];
+      return clean(readCell(trimesterSheet, row, column));
+    };
     const metadata = {
       anio: Number(readCell(startSheet, 10, 4)) || null,
-      nivel: clean(readCell(startSheet, 11, 1)),
-      institucion: clean(readCell(startSheet, 12, 1)),
-      lugar: clean(readCell(startSheet, 13, 1)),
-      areaCurricular: clean(readCell(startSheet, 14, 1)),
-      docente: clean(readCell(startSheet, 15, 1)),
-      grado: clean(readCell(startSheet, 16, 1)),
-      seccion: clean(readCell(startSheet, 16, 3)),
+      nivel: preferSheetValue(sheetHeader("nivel"), clean(readCell(startSheet, 11, 1))),
+      institucion: preferSheetValue(sheetHeader("institucion"), clean(readCell(startSheet, 12, 1))),
+      lugar: preferSheetValue(sheetHeader("lugar"), clean(readCell(startSheet, 13, 1))),
+      areaCurricular: preferSheetValue(sheetHeader("areaCurricular"), clean(readCell(startSheet, 14, 1))),
+      docente: preferSheetValue(sheetHeader("docente"), clean(readCell(startSheet, 15, 1))),
+      grado: preferSheetValue(sheetHeader("grado"), clean(readCell(startSheet, 16, 1))),
+      seccion: preferSheetValue(sheetHeader("seccion"), clean(readCell(startSheet, 16, 3))),
       trimestre,
     };
 
@@ -373,9 +409,22 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const parsedCompetenceDefinitions: ParsedCompetenceDefinition[] = COMPETENCES.map((definition) => ({
+    // Competency titles come from the sheet. A competency whose title cell is empty (or a
+    // broken formula such as "#REF!" / "0") is not used by this area and is dropped entirely.
+    const competenceTitles = new Map<number, string>();
+    const activeCompetences = COMPETENCES.filter((definition) => {
+      const raw = clean(readCell(trimesterSheet, COMPETENCE_NAME_ROW, definition.nameCol));
+      const usable = raw && raw !== "0" && !raw.startsWith("#");
+      if (usable) competenceTitles.set(definition.number, raw);
+      return Boolean(usable);
+    });
+    if (activeCompetences.length === 0) {
+      globalErrors.push(globalError("competencias", "La hoja del trimestre no declara ninguna competencia en la fila 7."));
+    }
+
+    const parsedCompetenceDefinitions: ParsedCompetenceDefinition[] = activeCompetences.map((definition) => ({
       numero: definition.number,
-      nombre: definition.name,
+      nombre: competenceTitles.get(definition.number) ?? `Competencia ${definition.number}`,
       capacidades: definition.noteCols.map((column, index) => {
         const rawHeader = clean(readCell(trimesterSheet, CAPACITY_NAME_ROW, column));
         return {
@@ -383,6 +432,8 @@ Deno.serve(async (req: Request) => {
           columna: column,
           columnaExcel: excelColumn(column),
           nombre: capacityName(rawHeader, index + 1),
+          // "Significativo" means the teacher gave the column a real name. A leftover
+          // "CAPACIDAD 4" placeholder does not count as evidence the column is in use.
           encabezadoSignificativo: Boolean(rawHeader) && !isCapacityPlaceholder(rawHeader),
           tieneValor: false,
           activa: false,
@@ -403,10 +454,11 @@ Deno.serve(async (req: Request) => {
       blankStreak = 0;
       const mapped = studentIndex.get(normalizeName(rawName)) ?? null;
       const errors: ImportError[] = [];
-      if (!mapped) errors.push(rowError(row + 1, rawName, "estudiante", "Estudiante no encontrado o nombre ambiguo; no se crea automáticamente."));
+      const esNuevo = !mapped;
+      const estadoMapeo = mapped ? "ENCONTRADO" : "NUEVO";
 
       const competencies: ParsedCompetence[] = [];
-      for (const [competenceIndex, definition] of COMPETENCES.entries()) {
+      for (const [competenceIndex, definition] of activeCompetences.entries()) {
         const parsedDefinition = parsedCompetenceDefinitions[competenceIndex];
         const rawNotes = definition.noteCols.map((column, index) => {
           const capacity = parsedDefinition.capacidades[index];
@@ -432,20 +484,16 @@ Deno.serve(async (req: Request) => {
             activa: hasValue || capacity.encabezadoSignificativo,
           };
         });
-        // Match IFERROR(AVERAGE(capacity-range), "") from the workbook. The
-        // source formula cache may be stale, so calculate from the source
-        // capacity cells instead of trusting its cached result.
         const competenceAverage = average(
           rawNotes.map((note) => note.valor).filter((value): value is number => value !== null),
         );
         competencies.push({
           numero: definition.number,
-          nombre: definition.name,
+          nombre: parsedDefinition.nombre,
           notas: rawNotes,
           promedioCompetencia: competenceAverage,
         });
       }
-      // Match IFERROR(AVERAGE(the four competency averages), "") from AL.
       const finalAverage = average(
         competencies.map((item) => item.promedioCompetencia).filter((value): value is number => value !== null),
       );
@@ -456,18 +504,19 @@ Deno.serve(async (req: Request) => {
         nombreExcel: rawName,
         idEstudiante: mapped?.id ?? null,
         codigoEstudiante: mapped?.codigo ?? null,
-        estadoMapeo: mapped ? "ENCONTRADO" : "NO_ENCONTRADO",
+        estadoMapeo,
+        esNuevo,
         competencias: competencies,
         promedioFinalTrimestre: finalAverage,
         errores: errors,
       });
     }
 
-    // Capacity counts are global per competency. A value present only in a
-    // later student's fifth/sixth slot must still produce arrays of the same
-    // length for every student before the atomic grade RPC validates them.
     for (const definition of parsedCompetenceDefinitions) {
-      const activeCount = Math.max(3, definition.capacidades.reduce(
+      // Keep every capacity up to the last one that carries data, or that has a header the
+      // teacher actually named. A bare "CAPACIDAD 4" placeholder with no notes anywhere is
+      // template filler and must not become an empty column in the preview.
+      const activeCount = Math.max(1, definition.capacidades.reduce(
         (count, capacity) => capacity.encabezadoSignificativo || capacity.tieneValor ? capacity.numero : count,
         0,
       ));
@@ -476,9 +525,34 @@ Deno.serve(async (req: Request) => {
       });
       for (const student of students) {
         const competence = student.competencias.find((item) => item.numero === definition.numero);
-        if (competence) competence.notas = competence.notas.slice(0, activeCount);
+        if (competence) {
+          competence.notas = competence.notas.slice(0, activeCount);
+          competence.notas.forEach((note) => {
+            note.activa = note.numeroCapacidad <= activeCount;
+          });
+        }
       }
     }
+
+    // A competency may be declared in row 7 by the template yet never be graded (no note in
+    // any column, for any student). Drop it so the preview shows only what the file uses.
+    const gradedCompetences = new Set(
+      parsedCompetenceDefinitions
+        .filter((definition) => definition.capacidades.some((capacity) => capacity.tieneValor))
+        .map((definition) => definition.numero),
+    );
+    if (gradedCompetences.size > 0) {
+      for (let index = parsedCompetenceDefinitions.length - 1; index >= 0; index--) {
+        if (!gradedCompetences.has(parsedCompetenceDefinitions[index].numero)) {
+          parsedCompetenceDefinitions.splice(index, 1);
+        }
+      }
+      for (const student of students) {
+        student.competencias = student.competencias.filter((item) => gradedCompetences.has(item.numero));
+      }
+    }
+
+    students.sort((a, b) => a.nombreExcel.localeCompare(b.nombreExcel, "es"));
 
     const evaluated = students.map((item) => item.promedioFinalTrimestre).filter((value): value is number => value !== null);
     const count = (predicate: (value: number) => boolean) => evaluated.filter(predicate).length;
@@ -499,7 +573,7 @@ Deno.serve(async (req: Request) => {
     if (mode === "preview") return response(req, preview);
     if (preview.bloqueante) return fail(req, "La importación tiene errores estructurales bloqueantes.", 422);
 
-    const importable = students.filter((item) => item.idEstudiante && item.promedioFinalTrimestre !== null && item.errores.length === 0);
+    const importable = students.filter((item) => (item.idEstudiante || item.esNuevo) && item.promedioFinalTrimestre !== null && item.errores.length === 0);
     const allErrors = [...globalErrors, ...students.flatMap((item) => item.errores)];
     const competencies = parsedCompetenceDefinitions.map((definition) => ({
       numero_competencia: definition.numero,
@@ -510,18 +584,13 @@ Deno.serve(async (req: Request) => {
     }));
     const studentPayload = importable.map((student) => ({
       estudiante_id: student.idEstudiante,
+      nombre_excel: student.nombreExcel,
+      es_nuevo: student.esNuevo,
       competencias: student.competencias.map((competence) => ({
         numero_competencia: competence.numero,
         notas: competence.notas.map((note) => note.valor),
       })),
     }));
-    const detailCount = studentPayload.reduce(
-      (total, student) => total + student.competencias.reduce(
-        (subtotal, competence) => subtotal + competence.notas.filter((note) => note !== null).length,
-        0,
-      ),
-      0,
-    );
     const { data: persisted, error: persistError } = await userClient.rpc("confirmar_importacion_notas", {
       p_asignacion_id: assignmentId,
       p_trimestre: trimestre,
@@ -550,7 +619,13 @@ Deno.serve(async (req: Request) => {
       totalFilas: students.length,
       totalCorrectas: importable.length,
       totalConError: students.length - importable.length,
-      notasIndividualesGuardadas: detailCount,
+      notasIndividualesGuardadas: studentPayload.reduce(
+        (total, student) => total + student.competencias.reduce(
+          (subtotal, competence) => subtotal + competence.notas.filter((note) => note !== null).length,
+          0,
+        ),
+        0,
+      ),
       competenciasGuardadas: saved.competenciasGuardadas,
       promediosFinalesGuardados: saved.promediosFinalesGuardados,
       errores: allErrors,

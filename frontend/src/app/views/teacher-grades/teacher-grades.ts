@@ -1,4 +1,4 @@
-import { DecimalPipe, DOCUMENT } from '@angular/common';
+import { DOCUMENT, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,7 +23,7 @@ type CapacityEditor = {
 
 @Component({
   selector: 'app-teacher-grades',
-  imports: [DecimalPipe, FormsModule],
+  imports: [FormsModule, DecimalPipe],
   templateUrl: './teacher-grades.html',
   styleUrl: './teacher-grades.css',
   animations: [fadeIn],

@@ -521,6 +521,26 @@ a {
   font-weight: 750;
 }
 
+/* Numbered step label shared by the three inputs of the import setup panel. */
+.field__step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.field__step > b {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 19px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #172f73;
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .field input,
 .field select,
 .field textarea {
@@ -662,6 +682,8 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 22px;
+  padding: 0;
+  list-style: none;
 }
 
 .import-step {
@@ -695,6 +717,16 @@ a {
 .import-step--current > span {
   background: var(--primary);
   color: #172f73;
+}
+
+.import-step--done {
+  border-color: rgba(126, 217, 163, 0.55);
+  background: rgba(126, 217, 163, 0.14);
+}
+
+.import-step--done > span {
+  background: #2f9e63;
+  color: white;
 }
 
 .import-step strong,
@@ -839,6 +871,10 @@ a {
 }
 
 .file-picker__title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   color: var(--ink);
   font-size: 14px;
   font-weight: 800;
@@ -846,10 +882,31 @@ a {
 }
 
 .file-picker__step {
+  justify-content: center;
   color: var(--primary-strong);
   font-size: 11px;
   font-weight: 850;
   text-transform: uppercase;
+}
+
+/* Once a file is chosen the dropzone stops reading as an empty target. */
+.file-picker.is-loaded {
+  border-style: solid;
+  border-color: #2f9e63;
+  background: rgba(126, 217, 163, 0.1);
+}
+
+.file-picker.is-loaded .file-picker__title {
+  color: #1c6b42;
+}
+
+.file-picker.is-loaded .file-picker__title svg {
+  flex: 0 0 auto;
+  color: #2f9e63;
+}
+
+.file-picker.is-loaded .field__step > b {
+  background: #2f9e63;
 }
 
 .file-picker__detail {
@@ -907,60 +964,6 @@ a {
   overflow-wrap: anywhere;
 }
 
-.destination-summary {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.destination-summary--wide {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.destination-block {
-  padding: 16px;
-  border: 1px solid var(--line);
-  background: #fbfcff;
-}
-
-.destination-block__heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.destination-block__heading strong {
-  color: #172f73;
-  font-size: 14px;
-}
-
-.destination-block__heading span {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.destination-summary div {
-  padding: 10px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.75);
-}
-
-.destination-summary dt {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 750;
-  text-transform: uppercase;
-}
-
-.destination-summary dd {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 800;
-}
-
 .import-setup__action {
   display: flex;
   align-items: center;
@@ -971,16 +974,15 @@ a {
   background: #f4f7ff;
 }
 
-.import-setup__action strong {
-  display: block;
-  color: #172f73;
-  font-size: 14px;
+.import-setup__destination {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
-.import-setup__action p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
+.import-setup__destination strong {
+  color: #172f73;
 }
 
 .import-review__actions {
@@ -1202,8 +1204,28 @@ a {
 }
 
 .preview-competency-heading {
-  width: 118px;
-  min-width: 118px;
+  width: 132px;
+  min-width: 132px;
+  vertical-align: top;
+}
+
+.preview-competency-heading__index {
+  display: block;
+}
+
+/* The full competency title comes from the file and can be long; clamp it so the
+   header stays readable while the complete text remains in the title attribute. */
+.preview-competency-heading small {
+  display: -webkit-box;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .preview-student-cell {
@@ -1278,7 +1300,7 @@ a {
 
 .competency-mini-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
 
@@ -1296,9 +1318,16 @@ a {
 }
 
 .competency-mini-grid h4 {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: 13px;
   line-height: 1.35;
+}
+
+.competency-mini-grid__name {
+  margin: 2px 0 10px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .mini-note-list {
@@ -1364,6 +1393,49 @@ a {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.history-header-toggle {
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.history-header-toggle:hover {
+  background-color: var(--field-bg, rgba(0, 0, 0, 0.02));
+}
+
+.history-chevron-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #000000;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.history-header-toggle:hover .history-chevron-btn,
+.history-chevron-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.history-chevron-icon {
+  width: 28px;
+  height: 28px;
+  stroke: #000000;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.history-chevron-icon.is-open {
+  transform: rotate(180deg);
 }
 
 .empty-state {
@@ -1437,17 +1509,11 @@ a {
     width: 100%;
   }
 
-  .destination-block__heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .import-setup__action .import-action,
   .import-review__actions .import-action {
     width: 100%;
   }
 
-  .destination-summary,
   .result-grid,
   .metadata-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

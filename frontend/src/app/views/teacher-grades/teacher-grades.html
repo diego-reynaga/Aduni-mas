@@ -1,4 +1,39 @@
 <section class="page-stack teacher-page teacher-grades-page" [@fadeIn]>
+  @if (courses().length > 1) {
+    <div class="courses-selector-bar">
+      <div class="courses-selector-bar__header">
+        <div class="courses-selector-bar__title-group">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+            <path d="M6 6h10"/>
+            <path d="M6 10h10"/>
+          </svg>
+          <span class="courses-selector-bar__title">Mis Cursos Asignados</span>
+        </div>
+        <span class="courses-selector-bar__count">{{ courses().length }} cursos</span>
+      </div>
+      <div class="courses-pills-row">
+        @for (course of courses(); track course.assignmentId) {
+          <button
+            type="button"
+            class="course-pill"
+            [class.is-active]="course.assignmentId === assignmentId()"
+            [disabled]="loading() || saving()"
+            (click)="switchCourse(course.assignmentId)"
+          >
+            <div class="course-pill__header">
+              <span class="course-pill__name">{{ course.curso }}</span>
+              @if (course.assignmentId === assignmentId()) {
+                <span class="course-pill__badge">Actual</span>
+              }
+            </div>
+            <span class="course-pill__meta">{{ course.grado }} {{ course.seccion }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
   @if (selectedCourse()) {
     <div class="page-heading teacher-course-heading">
       <div class="teacher-course-heading__content">
@@ -8,27 +43,10 @@
           {{ selectedCourse()!.grado }} sección {{ selectedCourse()!.seccion }} · {{ trimestre().replace('_', ' ') }} ·
           {{ selectedCourse()!.estudiantes }} estudiantes matriculados.
         </p>
-        @if (courses().length > 1) {
-          <label class="course-switcher" for="course-select">
-            <span>Cambiar curso</span>
-            <select
-              id="course-select"
-              [ngModel]="assignmentId()"
-              (ngModelChange)="switchCourse($event)"
-              [disabled]="loading() || saving()"
-            >
-              @for (course of courses(); track course.assignmentId) {
-                <option [ngValue]="course.assignmentId">
-                  {{ course.curso }} · {{ course.grado }} {{ course.seccion }} · {{ course.periodo }}
-                </option>
-              }
-            </select>
-          </label>
-        }
       </div>
       <div class="data-chip-row grade-context-chips">
         <span class="data-chip">Notas: 0–20</span>
-        <span class="data-chip">4 competencias</span>
+        <span class="data-chip">{{ competencias().length }} competencias</span>
         @if (dirty()) {
           <span class="data-chip data-chip--pending">Cambios sin guardar</span>
         }
@@ -68,7 +86,7 @@
       <div>
         <p class="section-kicker">Acta del trimestre</p>
         <h3>Notas por capacidad</h3>
-        <p>Seleccione una competencia para registrar sus capacidades. El promedio final integra las cuatro.</p>
+        <p>Seleccione una competencia para registrar sus capacidades. El promedio final integra todas.</p>
       </div>
       <button
         class="btn-primary grade-save-button"

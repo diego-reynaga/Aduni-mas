@@ -5,29 +5,22 @@
       <h2>Importar notas desde Excel</h2>
       <p>Seleccione el curso, el trimestre y el archivo. Primero revisara los datos y solo se guardaran al confirmar.</p>
 
-      <div class="import-steps" aria-label="Proceso de importacion">
-        <div class="import-step import-step--current">
-          <span>1</span>
-          <div>
-            <strong>Preparar archivo</strong>
-            <small>Curso, trimestre y Excel</small>
-          </div>
-        </div>
-        <div class="import-step">
-          <span>2</span>
-          <div>
-            <strong>Revisar datos</strong>
-            <small>Notas y observaciones</small>
-          </div>
-        </div>
-        <div class="import-step">
-          <span>3</span>
-          <div>
-            <strong>Confirmar guardado</strong>
-            <small>Registro final del trimestre</small>
-          </div>
-        </div>
-      </div>
+      <ol class="import-steps" aria-label="Proceso de importacion">
+        @for (step of steps; track step.number) {
+          <li
+            class="import-step"
+            [class.import-step--current]="currentStep() === step.number"
+            [class.import-step--done]="currentStep() > step.number"
+            [attr.aria-current]="currentStep() === step.number ? 'step' : null"
+          >
+            <span>{{ currentStep() > step.number ? '✓' : step.number }}</span>
+            <div>
+              <strong>{{ step.title }}</strong>
+              <small>{{ step.detail }}</small>
+            </div>
+          </li>
+        }
+      </ol>
     </div>
   </div>
 
@@ -36,17 +29,10 @@
   }
 
   <section class="surface import-setup">
-    <div class="surface-header">
-      <div>
-        <p class="section-kicker">Paso 1 de 3</p>
-        <h3>Indique donde se guardaran las notas</h3>
-        <p>El archivo se registrara solo en el curso y trimestre que seleccione aqui.</p>
-      </div>
-    </div>
     <div class="surface-body import-file-panel" [formGroup]="form">
       <div class="selector-grid">
         <label class="field">
-          <span><b>1</b> Trimestre</span>
+          <span class="field__step"><b>1</b> Trimestre</span>
           <select formControlName="trimestre" (change)="onTrimestreChanged()">
             @for (item of trimestres; track item.value) {
               <option [value]="item.value">{{ item.label }}</option>
@@ -55,60 +41,46 @@
         </label>
 
         <label class="field">
-          <span><b>2</b> Curso asignado</span>
+          <span class="field__step"><b>2</b> Curso asignado</span>
           <select formControlName="assignmentId" (change)="onAssignmentChanged()">
             @for (course of courses(); track course.assignmentId) {
               <option [ngValue]="course.assignmentId">
-                {{ course.curso }} · {{ course.grado }} {{ course.seccion }} · {{ course.periodo }}
+                {{ course.curso }} · {{ course.grado }} {{ course.seccion }}
               </option>
             }
           </select>
         </label>
       </div>
 
-      <label class="file-picker file-picker--wide">
+      <label class="file-picker file-picker--wide" [class.is-loaded]="!!form.value.fileName">
         <input type="file" accept=".xlsx" (change)="onFileSelected($event)">
-        <span class="file-picker__step">3. Archivo de notas</span>
-        <span class="file-picker__title">{{ form.value.fileName || 'Seleccionar NOTAS.xlsx' }}</span>
-        <span class="file-picker__detail">
-          {{ form.value.fileName ? 'Archivo listo para revisar' : 'Haga clic aqui para elegir el archivo Excel' }}
-        </span>
+        <span class="field__step file-picker__step"><b>3</b> Archivo de registro</span>
+        @if (form.value.fileName) {
+          <span class="file-picker__title">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17">
+              <path d="m5 12 4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            {{ form.value.fileName }}
+          </span>
+          <span class="file-picker__detail">Listo para previsualizar · haga clic para cambiar el archivo</span>
+        } @else {
+          <span class="file-picker__title">Seleccionar archivo de Excel</span>
+          <span class="file-picker__detail">Haga clic aquí para elegir el registro de notas (.xlsx)</span>
+        }
       </label>
 
-      @if (selectedCourse(); as course) {
-        <div class="destination-block">
-          <div class="destination-block__heading">
-            <strong>Destino seleccionado</strong>
-            <span>Revise estos datos antes de continuar.</span>
-          </div>
-          <dl class="destination-summary destination-summary--wide">
-            <div>
-              <dt>Curso</dt>
-              <dd>{{ course.curso }}</dd>
-            </div>
-            <div>
-              <dt>Grado</dt>
-              <dd>{{ course.grado }} {{ course.seccion }}</dd>
-            </div>
-            <div>
-              <dt>Periodo asignado</dt>
-              <dd>{{ course.periodo }}</dd>
-            </div>
-            <div>
-              <dt>Estudiantes</dt>
-              <dd>{{ course.estudiantes }}</dd>
-            </div>
-          </dl>
-        </div>
-      } @else {
+      @if (!selectedCourse()) {
         <p class="empty-state">{{ loadingContext() ? 'Cargando asignaciones...' : 'No hay asignaciones disponibles.' }}</p>
       }
 
       <div class="import-setup__action">
-        <div>
-          <strong>Cuando termine de seleccionar los datos</strong>
-          <p>Revise el archivo antes de guardar cualquier nota.</p>
-        </div>
+        @if (selectedCourse(); as course) {
+          <p class="import-setup__destination">
+            Se guardará en <strong>{{ course.curso }}</strong> · {{ course.grado }} {{ course.seccion }}
+            · <strong>{{ selectedTrimestreLabel() }}</strong>
+            · {{ course.estudiantes }} estudiantes matriculados.
+          </p>
+        }
         <button class="btn-primary import-action" type="button" (click)="previewExcel()" [disabled]="!canPreview()">
           {{ loadingPreview() ? 'Previsualizando...' : 'Previsualizar archivo' }}
         </button>
@@ -125,9 +97,9 @@
           <p>{{ data.metadata.trimestre }} · {{ data.metadata.institucion }} · {{ data.metadata.docente }}</p>
         </div>
         <div class="import-review__actions">
-          <span class="status-pill" [class.is-good]="!data.bloqueante" [class.is-danger]="data.bloqueante">
-            {{ data.bloqueante ? 'Bloqueada' : 'Lista para confirmar' }}
-          </span>
+          @if (data.bloqueante) {
+            <span class="status-pill is-danger">Bloqueada</span>
+          }
           <button class="btn-primary import-action" type="button" (click)="confirmarImportacion()" [disabled]="!canConfirm()">
             {{ confirming() ? 'Guardando...' : 'Confirmar y guardar' }}
           </button>
@@ -143,22 +115,6 @@
           <div>
             <dt>Nivel</dt>
             <dd>{{ data.metadata.nivel || '-' }}</dd>
-          </div>
-          <div>
-            <dt>Área</dt>
-            <dd>{{ data.metadata.areaCurricular || '-' }}</dd>
-          </div>
-          <div>
-            <dt>Docente</dt>
-            <dd>{{ data.metadata.docente || '-' }}</dd>
-          </div>
-          <div>
-            <dt>Grado</dt>
-            <dd>{{ data.metadata.grado || '-' }}</dd>
-          </div>
-          <div>
-            <dt>Sección</dt>
-            <dd>{{ data.metadata.seccion || '-' }}</dd>
           </div>
           <div>
             <dt>Institución</dt>
@@ -245,9 +201,10 @@
               <th>N°</th>
               <th>Estudiante</th>
               <th>Mapeo</th>
-              @for (competencyNumber of [1, 2, 3, 4]; track competencyNumber) {
-                <th class="preview-competency-heading">
-                  Competencia {{ competencyNumber }}
+              @for (competency of previewCompetencies(); track competency.numero) {
+                <th class="preview-competency-heading" [attr.title]="competency.nombre">
+                  <span class="preview-competency-heading__index">Competencia {{ competency.numero }}</span>
+                  <small>{{ competency.nombre }}</small>
                 </th>
               }
               <th>Promedio final</th>
@@ -279,8 +236,8 @@
                   </button>
                 </td>
                 <td>
-                  <span class="status-pill" [class.is-good]="student.estadoMapeo === 'ENCONTRADO'" [class.is-warning]="student.estadoMapeo !== 'ENCONTRADO'">
-                    {{ student.estadoMapeo === 'ENCONTRADO' ? 'Encontrado' : 'No encontrado' }}
+                  <span class="status-pill" [class.is-good]="student.estadoMapeo === 'ENCONTRADO'" [class.is-warning]="student.estadoMapeo === 'NUEVO'">
+                    {{ student.estadoMapeo === 'ENCONTRADO' ? 'Encontrado' : 'Nuevo (se registrará)' }}
                   </span>
                 </td>
                 @for (competence of student.competencias; track competence.numero) {
@@ -299,11 +256,12 @@
               </tr>
               @if (isExpanded(student)) {
                 <tr class="expanded-row" [id]="'notes-detail-' + student.filaExcel">
-                  <td colspan="9">
+                  <td [attr.colspan]="previewColumnCount()">
                     <div class="competency-mini-grid">
                       @for (competence of student.competencias; track competence.numero) {
                         <article>
                           <h4>Competencia {{ competence.numero }}</h4>
+                          <p class="competency-mini-grid__name">{{ competence.nombre }}</p>
                           <div class="mini-note-list">
                             @for (note of competence.notas; track note.columnaExcel) {
                               @if (note.activa !== false) {
@@ -328,66 +286,34 @@
     </section>
   }
 
-  @if (result(); as saved) {
-    <section class="import-result">
-      <div class="import-result__heading">
-        <div>
-          <p class="section-kicker">Resultado guardado</p>
-          <h3>{{ saved.message }}</h3>
-        </div>
-        <span class="status-pill" [class.is-good]="saved.totalConError === 0" [class.is-warning]="saved.totalConError > 0">
-          Importación #{{ saved.idImportacion }}
-        </span>
-      </div>
-      <div class="result-grid result-grid--compact">
-        <article>
-          <span>Filas leídas</span>
-          <strong>{{ saved.totalFilas }}</strong>
-        </article>
-        <article class="is-highlight">
-          <span>Estudiantes guardados</span>
-          <strong>{{ saved.totalCorrectas }}</strong>
-        </article>
-        <article>
-          <span>Notas individuales</span>
-          <strong>{{ saved.notasIndividualesGuardadas }}</strong>
-        </article>
-        <article>
-          <span>Competencias</span>
-          <strong>{{ saved.competenciasGuardadas }}</strong>
-        </article>
-        <article [class.has-warning]="saved.totalConError > 0">
-          <span>Filas observadas</span>
-          <strong>{{ saved.totalConError }}</strong>
-        </article>
-      </div>
-      @if (saved.errores.length > 0) {
-        <button class="btn-secondary" type="button" (click)="downloadResultErrors()">Descargar reporte de errores</button>
-      }
-    </section>
-  }
-
   <section class="surface">
-    <div class="surface-header">
+    <div class="surface-header history-header-toggle" (click)="toggleHistory()" role="button" tabindex="0">
       <div>
         <p class="section-kicker">Trazabilidad</p>
         <h3>Importaciones recientes</h3>
-        <p>Historial registrado en Supabase para este usuario.</p>
+        <p>Historial registrado en el sistema para este usuario.</p>
+      </div>
+      <div class="history-chevron-btn" aria-label="Desplegar trazabilidad">
+        <svg class="history-chevron-icon" [class.is-open]="showHistory()" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
       </div>
     </div>
-    <div class="history-list">
-      @for (item of history(); track item.idImportacion) {
-        <article class="history-row">
-          <div>
-            <strong>{{ item.nombreArchivo }}</strong>
-            <span>{{ item.trimestre || 'Sin trimestre' }} · {{ item.areaCurricular }} · {{ item.grado }} {{ item.seccion }} · {{ item.fechaImportacion }}</span>
-            <p>{{ item.observacion }}</p>
-          </div>
-          <span [class]="statusClass(item.estado)">{{ item.estado }}</span>
-        </article>
-      } @empty {
-        <p class="empty-state">{{ loadingHistory() ? 'Cargando historial...' : 'Todavía no existen importaciones registradas.' }}</p>
-      }
-    </div>
+    @if (showHistory()) {
+      <div class="history-list" [@fadeIn]>
+        @for (item of history(); track item.idImportacion) {
+          <article class="history-row">
+            <div>
+              <strong>{{ item.nombreArchivo }}</strong>
+              <span>{{ item.trimestre || 'Sin trimestre' }} · {{ item.areaCurricular }} · {{ item.grado }} {{ item.seccion }} · {{ item.fechaImportacion }}</span>
+              <p>{{ item.observacion }}</p>
+            </div>
+            <span [class]="statusClass(item.estado)">{{ item.estado }}</span>
+          </article>
+        } @empty {
+          <p class="empty-state">{{ loadingHistory() ? 'Cargando historial...' : 'Todavía no existen importaciones registradas.' }}</p>
+        }
+      </div>
+    }
   </section>
 </section>

@@ -257,7 +257,7 @@ export interface EstudianteTrimestrePreview {
   nombreExcel: string;
   idEstudiante: EntityId | null;
   codigoEstudiante: string | null;
-  estadoMapeo: 'ENCONTRADO' | 'NO_ENCONTRADO';
+  estadoMapeo: 'ENCONTRADO' | 'NUEVO' | 'NO_ENCONTRADO';
   competencias: CompetenciaTrimestre[];
   promedioFinalTrimestre: number | null;
   errores: ErrorImportacionNotas[];
@@ -277,7 +277,7 @@ export interface EstudianteNotaPreview {
   nombreExcel: string;
   idEstudiante: EntityId | null;
   codigoEstudiante: string | null;
-  estadoMapeo: 'ENCONTRADO' | 'NO_ENCONTRADO';
+  estadoMapeo: 'ENCONTRADO' | 'NUEVO' | 'NO_ENCONTRADO';
   iTrimestre: number | null;
   iiTrimestre: number | null;
   iiiTrimestre: number | null;
