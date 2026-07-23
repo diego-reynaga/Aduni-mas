@@ -39,10 +39,16 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: Prepare artifacts for GitHub Pages
+        run: |
+          mkdir -p _site
+          cp -r frontend/dist/frontend/browser/* _site/
+          cp _site/index.csr.html _site/index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: frontend/dist/frontend/browser
+          path: _site
 
   deploy:
     environment:
