@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Angular app
         working-directory: frontend
-        run: npm run build -- --configuration production --base-href /Aduni-mas/
+        run: npm run build -- --configuration production --base-href /
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
