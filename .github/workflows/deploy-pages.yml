@@ -34,7 +34,10 @@ jobs:
 
       - name: Build Angular app
         working-directory: frontend
-        run: npm run build -- --configuration production --base-href /SoftEscolar/
+        run: npm run build -- --configuration production --base-href /Aduni-mas/
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
