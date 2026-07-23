@@ -42,8 +42,7 @@ jobs:
       - name: Prepare artifacts for GitHub Pages
         run: |
           mkdir -p _site
-          cp -r frontend/dist/frontend/browser/* _site/
-          cp _site/index.csr.html _site/index.html
+          cp -r frontend/dist/frontend/browser/ _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
