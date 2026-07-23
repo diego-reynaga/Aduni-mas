@@ -365,10 +365,9 @@ export class PortalService {
       const courses = await this.fetchTeacherCourses();
       return {
         metrics: [
-          { label: 'Cursos asignados', value: String(courses.length), detail: 'Asignaciones visibles por RLS', tone: 'maroon' },
+          { label: 'Cursos asignados', value: String(courses.length), detail: 'Asignaciones activas', tone: 'maroon' },
           { label: 'Estudiantes', value: String(courses.reduce((sum, item) => sum + item.estudiantes, 0)), detail: 'Matrículas activas', tone: 'forest' },
           { label: 'Avance promedio', value: `${courses.length ? Math.round(courses.reduce((sum, item) => sum + item.avance, 0) / courses.length) : 0}%`, detail: 'Notas publicadas', tone: 'gold' },
-          { label: 'Seguridad', value: 'RLS', detail: 'Solo cursos propios', tone: 'ink' },
         ],
         courses,
       };
@@ -426,7 +425,7 @@ export class PortalService {
           const competencyNumber = Number(item.numero_competencia) as CompetencyNumber;
           return {
             ...item,
-            numero_capacidad: EXCEL_CAPACITY_COLUMNS[competencyNumber]?.indexOf(item.columna_excel) + 1 || 0,
+            numero_capacidad: EXCEL_CAPACITY_COLUMNS[competencyNumber]?.indexOf(String(item.columna_excel || '').toUpperCase().trim()) + 1 || 0,
           };
         }).filter((item) => item.numero_capacidad > 0);
       } else {

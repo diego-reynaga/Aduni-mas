@@ -18,39 +18,43 @@
       <div>
         <p class="section-kicker">Cursos disponibles</p>
         <h3>Mis asignaciones activas</h3>
-        <p>Seleccione un curso para registrar sus notas.</p>
+        <p>Seleccione un curso para registrar o importar sus notas.</p>
       </div>
-      <span class="status-pill is-good">Solo sus cursos asignados</span>
+      @if (courses().length) {
+        <span class="status-pill is-good">{{ courses().length }} curso{{ courses().length === 1 ? '' : 's' }}</span>
+      }
     </div>
 
     <div class="quiet-table-wrap">
-      <table class="quiet-table">
+      <table class="quiet-table teacher-courses-table">
         <thead>
           <tr>
-            <th>Codigo</th>
+            <th>Código</th>
             <th>Curso</th>
             <th>Grado</th>
             <th>Periodo</th>
-            <th>Estudiantes</th>
+            <th class="is-numeric">Estudiantes</th>
             <th>Avance</th>
-            <th>Accion</th>
+            <th class="is-actions">Acción</th>
           </tr>
         </thead>
         <tbody>
           @for (course of courses(); track course.assignmentId) {
             <tr>
-              <td><strong>{{ course.codigo }}</strong></td>
-              <td>{{ course.curso }}</td>
+              <td><span class="course-code">{{ course.codigo }}</span></td>
+              <td class="course-name">{{ course.curso }}</td>
               <td>{{ course.grado }} · {{ course.seccion }}</td>
               <td>{{ course.periodo }}</td>
-              <td>{{ course.estudiantes }}</td>
+              <td class="is-numeric">{{ course.estudiantes }}</td>
               <td>
-                <div class="progress-track">
-                  <span [style.width.%]="course.avance"></span>
+                <div class="course-progress">
+                  <div class="progress-track">
+                    <span [style.width.%]="course.avance"></span>
+                  </div>
+                  <span class="course-progress__value">{{ course.avance }}%</span>
                 </div>
-                <span class="text-xs text-slate-500">{{ course.avance }}% registrado</span>
               </td>
-              <td>
+              <td class="is-actions">
                 <div class="teacher-course-actions">
                   <a
                     class="btn-secondary btn-compact"
@@ -66,6 +70,15 @@
                   >
                     Importar Excel
                   </a>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="teacher-courses-empty">
+                  <p class="teacher-courses-empty__title">Aún no tiene cursos asignados</p>
+                  <p class="teacher-courses-empty__hint">Cuando reciba una asignación aparecerá aquí para registrar sus notas.</p>
                 </div>
               </td>
             </tr>

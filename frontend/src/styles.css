@@ -146,6 +146,75 @@ a {
   background: #f7f9ff;
 }
 
+.teacher-courses-table th.is-numeric,
+.teacher-courses-table td.is-numeric {
+  text-align: center;
+}
+
+.teacher-courses-table th.is-actions,
+.teacher-courses-table td.is-actions {
+  text-align: right;
+}
+
+.teacher-courses-table .course-code {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border: 1px solid #d3ddf5;
+  border-radius: 999px;
+  background: #f1f5ff;
+  color: #172f73;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.teacher-courses-table .course-name {
+  font-weight: 650;
+}
+
+.course-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-progress .progress-track {
+  flex: 1;
+  min-width: 96px;
+}
+
+.course-progress__value {
+  min-width: 38px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.teacher-course-actions .btn-compact {
+  border-radius: 8px;
+}
+
+.teacher-courses-empty {
+  padding: 34px 16px;
+  text-align: center;
+}
+
+.teacher-courses-empty__title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.teacher-courses-empty__hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .teacher-course-heading {
   align-items: center;
 }
