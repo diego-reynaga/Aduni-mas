@@ -30,11 +30,24 @@ export function excelAverage(values: readonly GradeValue[]): GradeValue {
   return recorded.length ? recorded.reduce((sum, value) => sum + value, 0) / recorded.length : null;
 }
 
-export function excelAchievement(value: number): 'C' | 'B' | 'A' | 'AD' {
-  if (value <= 10) return 'C';
-  if (value <= 14) return 'B';
-  if (value <= 19) return 'A';
-  return 'AD';
+export function excelAchievement(value: number | null | undefined): 'C' | 'B' | 'A' | 'AD' | '-' {
+  if (value == null || !Number.isFinite(value)) return '-';
+  const val = Math.round(value);
+  if (val >= 18) return 'AD';
+  if (val >= 14) return 'A';
+  if (val >= 11) return 'B';
+  return 'C';
+}
+
+export function getAchievementInfo(value: number | null | undefined): { letter: string; cssClass: string; label: string; name: string } {
+  const letter = excelAchievement(value);
+  switch (letter) {
+    case 'AD': return { letter: 'AD', cssClass: 'level-ad', label: 'Logro Destacado (18-20)', name: 'Logro Destacado' };
+    case 'A':  return { letter: 'A',  cssClass: 'level-a',  label: 'Logro Previsto (14-17)', name: 'Logro Previsto' };
+    case 'B':  return { letter: 'B',  cssClass: 'level-b',  label: 'En Proceso (11-13)', name: 'En Proceso' };
+    case 'C':  return { letter: 'C',  cssClass: 'level-c',  label: 'En Inicio (0-10)', name: 'En Inicio' };
+    default:   return { letter: '-',  cssClass: 'level-none', label: 'Sin Nota', name: 'Sin Nota' };
+  }
 }
 
 export function formatGrade(value: GradeValue | undefined): string {

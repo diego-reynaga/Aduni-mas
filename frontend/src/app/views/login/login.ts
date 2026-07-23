@@ -50,7 +50,7 @@ export class Login {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.message || 'No se pudo iniciar sesión. Verifique sus credenciales de Supabase Auth.');
+        this.error.set(err?.message || 'No se pudo iniciar sesión. Verifique sus credenciales.');
         supabase.rpc('registrar_intento_login_fallido', {
           p_email: this.form.getRawValue().username,
           p_detalle: { error: err.message || 'Error de login' }

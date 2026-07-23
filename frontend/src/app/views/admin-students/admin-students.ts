@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PortalService } from '../../core/portal.service';
 import { fadeIn, tabTransition, slideAlert, counterAnimate, slideInRight, scaleInModal, slideInUp, staggerList } from '../../core/animations';
 import { EntityId, StudentAdminRequest, StudentAdminResponse } from '../../core/models';
@@ -22,6 +22,7 @@ export class AdminStudents {
   private readonly portal = inject(PortalService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly activeTab = signal<Tab>('directorio');
   readonly loading = signal(false);
@@ -58,8 +59,18 @@ export class AdminStudents {
   readonly showWizardMatricula = signal(false);
   readonly wizardStep = signal(1); // 1: Alumno, 2: Aula, 3: Confirmación
   readonly matriculas = signal<any[]>([]);
+  readonly matriculasSearchControl = new FormControl('');
   readonly wizardStudentSearch = new FormControl('');
   
+  readonly filteredMatriculas = computed(() => {
+    const term = (this.matriculasSearchControl.value || '').toLowerCase().trim();
+    const list = this.matriculas();
+    if (!term) return list;
+    return list.filter(m => 
+      `${m.codigoMatricula || ''} ${m.estudianteCodigo || ''} ${m.estudianteNombre || ''} ${m.gradoNombre || ''} ${m.paralelo || ''} ${m.nivelNombre || ''} ${m.estado || ''}`.toLowerCase().includes(term)
+    );
+  });
+
   readonly wizardFilteredEstudiantes = computed(() => {
     const term = (this.wizardStudentSearch.value || '').toLowerCase();
     const activos = this.estudiantes().filter(e => e.activo);
@@ -98,6 +109,22 @@ export class AdminStudents {
     this.searchControl.valueChanges.subscribe(val => {
       this.loadEstudiantes(val || '');
     });
+    this.route.data.subscribe(data => {
+      const tab = data['tab'] as Tab;
+      if (tab) {
+        this.activeTab.set(tab);
+        if (tab === 'matriculas') {
+          this.loadMatriculas();
+        } else {
+          this.loadEstudiantes();
+        }
+      }
+    });
+    this.route.queryParams.subscribe(params => {
+      if (params['tab'] === 'matriculas' || params['tab'] === 'directorio') {
+        this.activeTab.set(params['tab'] as Tab);
+      }
+    });
   }
 
   setTab(tab: Tab) {
@@ -107,6 +134,7 @@ export class AdminStudents {
     } else {
       this.loadEstudiantes();
     }
+    void this.router.navigate(['/admin/alumnos', tab]);
   }
 
   // --- DIRECTORIO ---

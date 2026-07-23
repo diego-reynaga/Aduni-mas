@@ -3,66 +3,178 @@
     <div>
       <p class="section-kicker">Portal del estudiante</p>
       <h2>Mi Espacio Académico</h2>
-      <p>Vista general de tu rendimiento actual e información relevante.</p>
+      <p>Resumen general de tu rendimiento y calificaciones por competencias.</p>
     </div>
   </div>
 
-  <div class="kpi-grid">
-    @for (metric of metrics(); track metric.label) {
-      <div class="kpi-card">
-        <div class="kpi-icon tone-{{ metric.tone }}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-          </svg>
-        </div>
-        <div class="kpi-data">
-          <span class="kpi-label">{{ metric.label }}</span>
-          <span class="kpi-value"><strong>{{ metric.value }}</strong></span>
-          <span class="kpi-subtext">{{ metric.detail }}</span>
-        </div>
+  @if (loading()) {
+    <div style="padding: 40px; text-align: center; color: var(--muted);">
+      <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--brand-primary); animation: spin 1s ease-in-out infinite;"></div>
+      <p style="margin-top: 16px; font-weight: 500;">Cargando calificaciones por competencia...</p>
+      <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+  } @else if (error()) {
+    <div class="form-error-note" style="margin-bottom: 20px;">{{ error() }}</div>
+  } @else {
+
+    <!-- KPI Grid -->
+    @if (metrics().length > 0) {
+      <div class="kpi-grid">
+        @for (metric of metrics(); track metric.label) {
+          <div class="kpi-card">
+            <div class="kpi-icon tone-{{ metric.tone }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+              </svg>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-label">{{ metric.label }}</span>
+              <span class="kpi-value"><strong>{{ metric.value }}</strong></span>
+              <span class="kpi-subtext">{{ metric.detail }}</span>
+            </div>
+          </div>
+        }
       </div>
     }
-  </div>
 
-  @if (error()) {
-    <p class="read-only-note">{{ error() }}</p>
-  }
-
-  <section class="surface">
-    <div class="surface-header">
-      <div>
-        <h3>Detalle de notas publicadas</h3>
-        <p>Las calificaciones se actualizan tras el registro docente y la publicación administrativa.</p>
+    <!-- Executive Evaluation Scale Legend -->
+    <div class="eval-scale-card">
+      <div class="eval-scale-header">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+          <line x1="9" y1="21" x2="9" y2="10"></line>
+        </svg>
+        <span>Escala de Evaluación Cualitativa (MINEDU CNEB)</span>
+      </div>
+      <div class="eval-scale-grid">
+        <div class="scale-item">
+          <span class="scale-badge is-ad">AD</span>
+          <div class="scale-info">
+            <span class="scale-name">Logro Destacado</span>
+            <span class="scale-range">18 a 20</span>
+          </div>
+        </div>
+        <div class="scale-item">
+          <span class="scale-badge is-a">A</span>
+          <div class="scale-info">
+            <span class="scale-name">Logro Previsto</span>
+            <span class="scale-range">14 a 17</span>
+          </div>
+        </div>
+        <div class="scale-item">
+          <span class="scale-badge is-b">B</span>
+          <div class="scale-info">
+            <span class="scale-name">En Proceso</span>
+            <span class="scale-range">11 a 13</span>
+          </div>
+        </div>
+        <div class="scale-item">
+          <span class="scale-badge is-c">C</span>
+          <div class="scale-info">
+            <span class="scale-name">En Inicio</span>
+            <span class="scale-range">0 a 10</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="quiet-table-wrap">
-      <table class="quiet-table">
-        <thead>
-          <tr>
-            <th>Curso</th>
-            <th>Periodo</th>
-            <th>Práctica</th>
-            <th>Examen</th>
-            <th>Tarea</th>
-            <th>Promedio</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (report of reports(); track report.curso + report.periodo) {
-            <tr>
-              <td><strong>{{ report.curso }}</strong></td>
-              <td>{{ report.periodo }}</td>
-              <td>{{ report.practica }}</td>
-              <td>{{ report.examen || 'Pendiente' }}</td>
-              <td>{{ report.tarea }}</td>
-              <td class="score-strong">{{ report.promedio | number: '1.0-0' }}</td>
-              <td><span [class]="statusClass(report.estado)">{{ report.estado }}</span></td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <!-- Trimester Tabs Bar -->
+    <div class="tab-bar">
+      @for (trim of trimestres; track trim.value) {
+        <button 
+          type="button"
+          class="tab-btn"
+          [class.is-active]="selectedTrimestre() === trim.value"
+          (click)="selectedTrimestre.set(trim.value)"
+        >
+          {{ trim.label }}
+        </button>
+      }
     </div>
-  </section>
+
+    <!-- Competencies Summary per Course -->
+    @for (report of filteredReports(); track report.curso + report.periodo) {
+      <section class="surface" style="margin-bottom: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+        <div class="surface-header" style="align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 16px;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); margin: 0;">{{ report.curso }}</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-top: 4px; font-weight: 500;">{{ formatPeriodoTrimestre(report.periodo, report.trimestre) }}</p>
+          </div>
+          <div style="display: flex; gap: 16px; align-items: center;">
+            <div class="eval-hero-box">
+              @if (report.promedioFinal !== null) {
+                <span class="eval-hero-tag" [class]="'is-' + getLogro(report.promedioFinal).toLowerCase()">
+                  {{ getLogro(report.promedioFinal) }}
+                </span>
+                <div class="eval-hero-meta">
+                  <span class="eval-hero-label">Nivel de Logro Final</span>
+                  <span class="eval-hero-title">{{ getLogroInfo(report.promedioFinal).name }}</span>
+                </div>
+              } @else {
+                <span class="eval-hero-tag is-none">-</span>
+                <div class="eval-hero-meta">
+                  <span class="eval-hero-label">Nivel de Logro Final</span>
+                  <span class="eval-hero-title">Sin evaluar</span>
+                </div>
+              }
+            </div>
+            <a routerLink="/estudiante/notas-competencia" class="btn-text" style="font-weight: 700; font-size: 13px; color: var(--brand-primary); text-decoration: none; display: flex; align-items: center; gap: 4px;">
+              Ver detalle completo →
+            </a>
+          </div>
+        </div>
+
+        <div class="quiet-table-wrap" style="padding: 0;">
+          <table class="quiet-table" style="width: 100%;">
+            <thead>
+              <tr style="background: var(--slate-50);">
+                <th style="font-weight: 700; color: var(--slate-700); padding-left: 1.5rem;">Competencia Evaluada</th>
+                <th style="width: 220px; text-align: left; font-weight: 700; color: var(--slate-700);">Nivel de Logro</th>
+                <th style="width: 100px; text-align: right; font-weight: 700; color: var(--slate-700); padding-right: 1.5rem;">Puntaje</th>
+              </tr>
+            </thead>
+            <tbody [@staggerRows]="report.competencias.length">
+              @for (comp of report.competencias || []; track comp.numeroCompetencia) {
+                <tr style="background-color: var(--field-bg); border-top: 1px solid var(--line);">
+                  <td style="padding: 14px 1.5rem;">
+                    <div class="comp-title-group">
+                      <span class="comp-num">{{ comp.numeroCompetencia }}</span>
+                      <strong style="font-size: 14px; color: var(--ink);">{{ comp.nombreCompetencia }}</strong>
+                    </div>
+                  </td>
+                  <td style="vertical-align: middle;">
+                    @if (comp.promedioCompetencia !== null) {
+                      <div class="logro-tag" [class]="'is-' + getLogro(comp.promedioCompetencia).toLowerCase()">
+                        <span class="tag-letter">{{ getLogro(comp.promedioCompetencia) }}</span>
+                        <span class="tag-desc">· {{ getLogroInfo(comp.promedioCompetencia).name }}</span>
+                      </div>
+                    } @else {
+                      <span style="color: var(--muted); font-size: 13px;">-</span>
+                    }
+                  </td>
+                  <td style="text-align: right; padding-right: 1.5rem; vertical-align: middle;">
+                    <strong style="font-size: 14px; font-weight: 800; color: var(--ink);">
+                      {{ comp.promedioCompetencia !== null ? (comp.promedioCompetencia | number: '1.0-0') : '-' }}
+                    </strong>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    @if (filteredReports().length === 0) {
+      <div class="empty-state-enhanced" style="display: grid; place-items: center; gap: 12px; padding: 60px 20px; text-align: center; background: white; border-radius: 16px; border: 1px solid var(--line);">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--slate-50); display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+          <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--slate-400)" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <h3 style="margin: 0; color: var(--ink); font-size: 18px; font-weight: 700;">No hay notas registradas para {{ selectedTrimestreLabel() }}</h3>
+        <p style="margin: 0; color: var(--slate-500); font-size: 14px; max-width: 400px;">Aún no se han evaluado o publicado las competencias para este trimestre.</p>
+      </div>
+    }
+
+  }
 </section>

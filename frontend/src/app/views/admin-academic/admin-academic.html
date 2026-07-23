@@ -29,12 +29,7 @@
     </div>
   }
 
-  <div class="tab-bar">
-    <button class="tab-btn" [class.is-active]="activeTab() === 'resumen'" (click)="setTab('resumen')">Resumen</button>
-    <button class="tab-btn" [class.is-active]="activeTab() === 'niveles'" (click)="setTab('niveles')">Niveles Educativos</button>
-    <button class="tab-btn" [class.is-active]="activeTab() === 'grados'" (click)="setTab('grados')">Grados y Secciones</button>
-    <button class="tab-btn" [class.is-active]="activeTab() === 'materias'" (click)="setTab('materias')">Materias</button>
-  </div>
+
 
   @if (activeTab() === 'resumen') {
     <div [@tabTransition]>

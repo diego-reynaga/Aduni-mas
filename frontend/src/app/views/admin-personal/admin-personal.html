@@ -22,12 +22,7 @@
     }
   </div>
 
-  <div class="tab-bar">
-    <button class="tab-btn" [class.is-active]="activeTab() === 'general'" (click)="setTab('general')">General</button>
-    <button class="tab-btn" [class.is-active]="activeTab() === 'docentes'" (click)="setTab('docentes')">Docentes</button>
-    <button class="tab-btn" [class.is-active]="activeTab() === 'administrativos'" (click)="setTab('administrativos')">Administrativos</button>
-    <button class="tab-btn" [class.is-active]="activeTab() === 'familias'" (click)="setTab('familias')">Apoderados</button>
-  </div>
+
 
   <div [@tabTransition]>
     <!-- KPI Cards -->

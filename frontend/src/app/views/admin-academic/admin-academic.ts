@@ -7,6 +7,7 @@ import {
   fadeIn, staggerRows, slideInRight, slideAlert,
   scaleInModal, tabTransition, counterAnimate, expandCollapse
 } from '../../core/animations';
+import { ActivatedRoute, Router } from '@angular/router';
 import { EntityId } from '../../core/models';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -31,6 +32,8 @@ export interface GrupoGrado {
 export class AdminAcademic {
   private readonly portal = inject(PortalService);
   private readonly confirmation = inject(ConfirmationService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly activeTab = signal<Tab>('resumen');
   readonly error = signal('');
@@ -160,6 +163,18 @@ export class AdminAcademic {
     this.loadGestiones();
     this.loadNiveles();
     this.loadMaterias();
+    this.route.data.subscribe(data => {
+      const tab = data['tab'] as Tab;
+      if (tab) {
+        this.activeTab.set(tab);
+      }
+    });
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'] as Tab;
+      if (tab && ['resumen', 'niveles', 'grados', 'materias'].includes(tab)) {
+        this.activeTab.set(tab);
+      }
+    });
   }
 
   loadGestiones() {
@@ -173,6 +188,7 @@ export class AdminAcademic {
     this.activeTab.set(tab);
     this.error.set('');
     this.successMessage.set('');
+    void this.router.navigate(['/admin/academico', tab]);
   }
 
   // --- LÓGICA NIVELES ---

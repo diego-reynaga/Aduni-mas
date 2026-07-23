@@ -80,25 +80,86 @@
       </div>
     </div>
 
-    @for (report of reports(); track report.curso + report.periodo) {
-      <section class="surface" style="margin-bottom: 24px; transition: transform 0.3s ease, box-shadow 0.3s ease;"
-               onmouseover="this.style.transform='scale(1.005)'; this.style.boxShadow='0 15px 25px -5px rgba(0, 0, 0, 0.1)';"
-               onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)';">
-        <div class="surface-header" style="padding-bottom: 16px; border-bottom: 1px solid var(--line); align-items: center;">
+    <!-- Executive Evaluation Scale Legend -->
+    <div class="eval-scale-card">
+      <div class="eval-scale-header">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+          <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+          <line x1="9" y1="21" x2="9" y2="10"></line>
+        </svg>
+        <span>Escala de Evaluación Cualitativa (MINEDU CNEB)</span>
+      </div>
+      <div class="eval-scale-grid">
+        <div class="scale-item">
+          <span class="scale-badge is-ad">AD</span>
+          <div class="scale-info">
+            <span class="scale-name">Logro Destacado</span>
+            <span class="scale-range">18 a 20</span>
+          </div>
+        </div>
+        <div class="scale-item">
+          <span class="scale-badge is-a">A</span>
+          <div class="scale-info">
+            <span class="scale-name">Logro Previsto</span>
+            <span class="scale-range">14 a 17</span>
+          </div>
+        </div>
+        <div class="scale-item">
+          <span class="scale-badge is-b">B</span>
+          <div class="scale-info">
+            <span class="scale-name">En Proceso</span>
+            <span class="scale-range">11 a 13</span>
+          </div>
+        </div>
+        <div class="scale-item">
+          <span class="scale-badge is-c">C</span>
+          <div class="scale-info">
+            <span class="scale-name">En Inicio</span>
+            <span class="scale-range">0 a 10</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trimester Tabs Bar -->
+    <div class="tab-bar">
+      @for (trim of trimestres; track trim.value) {
+        <button 
+          type="button"
+          class="tab-btn"
+          [class.is-active]="selectedTrimestre() === trim.value"
+          (click)="selectedTrimestre.set(trim.value)"
+        >
+          {{ trim.label }}
+        </button>
+      }
+    </div>
+
+    @for (report of filteredReports(); track report.curso + report.periodo) {
+      <section class="surface" style="margin-bottom: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+        <div class="surface-header" style="align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 16px;">
           <div>
-            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--ink);">{{ report.curso }}</h3>
-            <p style="color: var(--slate-500); font-weight: 500; display: flex; align-items: center; gap: 8px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              {{ report.periodo }} - {{ report.trimestre.replace('_', ' ') }}
-            </p>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--ink); margin: 0;">{{ report.curso }}</h3>
+            <p style="color: var(--muted); font-size: 13px; margin-top: 4px; font-weight: 500;">{{ formatPeriodoTrimestre(report.periodo, report.trimestre) }}</p>
           </div>
           <div style="display: flex; gap: 16px; align-items: center;">
-            <div style="text-align: right;">
-              <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--muted); display: block;">Promedio Final</span>
-              <strong style="font-size: 1.75rem; line-height: 1;"
-                      [style.color]="report.promedioFinal && report.promedioFinal >= 11 ? 'var(--forest)' : (report.promedioFinal ? 'var(--danger)' : 'var(--ink)')">
-                {{ report.promedioFinal !== null ? (report.promedioFinal | number: '1.0-0') : '-' }}
-              </strong>
+            <div class="eval-hero-box">
+              @if (report.promedioFinal !== null) {
+                <span class="eval-hero-tag" [class]="'is-' + getLogro(report.promedioFinal).toLowerCase()">
+                  {{ getLogro(report.promedioFinal) }}
+                </span>
+                <div class="eval-hero-meta">
+                  <span class="eval-hero-label">Nivel de Logro Final</span>
+                  <span class="eval-hero-title">{{ getLogroInfo(report.promedioFinal).name }}</span>
+                </div>
+              } @else {
+                <span class="eval-hero-tag is-none">-</span>
+                <div class="eval-hero-meta">
+                  <span class="eval-hero-label">Nivel de Logro Final</span>
+                  <span class="eval-hero-title">Sin evaluar</span>
+                </div>
+              }
             </div>
             @if (report.promedioFinal !== null) {
               <span class="status-pill-premium" [class.is-active]="report.promedioFinal >= 11" [class.is-inactive]="report.promedioFinal < 11" style="height: fit-content;">
@@ -110,42 +171,58 @@
         </div>
         
         <div class="quiet-table-wrap" style="padding: 0;">
-          <table class="quiet-table" style="min-width: 100%;">
+          <table class="quiet-table" style="width: 100%;">
             <thead>
               <tr style="background: var(--slate-50);">
-                <th style="font-weight: 700; color: var(--slate-700);">Competencia / Capacidad</th>
-                <th style="width: 140px; text-align: center; font-weight: 700; color: var(--slate-700);">Calificación</th>
+                <th style="font-weight: 700; color: var(--slate-700); padding-left: 1.5rem;">Competencia / Capacidad</th>
+                <th style="width: 220px; text-align: left; font-weight: 700; color: var(--slate-700);">Nivel de Logro</th>
+                <th style="width: 100px; text-align: right; font-weight: 700; color: var(--slate-700); padding-right: 1.5rem;">Puntaje</th>
               </tr>
             </thead>
             <tbody [@staggerRows]="report.competencias.length">
               @for (comp of report.competencias; track comp.numeroCompetencia) {
                 <tr style="background-color: var(--field-bg); border-top: 2px solid var(--line);">
-                  <td>
-                    <div style="display: flex; gap: 12px; align-items: flex-start;">
-                      <span style="background: var(--brand-primary); color: white; width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;">
-                        {{ comp.numeroCompetencia }}
-                      </span>
+                  <td style="padding: 14px 1.5rem;">
+                    <div class="comp-title-group">
+                      <span class="comp-num">{{ comp.numeroCompetencia }}</span>
                       <strong style="font-size: 14px; color: var(--ink);">{{ comp.nombreCompetencia }}</strong>
                     </div>
                   </td>
-                  <td style="text-align: center; vertical-align: middle;">
-                    <strong class="score-strong" style="font-size: 15px; padding: 4px 12px; border-radius: 12px; background: white; border: 1px solid var(--line);"
-                            [style.color]="comp.promedioCompetencia && comp.promedioCompetencia >= 11 ? 'var(--forest)' : (comp.promedioCompetencia ? 'var(--danger)' : 'var(--muted)')">
+                  <td style="vertical-align: middle;">
+                    @if (comp.promedioCompetencia !== null) {
+                      <div class="logro-tag" [class]="'is-' + getLogro(comp.promedioCompetencia).toLowerCase()">
+                        <span class="tag-letter">{{ getLogro(comp.promedioCompetencia) }}</span>
+                        <span class="tag-desc">· {{ getLogroInfo(comp.promedioCompetencia).name }}</span>
+                      </div>
+                    } @else {
+                      <span style="color: var(--muted); font-size: 13px;">-</span>
+                    }
+                  </td>
+                  <td style="text-align: right; padding-right: 1.5rem; vertical-align: middle;">
+                    <strong style="font-size: 14px; font-weight: 800; color: var(--ink);">
                       {{ comp.promedioCompetencia !== null ? (comp.promedioCompetencia | number: '1.0-0') : '-' }}
                     </strong>
                   </td>
                 </tr>
                 @for (cap of comp.capacidades; track cap.numero) {
                   <tr>
-                    <td style="padding-left: 3.5rem; color: var(--slate-600); font-size: 13.5px; border-bottom: 1px dashed var(--line-light);">
+                    <td style="padding-left: 3.5rem; padding-top: 10px; padding-bottom: 10px; color: var(--slate-600); font-size: 13.5px; border-bottom: 1px dashed var(--line-light);">
                       <div style="display: flex; align-items: center; gap: 8px;">
-                        <div style="width: 4px; height: 4px; border-radius: 50%; background: var(--slate-300);"></div>
-                        {{ cap.nombre }}
+                        <div style="width: 5px; height: 5px; border-radius: 50%; background: var(--slate-400);"></div>
+                        <span>{{ cap.nombre }}</span>
                       </div>
                     </td>
-                    <td style="text-align: center; font-family: monospace; font-size: 14px; font-weight: 600; border-bottom: 1px dashed var(--line-light);"
-                        [style.color]="cap.nota && cap.nota >= 11 ? 'var(--forest)' : (cap.nota ? 'var(--danger)' : 'var(--muted)')">
-                      {{ cap.nota !== null ? (cap.nota | number: '1.0-2') : '-' }}
+                    <td style="vertical-align: middle; border-bottom: 1px dashed var(--line-light);">
+                      @if (cap.nota !== null) {
+                        <div class="logro-tag" [class]="'is-' + getLogro(cap.nota).toLowerCase()" style="padding: 2px 8px; font-size: 11.5px;">
+                          <span class="tag-letter">{{ getLogro(cap.nota) }}</span>
+                        </div>
+                      } @else {
+                        <span style="color: var(--muted); font-size: 12px;">-</span>
+                      }
+                    </td>
+                    <td style="text-align: right; padding-right: 1.5rem; border-bottom: 1px dashed var(--line-light); vertical-align: middle; font-family: monospace; font-size: 13.5px; color: var(--slate-700);">
+                      {{ cap.nota !== null ? cap.nota : '-' }}
                     </td>
                   </tr>
                 }
@@ -156,13 +233,13 @@
       </section>
     }
 
-    @if (reports().length === 0 && selectedCode()) {
+    @if (filteredReports().length === 0 && selectedCode()) {
       <div class="empty-state-enhanced" style="display: grid; place-items: center; gap: 12px; padding: 60px 20px; text-align: center; background: white; border-radius: 16px; border: 1px solid var(--line);">
         <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--slate-50); display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-          <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--slate-400)" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <svg viewBox="0 0 24 24" width="32" height="32" stroke="var(--slate-400)" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
         </div>
-        <h3 style="margin: 0; color: var(--ink); font-size: 18px; font-weight: 700;">No hay notas registradas</h3>
-        <p style="margin: 0; color: var(--slate-500); font-size: 14px; max-width: 400px;">Aún no se han evaluado o publicado las competencias correspondientes a este estudiante para el periodo actual.</p>
+        <h3 style="margin: 0; color: var(--ink); font-size: 18px; font-weight: 700;">No hay notas registradas para {{ selectedTrimestreLabel() }}</h3>
+        <p style="margin: 0; color: var(--slate-500); font-size: 14px; max-width: 400px;">Aún no se han evaluado o publicado las competencias correspondientes a este estudiante para este trimestre.</p>
       </div>
     }
 
