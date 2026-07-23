@@ -124,6 +124,12 @@ export class NotasService {
         if (payload?.error) throw new Error(payload.error);
         if (payload?.details) throw new Error(payload.details);
       }
+      if (/failed to send a request|failed to fetch|networkerror/i.test(error.message ?? '')) {
+        throw new Error(
+          'No se pudo conectar con el servicio de importación. Verifique su conexión e intente nuevamente. '
+          + 'Si el problema continúa, el administrador debe revisar la configuración del dominio publicado.',
+        );
+      }
       throw new Error(error.message || 'No se pudo ejecutar la importación.');
     }
     if (data?.message && !data?.metadata && !data?.idImportacion) throw new Error(data.message);

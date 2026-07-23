@@ -2,14 +2,34 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "@supabase/supabase-js";
 import * as XLSX from "xlsx";
 
-const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN")?.trim() || "http://localhost:4200";
+const DEFAULT_ALLOWED_ORIGINS = [
+  "http://localhost:4200",
+  "https://adunimas.appwrite.network",
+];
 
-const CORS = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Vary": "Origin",
-};
+function configuredOrigins(): Set<string> {
+  const configured = [Deno.env.get("ALLOWED_ORIGINS"), Deno.env.get("ALLOWED_ORIGIN")]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return new Set([...DEFAULT_ALLOWED_ORIGINS, ...configured]);
+}
+
+const ALLOWED_ORIGINS = configuredOrigins();
+
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("Origin")?.trim() ?? "";
+  // Do not reflect arbitrary origins. Browser clients must come from one of the
+  // known application deployments or an explicitly configured origin.
+  const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : DEFAULT_ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const MAX_SHEETS = 12;
@@ -82,15 +102,15 @@ type ParsedCompetenceDefinition = {
   capacidades: ParsedCapacityDefinition[];
 };
 
-function response(body: unknown, status = 200): Response {
+function response(req: Request, body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...corsHeaders(req), "Content-Type": "application/json; charset=utf-8" },
   });
 }
 
-function fail(message: string, status = 400): Response {
-  return response({ message }, status);
+function fail(req: Request, message: string, status = 400): Response {
+  return response(req, { message }, status);
 }
 
 function clean(value: unknown): string {
@@ -224,12 +244,12 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (req.method !== "POST") return fail("Método no permitido.", 405);
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(req) });
+  if (req.method !== "POST") return fail(req, "Método no permitido.", 405);
 
   try {
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) return fail("Sesión requerida.", 401);
+    if (!authHeader.startsWith("Bearer ")) return fail(req, "Sesión requerida.", 401);
 
     const url = Deno.env.get("SUPABASE_URL") ?? "";
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -246,16 +266,16 @@ Deno.serve(async (req: Request) => {
     });
 
     const { data: userData, error: userError } = await userClient.auth.getUser(token);
-    if (userError || !userData.user) return fail("Token de usuario inválido.", 401);
+    if (userError || !userData.user) return fail(req, "Token de usuario inválido.", 401);
 
     const { data: profile, error: profileError } = await admin
       .from("profiles")
       .select("id, persona_id, rol, username, activo")
       .eq("id", userData.user.id)
       .single();
-    if (profileError || !profile?.activo) return fail("Perfil inactivo o inexistente.", 403);
+    if (profileError || !profile?.activo) return fail(req, "Perfil inactivo o inexistente.", 403);
     if (!["ADMINISTRADOR", "DOCENTE"].includes(profile.rol as AppRole)) {
-      return fail("Solo docentes y administradores pueden importar notas.", 403);
+      return fail(req, "Solo docentes y administradores pueden importar notas.", 403);
     }
 
     const form = await req.formData();
@@ -278,11 +298,11 @@ Deno.serve(async (req: Request) => {
       .eq("id", assignmentId)
       .single();
     if (assignmentError || !assignment || assignment.estado !== "ACTIVA") {
-      return fail("La asignación docente no existe o está cerrada.", 404);
+      return fail(req, "La asignación docente no existe o está cerrada.", 404);
     }
     const assignmentTeacher = assignment.docentes as unknown as { persona_id: string };
     if (profile.rol === "DOCENTE" && assignmentTeacher.persona_id !== profile.persona_id) {
-      return fail("No puede importar notas de cursos asignados a otro docente.", 403);
+      return fail(req, "No puede importar notas de cursos asignados a otro docente.", 403);
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -476,8 +496,8 @@ Deno.serve(async (req: Request) => {
       errores: globalErrors,
       bloqueante: globalErrors.length > 0,
     };
-    if (mode === "preview") return response(preview);
-    if (preview.bloqueante) return fail("La importación tiene errores estructurales bloqueantes.", 422);
+    if (mode === "preview") return response(req, preview);
+    if (preview.bloqueante) return fail(req, "La importación tiene errores estructurales bloqueantes.", 422);
 
     const importable = students.filter((item) => item.idEstudiante && item.promedioFinalTrimestre !== null && item.errores.length === 0);
     const allErrors = [...globalErrors, ...students.flatMap((item) => item.errores)];
@@ -523,7 +543,7 @@ Deno.serve(async (req: Request) => {
     });
     if (persistError) throw persistError;
     const saved = persisted as { idImportacion: string; message: string; competenciasGuardadas: number; promediosFinalesGuardados: number };
-    return response({
+    return response(req, {
       message: saved.message,
       idImportacion: saved.idImportacion,
       trimestre,
@@ -537,6 +557,6 @@ Deno.serve(async (req: Request) => {
     });
   } catch (error) {
     console.error("importar-notas-trimestre", error);
-    return fail(importErrorMessage(error), 400);
+    return fail(req, importErrorMessage(error), 400);
   }
 });
